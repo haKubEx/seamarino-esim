@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum EsimStatus {
+  NOT_ORDERED
+  PROCESSING
+  ISSUED
+  FAILED
+}
+
+model Order {
+  id              String @id @default(cuid())
+  referenceNumber String @unique
+
+  packageCode String
+  planName    String
+
+  customerName  String
+  customerEmail String
+  customerPhone String
+
+  sellingPriceUsd   Float
+  amountPhpCentavos Int
+  usdToPhpRate      Float
+  currency          String @default("PHP")
+
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  esimStatus    EsimStatus    @default(NOT_ORDERED)
+
+  paymongoSessionId String?   @unique
+  paymongoPaymentId String?   @unique
+  paymongoEventId   String?   @unique
+  paymentMethod     String?
+  paidAt            DateTime?
+
+  esimOrderId       String?   @unique
+  esimTransactionId String?
+  iccid             String?
+  qrCode            String?
+  qrCodeUrl         String?
+  activationCode    String?
+  smdpAddress       String?
+  esimRawResponse   String?
+  esimIssuedAt      DateTime?
+
+  emailSent     Boolean   @default(false)
+  emailSentAt   DateTime?
+  emailAttempts Int       @default(0)
+
+  processingAttempts Int       @default(0)
+  lastAttemptAt      DateTime?
+  lastError          String?
+
+  webhookReceivedAt DateTime?
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  refundedAt        DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerEmail])
+  @@index([packageCode])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([esimStatus])
+  @@index([createdAt])
+}
