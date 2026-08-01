@@ -11,11 +11,16 @@ export const dynamic = "force-dynamic";
 interface PayMongoError {
   detail?: string;
   code?: string;
+  source?: {
+    pointer?: string;
+    attribute?: string;
+  };
 }
 
 interface PayMongoCheckoutResponse {
   data?: {
     id?: string;
+    type?: string;
     attributes?: {
       checkout_url?: string;
       reference_number?: string;
@@ -25,38 +30,16 @@ interface PayMongoCheckoutResponse {
   errors?: PayMongoError[];
 }
 
-function formatData(bytes: number) {
-  const gb = bytes / 1024 / 1024 / 1024;
-
-  if (gb < 1) {
-    const mb = bytes / 1024 / 1024;
-    return `${Math.round(mb)} MB`;
-  }
-
-  const value = Number.isInteger(gb)
-    ? gb.toString()
-    : gb.toFixed(1);
-
-  return `${value} GB`;
-}
-
-function formatDurationUnit(unit: string, duration: number) {
-  const normalized = unit.trim().toLowerCase();
-
-  if (!normalized) {
-    return duration === 1 ? "day" : "days";
-  }
-
-  if (duration === 1) {
-    return normalized.endsWith("s")
-      ? normalized.slice(0, -1)
-      : normalized;
-  }
-
-  return normalized.endsWith("s")
-    ? normalized
-    : `${normalized}s`;
-}
+type CheckoutStage =
+  | "START"
+  | "READ_ENVIRONMENT"
+  | "READ_FORM"
+  | "LOAD_PLANS"
+  | "CALCULATE_PRICE"
+  | "CREATE_ORDER"
+  | "CREATE_PAYMONGO_SESSION"
+  | "SAVE_PAYMONGO_SESSION"
+  | "COMPLETE";
 
 function normalizeAppUrl(value: string) {
   return value.trim().replace(/\/+$/, "");
@@ -82,6 +65,45 @@ function isValidPhone(phone: string) {
   return digits.length >= 7 && digits.length <= 15;
 }
 
+function formatData(bytes: number) {
+  const gb = bytes / 1024 / 1024 / 1024;
+
+  if (gb < 1) {
+    const mb = bytes / 1024 / 1024;
+
+    return `${Math.round(mb)} MB`;
+  }
+
+  const formattedGb = Number.isInteger(gb)
+    ? gb.toString()
+    : gb.toFixed(1);
+
+  return `${formattedGb} GB`;
+}
+
+function formatDurationUnit(
+  durationUnit: string,
+  duration: number,
+) {
+  const normalizedUnit = durationUnit
+    .trim()
+    .toLowerCase();
+
+  if (!normalizedUnit) {
+    return duration === 1 ? "day" : "days";
+  }
+
+  if (duration === 1) {
+    return normalizedUnit.endsWith("s")
+      ? normalizedUnit.slice(0, -1)
+      : normalizedUnit;
+  }
+
+  return normalizedUnit.endsWith("s")
+    ? normalizedUnit
+    : `${normalizedUnit}s`;
+}
+
 function sanitizeMetadataValue(
   value: string,
   maximumLength = 255,
@@ -95,7 +117,10 @@ function getPaymentMethodTypes() {
       .map((method) => method.trim().toLowerCase())
       .filter(Boolean);
 
-  if (configuredMethods && configuredMethods.length > 0) {
+  if (
+    configuredMethods &&
+    configuredMethods.length > 0
+  ) {
     return configuredMethods;
   }
 
@@ -117,7 +142,7 @@ async function readPayMongoResponse(
     ) as PayMongoCheckoutResponse;
   } catch {
     console.error(
-      "PayMongo returned a non-JSON response:",
+      "PAYMONGO NON-JSON RESPONSE:",
       responseText,
     );
 
@@ -130,28 +155,98 @@ function getPayMongoErrorMessage(
 ) {
   const firstError = data.errors?.[0];
 
+  if (!firstError) {
+    return "Unable to create the PayMongo checkout session.";
+  }
+
+  const sourceInformation =
+    firstError.source?.pointer ||
+    firstError.source?.attribute;
+
+  if (sourceInformation && firstError.detail) {
+    return `${firstError.detail} (${sourceInformation})`;
+  }
+
   return (
-    firstError?.detail ||
-    firstError?.code ||
+    firstError.detail ||
+    firstError.code ||
     "Unable to create the PayMongo checkout session."
   );
 }
 
+function getSafeDatabaseInformation() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    return {
+      exists: false,
+      protocol: "missing",
+      usesLocalHost: false,
+    };
+  }
+
+  return {
+    exists: true,
+    protocol: databaseUrl.split(":")[0] ?? "unknown",
+    usesLocalHost:
+      databaseUrl.includes("127.0.0.1") ||
+      databaseUrl.includes("localhost") ||
+      databaseUrl.startsWith("file:"),
+  };
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message.slice(0, 1500);
+  }
+
+  return "Unknown checkout error.";
+}
+
 export async function POST(request: Request) {
+  let stage: CheckoutStage = "START";
   let createdOrderId: string | null = null;
+  let referenceNumber: string | null = null;
 
   try {
+    stage = "READ_ENVIRONMENT";
+
     const secretKey =
       process.env.PAYMONGO_SECRET_KEY?.trim();
 
+    const configuredBaseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL?.trim();
+
     const appUrl = normalizeAppUrl(
-      process.env.NEXT_PUBLIC_APP_URL ??
-        "http://localhost:3000",
+      configuredBaseUrl ||
+        process.env.VERCEL_URL
+          ? configuredBaseUrl ||
+              `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000",
     );
 
     const usdToPhpRate = Number(
       process.env.USD_TO_PHP_RATE ?? "58",
     );
+
+    const databaseInformation =
+      getSafeDatabaseInformation();
+
+    console.info("CHECKOUT ENVIRONMENT CHECK:", {
+      stage,
+      appUrl,
+      paymongoSecretExists: Boolean(secretKey),
+      databaseUrlExists:
+        databaseInformation.exists,
+      databaseProtocol:
+        databaseInformation.protocol,
+      databaseUsesLocalHost:
+        databaseInformation.usesLocalHost,
+      usdToPhpRate,
+      nodeEnvironment: process.env.NODE_ENV,
+      vercelEnvironment:
+        process.env.VERCEL_ENV ?? "not-vercel",
+    });
 
     if (!secretKey) {
       console.error(
@@ -167,12 +262,39 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!databaseInformation.exists) {
+      console.error("DATABASE_URL is missing.");
+
+      return NextResponse.json(
+        {
+          error:
+            "Order processing is temporarily unavailable.",
+        },
+        { status: 500 },
+      );
+    }
+
+    if (databaseInformation.usesLocalHost) {
+      console.error(
+        "DATABASE_URL points to a local database.",
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "The production database is not configured correctly.",
+        },
+        { status: 500 },
+      );
+    }
+
     if (
       !Number.isFinite(usdToPhpRate) ||
       usdToPhpRate <= 0
     ) {
       console.error(
-        "USD_TO_PHP_RATE is invalid.",
+        "USD_TO_PHP_RATE is invalid:",
+        usdToPhpRate,
       );
 
       return NextResponse.json(
@@ -184,14 +306,22 @@ export async function POST(request: Request) {
       );
     }
 
+    stage = "READ_FORM";
+
     let formData: FormData;
 
     try {
       formData = await request.formData();
-    } catch {
+    } catch (error) {
+      console.error(
+        "CHECKOUT FORM PARSING ERROR:",
+        error,
+      );
+
       return NextResponse.json(
         {
-          error: "The submitted checkout form is invalid.",
+          error:
+            "The submitted checkout form is invalid.",
         },
         { status: 400 },
       );
@@ -245,7 +375,8 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Please enter a valid email address.",
+          error:
+            "Please enter a valid email address.",
         },
         { status: 400 },
       );
@@ -254,7 +385,8 @@ export async function POST(request: Request) {
     if (!isValidPhone(phone)) {
       return NextResponse.json(
         {
-          error: "Please enter a valid phone number.",
+          error:
+            "Please enter a valid phone number.",
         },
         { status: 400 },
       );
@@ -270,10 +402,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const plans: EsimPackage[] = await getPlans();
+    stage = "LOAD_PLANS";
+
+    console.info("CHECKOUT: Loading plan", {
+      packageCode,
+    });
+
+    const plans: EsimPackage[] =
+      await getPlans();
 
     const plan = plans.find(
-      (item) => item.packageCode === packageCode,
+      (item) =>
+        item.packageCode === packageCode,
     );
 
     if (!plan) {
@@ -286,8 +426,13 @@ export async function POST(request: Request) {
       );
     }
 
+    stage = "CALCULATE_PRICE";
+
     const sellingPriceUsd = Number(
-      getSellingPrice(plan.price, plan.volume),
+      getSellingPrice(
+        plan.price,
+        plan.volume,
+      ),
     );
 
     if (
@@ -304,11 +449,15 @@ export async function POST(request: Request) {
     }
 
     const amountInCentavos = Math.round(
-      sellingPriceUsd * usdToPhpRate * 100,
+      sellingPriceUsd *
+        usdToPhpRate *
+        100,
     );
 
     if (
-      !Number.isSafeInteger(amountInCentavos) ||
+      !Number.isSafeInteger(
+        amountInCentavos,
+      ) ||
       amountInCentavos <= 0
     ) {
       return NextResponse.json(
@@ -320,38 +469,57 @@ export async function POST(request: Request) {
       );
     }
 
-    const referenceNumber =
+    referenceNumber =
       createReferenceNumber();
 
-    /*
-     * Save the order before contacting PayMongo.
-     * This lets the webhook find the order later.
-     */
-    const order = await prisma.order.create({
-      data: {
+    stage = "CREATE_ORDER";
+
+    console.info(
+      "CHECKOUT: Creating pending order",
+      {
         referenceNumber,
         packageCode: plan.packageCode,
-        planName: plan.name,
-        customerName: fullName,
-        customerEmail: email,
-        customerPhone: phone,
-        sellingPriceUsd,
-        amountPhpCentavos: amountInCentavos,
-        usdToPhpRate,
-        currency: "PHP",
-        status: "PENDING",
-        paymentStatus: "PENDING",
-        esimStatus: "NOT_ORDERED",
+        amountInCentavos,
       },
-    });
+    );
+
+    const order =
+      await prisma.order.create({
+        data: {
+          referenceNumber,
+          packageCode: plan.packageCode,
+          planName: plan.name,
+          customerName: fullName,
+          customerEmail: email,
+          customerPhone: phone,
+          sellingPriceUsd,
+          amountPhpCentavos:
+            amountInCentavos,
+          usdToPhpRate,
+          currency: "PHP",
+          status: "PENDING",
+          paymentStatus: "PENDING",
+          esimStatus: "NOT_ORDERED",
+        },
+      });
 
     createdOrderId = order.id;
+
+    console.info(
+      "CHECKOUT: Order created",
+      {
+        orderId: order.id,
+        referenceNumber,
+      },
+    );
 
     const authorization = Buffer.from(
       `${secretKey}:`,
     ).toString("base64");
 
-    const validity = `${plan.duration} ${formatDurationUnit(
+    const validity = `${
+      plan.duration
+    } ${formatDurationUnit(
       plan.durationUnit,
       plan.duration,
     )}`;
@@ -367,10 +535,16 @@ export async function POST(request: Request) {
 
           line_items: [
             {
-              name: plan.name.slice(0, 255),
+              name: plan.name.slice(
+                0,
+                255,
+              ),
               description: `${formatData(
                 plan.volume,
-              )} eSIM — ${validity}`.slice(0, 255),
+              )} eSIM — ${validity}`.slice(
+                0,
+                255,
+              ),
               amount: amountInCentavos,
               currency: "PHP",
               quantity: 1,
@@ -388,7 +562,8 @@ export async function POST(request: Request) {
             plan.packageCode,
           )}&payment=cancelled`,
 
-          reference_number: referenceNumber,
+          reference_number:
+            referenceNumber,
 
           description:
             `Seamarino eSIM order for ${fullName}`.slice(
@@ -397,53 +572,107 @@ export async function POST(request: Request) {
             ),
 
           metadata: {
-            order_id: sanitizeMetadataValue(order.id),
+            order_id:
+              sanitizeMetadataValue(
+                order.id,
+              ),
+
             reference_number:
-              sanitizeMetadataValue(referenceNumber),
-            package_code: sanitizeMetadataValue(
-              plan.packageCode,
-            ),
-            plan_name: sanitizeMetadataValue(plan.name),
+              sanitizeMetadataValue(
+                referenceNumber,
+              ),
+
+            package_code:
+              sanitizeMetadataValue(
+                plan.packageCode,
+              ),
+
+            plan_name:
+              sanitizeMetadataValue(
+                plan.name,
+              ),
+
             customer_name:
-              sanitizeMetadataValue(fullName),
+              sanitizeMetadataValue(
+                fullName,
+              ),
+
             customer_email:
-              sanitizeMetadataValue(email),
+              sanitizeMetadataValue(
+                email,
+              ),
+
             customer_phone:
-              sanitizeMetadataValue(phone),
+              sanitizeMetadataValue(
+                phone,
+              ),
+
             selling_price_usd:
               sellingPriceUsd.toFixed(2),
+
             amount_php: (
               amountInCentavos / 100
             ).toFixed(2),
+
             usd_to_php_rate:
               usdToPhpRate.toString(),
-            data_allowance: formatData(plan.volume),
+
+            data_allowance:
+              formatData(plan.volume),
+
             validity,
           },
         },
       },
     };
 
-    const paymongoResponse = await fetch(
-      "https://api.paymongo.com/v2/checkout_sessions",
+    stage = "CREATE_PAYMONGO_SESSION";
+
+    console.info(
+      "CHECKOUT: Creating PayMongo session",
       {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${authorization}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(checkoutPayload),
-        cache: "no-store",
+        orderId: order.id,
+        referenceNumber,
+        paymentMethods:
+          getPaymentMethodTypes(),
+        successUrl:
+          checkoutPayload.data.attributes
+            .success_url,
+        cancelUrl:
+          checkoutPayload.data.attributes
+            .cancel_url,
       },
     );
 
+    const paymongoResponse =
+      await fetch(
+        "https://api.paymongo.com/v2/checkout_sessions",
+        {
+          method: "POST",
+          headers: {
+            Authorization:
+              `Basic ${authorization}`,
+            "Content-Type":
+              "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(
+            checkoutPayload,
+          ),
+          cache: "no-store",
+        },
+      );
+
     const paymongoData =
-      await readPayMongoResponse(paymongoResponse);
+      await readPayMongoResponse(
+        paymongoResponse,
+      );
 
     if (!paymongoResponse.ok) {
       const paymentError =
-        getPayMongoErrorMessage(paymongoData);
+        getPayMongoErrorMessage(
+          paymongoData,
+        );
 
       await prisma.order.update({
         where: {
@@ -459,10 +688,11 @@ export async function POST(request: Request) {
       });
 
       console.error(
-        "PayMongo checkout session error:",
+        "PAYMONGO CHECKOUT SESSION ERROR:",
         JSON.stringify(
           {
-            status: paymongoResponse.status,
+            status:
+              paymongoResponse.status,
             referenceNumber,
             response: paymongoData,
           },
@@ -477,7 +707,8 @@ export async function POST(request: Request) {
         },
         {
           status:
-            paymongoResponse.status >= 400 &&
+            paymongoResponse.status >=
+              400 &&
             paymongoResponse.status < 600
               ? paymongoResponse.status
               : 502,
@@ -486,25 +717,36 @@ export async function POST(request: Request) {
     }
 
     const checkoutUrl =
-      paymongoData.data?.attributes?.checkout_url;
+      paymongoData.data?.attributes
+        ?.checkout_url;
 
     const checkoutSessionId =
       paymongoData.data?.id;
 
-    if (!checkoutUrl || !checkoutSessionId) {
+    if (
+      !checkoutUrl ||
+      !checkoutSessionId
+    ) {
+      const missingDataError =
+        "PayMongo did not return a checkout URL or session ID.";
+
       await prisma.order.update({
         where: {
           id: order.id,
         },
         data: {
-          lastError:
-            "PayMongo did not return a checkout URL or session ID.",
+          lastError: missingDataError,
           lastAttemptAt: new Date(),
           processingAttempts: {
             increment: 1,
           },
         },
       });
+
+      console.error(
+        "PAYMONGO INVALID RESPONSE:",
+        paymongoData,
+      );
 
       return NextResponse.json(
         {
@@ -515,22 +757,25 @@ export async function POST(request: Request) {
       );
     }
 
-    /*
-     * Attach the PayMongo session to the saved order.
-     */
+    stage = "SAVE_PAYMONGO_SESSION";
+
     await prisma.order.update({
       where: {
         id: order.id,
       },
       data: {
-        paymongoSessionId: checkoutSessionId,
+        paymongoSessionId:
+          checkoutSessionId,
         lastError: null,
       },
     });
 
+    stage = "COMPLETE";
+
     console.info(
-      "Checkout session created:",
+      "CHECKOUT SESSION CREATED:",
       {
+        stage,
         orderId: order.id,
         referenceNumber,
         checkoutSessionId,
@@ -544,7 +789,23 @@ export async function POST(request: Request) {
       303,
     );
   } catch (error) {
-    console.error("Checkout route error:", error);
+    const errorMessage =
+      getErrorMessage(error);
+
+    console.error(
+      "CHECKOUT ROUTE ERROR:",
+      {
+        stage,
+        createdOrderId,
+        referenceNumber,
+        errorName:
+          error instanceof Error
+            ? error.name
+            : "UnknownError",
+        errorMessage,
+        error,
+      },
+    );
 
     if (createdOrderId) {
       try {
@@ -554,10 +815,14 @@ export async function POST(request: Request) {
           },
           data: {
             lastError:
-              error instanceof Error
-                ? error.message.slice(0, 1000)
-                : "Unknown checkout error.",
-            lastAttemptAt: new Date(),
+              `[${stage}] ${errorMessage}`.slice(
+                0,
+                1500,
+              ),
+
+            lastAttemptAt:
+              new Date(),
+
             processingAttempts: {
               increment: 1,
             },
@@ -565,8 +830,11 @@ export async function POST(request: Request) {
         });
       } catch (databaseError) {
         console.error(
-          "Unable to save checkout error:",
-          databaseError,
+          "UNABLE TO SAVE CHECKOUT ERROR:",
+          {
+            createdOrderId,
+            databaseError,
+          },
         );
       }
     }
@@ -575,8 +843,30 @@ export async function POST(request: Request) {
       {
         error:
           "Something went wrong while starting your payment. Please try again.",
+        stage:
+          process.env.NODE_ENV ===
+          "development"
+            ? stage
+            : undefined,
       },
       { status: 500 },
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    {
+      message:
+        "This checkout endpoint only accepts form submissions.",
+      instruction:
+        "Open an eSIM plan and complete the checkout form.",
+    },
+    {
+      status: 405,
+      headers: {
+        Allow: "POST",
+      },
+    },
+  );
 }
