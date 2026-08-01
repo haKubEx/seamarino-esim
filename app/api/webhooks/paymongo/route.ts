@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/app/lib/prisma";
+import { purchaseEsimProfile } from "@/app/services/esimOrder";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,10 +10,12 @@ export const dynamic = "force-dynamic";
 type PayMongoPayment = {
   id?: string;
   type?: string;
+
   attributes?: {
     amount?: number;
     currency?: string;
     status?: string;
+
     source?: {
       id?: string;
       type?: string;
@@ -23,6 +26,7 @@ type PayMongoPayment = {
 type CheckoutSessionResource = {
   id?: string;
   type?: string;
+
   attributes?: {
     reference_number?: string;
     status?: string;
@@ -47,7 +51,6 @@ type PayMongoWebhookPayload = {
       type?: string;
       livemode?: boolean;
       created_at?: number;
-
       data?: CheckoutSessionResource;
       previous_data?: Record<string, unknown>;
     };
@@ -66,15 +69,15 @@ function parseSignatureHeader(
   const values = new Map<string, string>();
 
   for (const part of header.split(",")) {
-    const trimmed = part.trim();
-    const separatorIndex = trimmed.indexOf("=");
+    const trimmedPart = part.trim();
+    const separatorIndex = trimmedPart.indexOf("=");
 
     if (separatorIndex === -1) {
       continue;
     }
 
-    const key = trimmed.slice(0, separatorIndex);
-    const value = trimmed.slice(separatorIndex + 1);
+    const key = trimmedPart.slice(0, separatorIndex);
+    const value = trimmedPart.slice(separatorIndex + 1);
 
     values.set(key, value);
   }
@@ -92,20 +95,25 @@ function parseSignatureHeader(
   };
 }
 
-function safeCompare(
-  expected: string,
-  received: string,
+function secureCompare(
+  expectedSignature: string,
+  receivedSignature: string,
 ) {
-  if (!expected || !received) {
+  if (!expectedSignature || !receivedSignature) {
     return false;
   }
 
-  const expectedBuffer = Buffer.from(expected, "utf8");
-  const receivedBuffer = Buffer.from(received, "utf8");
+  const expectedBuffer = Buffer.from(
+    expectedSignature,
+    "utf8",
+  );
 
-  if (
-    expectedBuffer.length !== receivedBuffer.length
-  ) {
+  const receivedBuffer = Buffer.from(
+    receivedSignature,
+    "utf8",
+  );
+
+  if (expectedBuffer.length !== receivedBuffer.length) {
     return false;
   }
 
@@ -115,7 +123,7 @@ function safeCompare(
   );
 }
 
-function verifySignature({
+function verifyPayMongoSignature({
   rawBody,
   signatureHeader,
   webhookSecret,
@@ -126,17 +134,17 @@ function verifySignature({
   webhookSecret: string;
   liveMode: boolean;
 }) {
-  const parsed =
+  const parsedSignature =
     parseSignatureHeader(signatureHeader);
 
-  if (!parsed) {
+  if (!parsedSignature) {
     return false;
   }
 
   const signedPayload =
-    `${parsed.timestamp}.${rawBody}`;
+    `${parsedSignature.timestamp}.${rawBody}`;
 
-  const expectedSignature = createHmac(
+  const calculatedSignature = createHmac(
     "sha256",
     webhookSecret,
   )
@@ -144,11 +152,11 @@ function verifySignature({
     .digest("hex");
 
   const receivedSignature = liveMode
-    ? parsed.liveSignature
-    : parsed.testSignature;
+    ? parsedSignature.liveSignature
+    : parsedSignature.testSignature;
 
-  return safeCompare(
-    expectedSignature,
+  return secureCompare(
+    calculatedSignature,
     receivedSignature,
   );
 }
@@ -158,9 +166,26 @@ function findPaidPayment(
 ) {
   return payments?.find(
     (payment) =>
-      payment.attributes?.status
-        ?.toLowerCase() === "paid",
+      payment.attributes?.status?.toLowerCase() ===
+      "paid",
   );
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message.slice(0, 1500);
+  }
+
+  return "Unknown eSIM processing error.";
+}
+
+function createEsimTransactionId(
+  referenceNumber: string,
+) {
+  return referenceNumber
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .slice(0, 50);
 }
 
 export async function POST(request: Request) {
@@ -175,17 +200,15 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error:
-            "Webhook secret is not configured.",
+          error: "Webhook secret is not configured.",
         },
         { status: 500 },
       );
     }
 
-    const signatureHeader =
-      request.headers.get(
-        "paymongo-signature",
-      );
+    const signatureHeader = request.headers.get(
+      "paymongo-signature",
+    );
 
     if (!signatureHeader) {
       console.error(
@@ -194,8 +217,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error:
-            "Missing PayMongo signature.",
+          error: "Missing PayMongo signature.",
         },
         { status: 401 },
       );
@@ -234,7 +256,7 @@ export async function POST(request: Request) {
     });
 
     const signatureIsValid =
-      verifySignature({
+      verifyPayMongoSignature({
         rawBody,
         signatureHeader,
         webhookSecret,
@@ -248,8 +270,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error:
-            "Invalid webhook signature.",
+          error: "Invalid webhook signature.",
         },
         { status: 401 },
       );
@@ -259,11 +280,6 @@ export async function POST(request: Request) {
       eventType !==
       "checkout_session.payment.paid"
     ) {
-      console.info(
-        "Ignoring PayMongo event:",
-        eventType,
-      );
-
       return NextResponse.json({
         received: true,
         ignored: true,
@@ -307,31 +323,15 @@ export async function POST(request: Request) {
     const paidCurrency =
       paidPayment?.attributes?.currency;
 
-    console.info(
-      "PAYMONGO PAID SESSION DETAILS:",
-      {
-        checkoutSessionId,
-        referenceNumber,
-        metadataOrderId,
-        paymentId,
-        paymentMethod,
-        paidAmount,
-        paidCurrency,
-      },
-    );
-
-    if (
-      !referenceNumber &&
-      !metadataOrderId
-    ) {
+    if (!referenceNumber && !metadataOrderId) {
       console.error(
-        "Webhook has no reference number or order ID.",
+        "Webhook does not identify an order.",
       );
 
       return NextResponse.json(
         {
           error:
-            "Webhook does not identify an order.",
+            "Webhook does not contain an order identifier.",
         },
         { status: 400 },
       );
@@ -368,43 +368,13 @@ export async function POST(request: Request) {
       );
     }
 
-    if (
-      order.paymentStatus === "PAID" ||
-      order.status === "PAID" ||
-      order.status === "PROCESSING" ||
-      order.status === "COMPLETED"
-    ) {
-      console.info(
-        "Duplicate paid webhook ignored:",
-        {
-          orderId: order.id,
-          referenceNumber:
-            order.referenceNumber,
-        },
-      );
-
-      return NextResponse.json({
-        received: true,
-        duplicate: true,
-        referenceNumber:
-          order.referenceNumber,
-      });
-    }
-
+    /*
+     * Validate the payment before fulfillment.
+     */
     if (
       typeof paidAmount === "number" &&
-      paidAmount !==
-        order.amountPhpCentavos
+      paidAmount !== order.amountPhpCentavos
     ) {
-      console.error(
-        "Paid amount does not match order:",
-        {
-          expected:
-            order.amountPhpCentavos,
-          received: paidAmount,
-        },
-      );
-
       await prisma.order.update({
         where: {
           id: order.id,
@@ -414,15 +384,13 @@ export async function POST(request: Request) {
           paymentStatus: "FAILED",
           lastError:
             "PayMongo payment amount did not match the order amount.",
-          webhookReceivedAt:
-            new Date(),
+          webhookReceivedAt: new Date(),
         },
       });
 
       return NextResponse.json(
         {
-          error:
-            "Payment amount mismatch.",
+          error: "Payment amount mismatch.",
         },
         { status: 400 },
       );
@@ -442,15 +410,13 @@ export async function POST(request: Request) {
           paymentStatus: "FAILED",
           lastError:
             "PayMongo payment currency did not match the order currency.",
-          webhookReceivedAt:
-            new Date(),
+          webhookReceivedAt: new Date(),
         },
       });
 
       return NextResponse.json(
         {
-          error:
-            "Payment currency mismatch.",
+          error: "Payment currency mismatch.",
         },
         { status: 400 },
       );
@@ -458,49 +424,242 @@ export async function POST(request: Request) {
 
     const now = new Date();
 
+    /*
+     * Mark payment as paid first.
+     */
+    if (order.paymentStatus !== "PAID") {
+      await prisma.order.update({
+        where: {
+          id: order.id,
+        },
+        data: {
+          status: "PAID",
+          paymentStatus: "PAID",
+
+          paymongoSessionId:
+            checkoutSessionId ??
+            order.paymongoSessionId,
+
+          paymongoPaymentId:
+            paymentId ??
+            order.paymongoPaymentId,
+
+          paymentMethod:
+            paymentMethod ??
+            order.paymentMethod,
+
+          paidAt: order.paidAt ?? now,
+          webhookReceivedAt: now,
+          lastError: null,
+        },
+      });
+    }
+
+    /*
+     * If an eSIM order already exists, do not buy again.
+     */
+    if (
+      order.esimOrderId ||
+      order.esimStatus === "ISSUED" ||
+      order.status === "COMPLETED"
+    ) {
+      console.info(
+        "eSIM already ordered for this payment:",
+        {
+          orderId: order.id,
+          referenceNumber:
+            order.referenceNumber,
+          esimOrderId:
+            order.esimOrderId,
+        },
+      );
+
+      return NextResponse.json({
+        received: true,
+        duplicate: true,
+        paymentConfirmed: true,
+        esimAlreadyOrdered: true,
+        referenceNumber:
+          order.referenceNumber,
+      });
+    }
+
+    /*
+     * Claim the paid order for fulfillment.
+     */
+    const claimResult =
+      await prisma.order.updateMany({
+        where: {
+          id: order.id,
+          paymentStatus: "PAID",
+          esimStatus: {
+            in: [
+              "NOT_ORDERED",
+              "FAILED",
+            ],
+          },
+          esimOrderId: null,
+        },
+        data: {
+          status: "PROCESSING",
+          esimStatus: "PROCESSING",
+          processingAttempts: {
+            increment: 1,
+          },
+          lastAttemptAt: new Date(),
+          lastError: null,
+        },
+      });
+
+    if (claimResult.count === 0) {
+      console.info(
+        "Order is already being processed:",
+        {
+          orderId: order.id,
+          referenceNumber:
+            order.referenceNumber,
+        },
+      );
+
+      return NextResponse.json({
+        received: true,
+        paymentConfirmed: true,
+        processing: true,
+        referenceNumber:
+          order.referenceNumber,
+      });
+    }
+
+    const transactionId =
+      order.esimTransactionId ??
+      createEsimTransactionId(
+        order.referenceNumber,
+      );
+
+    /*
+     * Save the transaction ID before calling the supplier.
+     * The same ID will be reused if fulfillment is retried.
+     */
     await prisma.order.update({
       where: {
         id: order.id,
       },
       data: {
-        status: "PAID",
-        paymentStatus: "PAID",
-
-        paymongoSessionId:
-          checkoutSessionId ??
-          order.paymongoSessionId,
-
-        paymongoPaymentId:
-          paymentId ??
-          order.paymongoPaymentId,
-
-        paymentMethod:
-          paymentMethod ??
-          order.paymentMethod,
-
-        paidAt: now,
-        webhookReceivedAt: now,
-        lastError: null,
+        esimTransactionId:
+          transactionId,
       },
     });
 
-    console.info(
-      "ORDER MARKED AS PAID:",
-      {
-        orderId: order.id,
+    try {
+      const purchaseResult =
+        await purchaseEsimProfile({
+          packageCode:
+            order.packageCode,
+          transactionId,
+        });
+
+      await prisma.order.update({
+        where: {
+          id: order.id,
+        },
+        data: {
+          status: "PROCESSING",
+          esimStatus: "PROCESSING",
+
+          esimOrderId:
+            purchaseResult.orderNo,
+
+          esimTransactionId:
+            purchaseResult.transactionId,
+
+          esimRawResponse:
+            JSON.stringify(
+              purchaseResult.rawResponse,
+            ).slice(0, 20000),
+
+          lastError: null,
+          lastAttemptAt: new Date(),
+        },
+      });
+
+      console.info(
+        "ESIM ACCESS ORDER CREATED:",
+        {
+          orderId: order.id,
+          referenceNumber:
+            order.referenceNumber,
+          supplierOrderNo:
+            purchaseResult.orderNo,
+          transactionId:
+            purchaseResult.transactionId,
+        },
+      );
+
+      return NextResponse.json({
+        received: true,
+        processed: true,
+        paymentConfirmed: true,
+        esimOrdered: true,
         referenceNumber:
           order.referenceNumber,
-        checkoutSessionId,
-        paymentId,
-      },
-    );
+        supplierOrderNo:
+          purchaseResult.orderNo,
+      });
+    } catch (purchaseError) {
+      const purchaseErrorMessage =
+        getErrorMessage(purchaseError);
 
-    return NextResponse.json({
-      received: true,
-      processed: true,
-      referenceNumber:
-        order.referenceNumber,
-    });
+      console.error(
+        "ESIM ACCESS PURCHASE FAILED:",
+        {
+          orderId: order.id,
+          referenceNumber:
+            order.referenceNumber,
+          packageCode:
+            order.packageCode,
+          transactionId,
+          error:
+            purchaseErrorMessage,
+        },
+      );
+
+      /*
+       * Payment remains PAID.
+       * Only the fulfillment status fails.
+       */
+      await prisma.order.update({
+        where: {
+          id: order.id,
+        },
+        data: {
+          status: "FAILED",
+          paymentStatus: "PAID",
+          esimStatus: "FAILED",
+
+          esimTransactionId:
+            transactionId,
+
+          lastError:
+            purchaseErrorMessage,
+
+          lastAttemptAt:
+            new Date(),
+        },
+      });
+
+      /*
+       * Return 200 so PayMongo does not repeatedly resend
+       * a valid paid event for a supplier-side problem.
+       */
+      return NextResponse.json({
+        received: true,
+        paymentConfirmed: true,
+        esimOrdered: false,
+        fulfillmentFailed: true,
+        referenceNumber:
+          order.referenceNumber,
+      });
+    }
   } catch (error) {
     console.error(
       "PAYMONGO WEBHOOK ERROR:",
