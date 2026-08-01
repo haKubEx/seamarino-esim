@@ -33,6 +33,12 @@ enum EsimStatus {
   FAILED
 }
 
+model AppSetting {
+  id           String   @id @default("main")
+  usdToPhpRate Float    @default(58)
+  updatedAt    DateTime @updatedAt
+}
+
 model Order {
   id              String @id @default(cuid())
   referenceNumber String @unique

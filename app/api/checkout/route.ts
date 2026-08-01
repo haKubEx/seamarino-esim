@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-
+import { getUsdToPhpRate } from "@/app/services/settings";
 import { prisma } from "@/app/lib/prisma";
 import { getSellingPrice } from "@/app/lib/pricing";
 import { getPlans } from "@/app/services/plans";
@@ -225,9 +225,8 @@ export async function POST(request: Request) {
           : "http://localhost:3000",
     );
 
-    const usdToPhpRate = Number(
-      process.env.USD_TO_PHP_RATE ?? "58",
-    );
+    const usdToPhpRate =
+  await getUsdToPhpRate();
 
     const databaseInformation =
       getSafeDatabaseInformation();

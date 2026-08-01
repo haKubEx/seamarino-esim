@@ -8,5 +8,6 @@
  *
  * 🟢 You can import this file directly.
  */
+export type * from './models/AppSetting'
 export type * from './models/Order'
 export type * from './commonInputTypes'

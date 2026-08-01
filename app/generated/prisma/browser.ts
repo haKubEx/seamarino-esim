@@ -18,6 +18,11 @@ export { Prisma }
 export * as $Enums from './enums'
 export * from './enums';
 /**
+ * Model AppSetting
+ * 
+ */
+export type AppSetting = Prisma.AppSettingModel
+/**
  * Model Order
  * 
  */
