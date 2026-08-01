@@ -262,12 +262,12 @@ export default function AdminDashboardPage() {
           />
 
           <DashboardCard
-            title="Plans"
-            description="Control which eSIM plans appear in your store and manage future pricing rules."
-            buttonLabel="Manage Plans"
-            icon="🌍"
-            disabled
-          />
+  title="Plans"
+  description="Control which eSIM plans appear in your store, change markup percentages, and choose featured packages."
+  href="/admin/plans"
+  buttonLabel="Manage Plans"
+  icon="🌍"
+/>
 
           <DashboardCard
             title="Customers"

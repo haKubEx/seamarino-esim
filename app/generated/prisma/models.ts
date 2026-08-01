@@ -10,4 +10,5 @@
  */
 export type * from './models/AppSetting'
 export type * from './models/Order'
+export type * from './models/PlanSetting'
 export type * from './commonInputTypes'

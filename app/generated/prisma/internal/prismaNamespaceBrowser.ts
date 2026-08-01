@@ -52,7 +52,8 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   AppSetting: 'AppSetting',
-  Order: 'Order'
+  Order: 'Order',
+  PlanSetting: 'PlanSetting'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -131,6 +132,20 @@ export const OrderScalarFieldEnum = {
 } as const
 
 export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
+
+
+export const PlanSettingScalarFieldEnum = {
+  id: 'id',
+  packageCode: 'packageCode',
+  enabled: 'enabled',
+  featured: 'featured',
+  markupPercent: 'markupPercent',
+  customName: 'customName',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlanSettingScalarFieldEnum = (typeof PlanSettingScalarFieldEnum)[keyof typeof PlanSettingScalarFieldEnum]
 
 
 export const SortOrder = {

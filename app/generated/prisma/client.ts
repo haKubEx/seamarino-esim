@@ -51,3 +51,8 @@ export type AppSetting = Prisma.AppSettingModel
  * 
  */
 export type Order = Prisma.OrderModel
+/**
+ * Model PlanSetting
+ * 
+ */
+export type PlanSetting = Prisma.PlanSettingModel

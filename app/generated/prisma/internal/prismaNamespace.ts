@@ -398,7 +398,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   AppSetting: 'AppSetting',
-  Order: 'Order'
+  Order: 'Order',
+  PlanSetting: 'PlanSetting'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -414,7 +415,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "appSetting" | "order"
+    modelProps: "appSetting" | "order" | "planSetting"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -566,6 +567,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PlanSetting: {
+      payload: Prisma.$PlanSettingPayload<ExtArgs>
+      fields: Prisma.PlanSettingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PlanSettingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PlanSettingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>
+        }
+        findFirst: {
+          args: Prisma.PlanSettingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PlanSettingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>
+        }
+        findMany: {
+          args: Prisma.PlanSettingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>[]
+        }
+        create: {
+          args: Prisma.PlanSettingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>
+        }
+        createMany: {
+          args: Prisma.PlanSettingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PlanSettingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>[]
+        }
+        delete: {
+          args: Prisma.PlanSettingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>
+        }
+        update: {
+          args: Prisma.PlanSettingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>
+        }
+        deleteMany: {
+          args: Prisma.PlanSettingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PlanSettingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PlanSettingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>[]
+        }
+        upsert: {
+          args: Prisma.PlanSettingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSettingPayload>
+        }
+        aggregate: {
+          args: Prisma.PlanSettingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePlanSetting>
+        }
+        groupBy: {
+          args: Prisma.PlanSettingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlanSettingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PlanSettingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlanSettingCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -665,6 +740,20 @@ export const OrderScalarFieldEnum = {
 } as const
 
 export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
+
+
+export const PlanSettingScalarFieldEnum = {
+  id: 'id',
+  packageCode: 'packageCode',
+  enabled: 'enabled',
+  featured: 'featured',
+  markupPercent: 'markupPercent',
+  customName: 'customName',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlanSettingScalarFieldEnum = (typeof PlanSettingScalarFieldEnum)[keyof typeof PlanSettingScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -954,6 +1043,7 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   appSetting?: Prisma.AppSettingOmit
   order?: Prisma.OrderOmit
+  planSetting?: Prisma.PlanSettingOmit
 }
 
 /* Types for Logging */

@@ -109,3 +109,17 @@ model Order {
   @@index([esimStatus])
   @@index([createdAt])
 }
+
+model PlanSetting {
+  id            String   @id @default(cuid())
+  packageCode   String   @unique
+  enabled       Boolean  @default(true)
+  featured      Boolean  @default(false)
+  markupPercent Float    @default(20)
+  customName    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([enabled])
+  @@index([featured])
+}
