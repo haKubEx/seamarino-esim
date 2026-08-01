@@ -51,7 +51,9 @@ type PayMongoWebhookPayload = {
       type?: string;
       livemode?: boolean;
       created_at?: number;
+
       data?: CheckoutSessionResource;
+
       previous_data?: Record<string, unknown>;
     };
   };
@@ -200,7 +202,8 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: "Webhook secret is not configured.",
+          error:
+            "Webhook secret is not configured.",
         },
         { status: 500 },
       );
@@ -217,7 +220,8 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: "Missing PayMongo signature.",
+          error:
+            "Missing PayMongo signature.",
         },
         { status: 401 },
       );
@@ -270,7 +274,8 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: "Invalid webhook signature.",
+          error:
+            "Invalid webhook signature.",
         },
         { status: 401 },
       );
@@ -369,7 +374,8 @@ export async function POST(request: Request) {
     }
 
     /*
-     * Validate the payment before fulfillment.
+     * Confirm that the paid amount matches
+     * the order saved before checkout.
      */
     if (
       typeof paidAmount === "number" &&
@@ -396,6 +402,10 @@ export async function POST(request: Request) {
       );
     }
 
+    /*
+     * Confirm that PayMongo used the same
+     * currency stored on the order.
+     */
     if (
       paidCurrency &&
       paidCurrency.toUpperCase() !==
@@ -425,7 +435,7 @@ export async function POST(request: Request) {
     const now = new Date();
 
     /*
-     * Mark payment as paid first.
+     * Save the verified PayMongo payment.
      */
     if (order.paymentStatus !== "PAID") {
       await prisma.order.update({
@@ -444,23 +454,32 @@ export async function POST(request: Request) {
             paymentId ??
             order.paymongoPaymentId,
 
+          paymongoEventId:
+            payload.data?.id ??
+            order.paymongoEventId,
+
           paymentMethod:
             paymentMethod ??
             order.paymentMethod,
 
-          paidAt: order.paidAt ?? now,
+          paidAt:
+            order.paidAt ?? now,
+
           webhookReceivedAt: now,
+
           lastError: null,
         },
       });
     }
 
     /*
-     * If an eSIM order already exists, do not buy again.
+     * Do not purchase another profile if the
+     * supplier order already exists.
      */
     if (
       order.esimOrderId ||
       order.esimStatus === "ISSUED" ||
+      order.esimStatus === "DELIVERED" ||
       order.status === "COMPLETED"
     ) {
       console.info(
@@ -471,6 +490,8 @@ export async function POST(request: Request) {
             order.referenceNumber,
           esimOrderId:
             order.esimOrderId,
+          esimStatus:
+            order.esimStatus,
         },
       );
 
@@ -485,27 +506,34 @@ export async function POST(request: Request) {
     }
 
     /*
-     * Claim the paid order for fulfillment.
+     * Claim the order before contacting the
+     * supplier. This helps prevent duplicate
+     * purchases from repeated webhook events.
      */
     const claimResult =
       await prisma.order.updateMany({
         where: {
           id: order.id,
           paymentStatus: "PAID",
+
           esimStatus: {
             in: [
               "NOT_ORDERED",
               "FAILED",
             ],
           },
+
           esimOrderId: null,
         },
+
         data: {
           status: "PROCESSING",
           esimStatus: "PROCESSING",
+
           processingAttempts: {
             increment: 1,
           },
+
           lastAttemptAt: new Date(),
           lastError: null,
         },
@@ -537,13 +565,15 @@ export async function POST(request: Request) {
       );
 
     /*
-     * Save the transaction ID before calling the supplier.
-     * The same ID will be reused if fulfillment is retried.
+     * Save the transaction ID before contacting
+     * eSIM Access. The same transaction ID will
+     * be reused if fulfillment must be retried.
      */
     await prisma.order.update({
       where: {
         id: order.id,
       },
+
       data: {
         esimTransactionId:
           transactionId,
@@ -555,15 +585,27 @@ export async function POST(request: Request) {
         await purchaseEsimProfile({
           packageCode:
             order.packageCode,
+
           transactionId,
         });
 
+      /*
+       * Important:
+       * Do not save purchaseResult.rawResponse
+       * into esimRawResponse here.
+       *
+       * esimRawResponse is reserved for the
+       * actual profile query response containing
+       * ICCID, activation code and QR details.
+       */
       await prisma.order.update({
         where: {
           id: order.id,
         },
+
         data: {
           status: "PROCESSING",
+          paymentStatus: "PAID",
           esimStatus: "PROCESSING",
 
           esimOrderId:
@@ -571,11 +613,6 @@ export async function POST(request: Request) {
 
           esimTransactionId:
             purchaseResult.transactionId,
-
-          esimRawResponse:
-            JSON.stringify(
-              purchaseResult.rawResponse,
-            ).slice(0, 20000),
 
           lastError: null,
           lastAttemptAt: new Date(),
@@ -588,8 +625,10 @@ export async function POST(request: Request) {
           orderId: order.id,
           referenceNumber:
             order.referenceNumber,
+
           supplierOrderNo:
             purchaseResult.orderNo,
+
           transactionId:
             purchaseResult.transactionId,
         },
@@ -600,8 +639,10 @@ export async function POST(request: Request) {
         processed: true,
         paymentConfirmed: true,
         esimOrdered: true,
+
         referenceNumber:
           order.referenceNumber,
+
         supplierOrderNo:
           purchaseResult.orderNo,
       });
@@ -615,22 +656,26 @@ export async function POST(request: Request) {
           orderId: order.id,
           referenceNumber:
             order.referenceNumber,
+
           packageCode:
             order.packageCode,
+
           transactionId,
+
           error:
             purchaseErrorMessage,
         },
       );
 
       /*
-       * Payment remains PAID.
-       * Only the fulfillment status fails.
+       * Keep payment PAID because the customer
+       * successfully paid. Only fulfillment failed.
        */
       await prisma.order.update({
         where: {
           id: order.id,
         },
+
         data: {
           status: "FAILED",
           paymentStatus: "PAID",
@@ -648,14 +693,16 @@ export async function POST(request: Request) {
       });
 
       /*
-       * Return 200 so PayMongo does not repeatedly resend
-       * a valid paid event for a supplier-side problem.
+       * Return 200 so PayMongo does not repeatedly
+       * resend a valid paid event for a temporary
+       * supplier fulfillment problem.
        */
       return NextResponse.json({
         received: true,
         paymentConfirmed: true,
         esimOrdered: false,
         fulfillmentFailed: true,
+
         referenceNumber:
           order.referenceNumber,
       });
