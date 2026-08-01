@@ -30,6 +30,7 @@ export type OrderAvgAggregateOutputType = {
   sellingPriceUsd: number | null
   amountPhpCentavos: number | null
   usdToPhpRate: number | null
+  profileCheckAttempts: number | null
   emailAttempts: number | null
   processingAttempts: number | null
 }
@@ -38,6 +39,7 @@ export type OrderSumAggregateOutputType = {
   sellingPriceUsd: number | null
   amountPhpCentavos: number | null
   usdToPhpRate: number | null
+  profileCheckAttempts: number | null
   emailAttempts: number | null
   processingAttempts: number | null
 }
@@ -64,13 +66,20 @@ export type OrderMinAggregateOutputType = {
   paidAt: Date | null
   esimOrderId: string | null
   esimTransactionId: string | null
+  esimTranNo: string | null
   iccid: string | null
   qrCode: string | null
   qrCodeUrl: string | null
   activationCode: string | null
   smdpAddress: string | null
+  smdpStatus: string | null
+  supplierEsimStatus: string | null
+  apn: string | null
   esimRawResponse: string | null
   esimIssuedAt: Date | null
+  profileIssuedAt: Date | null
+  profileLastCheckedAt: Date | null
+  profileCheckAttempts: number | null
   emailSent: boolean | null
   emailSentAt: Date | null
   emailAttempts: number | null
@@ -107,13 +116,20 @@ export type OrderMaxAggregateOutputType = {
   paidAt: Date | null
   esimOrderId: string | null
   esimTransactionId: string | null
+  esimTranNo: string | null
   iccid: string | null
   qrCode: string | null
   qrCodeUrl: string | null
   activationCode: string | null
   smdpAddress: string | null
+  smdpStatus: string | null
+  supplierEsimStatus: string | null
+  apn: string | null
   esimRawResponse: string | null
   esimIssuedAt: Date | null
+  profileIssuedAt: Date | null
+  profileLastCheckedAt: Date | null
+  profileCheckAttempts: number | null
   emailSent: boolean | null
   emailSentAt: Date | null
   emailAttempts: number | null
@@ -150,13 +166,20 @@ export type OrderCountAggregateOutputType = {
   paidAt: number
   esimOrderId: number
   esimTransactionId: number
+  esimTranNo: number
   iccid: number
   qrCode: number
   qrCodeUrl: number
   activationCode: number
   smdpAddress: number
+  smdpStatus: number
+  supplierEsimStatus: number
+  apn: number
   esimRawResponse: number
   esimIssuedAt: number
+  profileIssuedAt: number
+  profileLastCheckedAt: number
+  profileCheckAttempts: number
   emailSent: number
   emailSentAt: number
   emailAttempts: number
@@ -177,6 +200,7 @@ export type OrderAvgAggregateInputType = {
   sellingPriceUsd?: true
   amountPhpCentavos?: true
   usdToPhpRate?: true
+  profileCheckAttempts?: true
   emailAttempts?: true
   processingAttempts?: true
 }
@@ -185,6 +209,7 @@ export type OrderSumAggregateInputType = {
   sellingPriceUsd?: true
   amountPhpCentavos?: true
   usdToPhpRate?: true
+  profileCheckAttempts?: true
   emailAttempts?: true
   processingAttempts?: true
 }
@@ -211,13 +236,20 @@ export type OrderMinAggregateInputType = {
   paidAt?: true
   esimOrderId?: true
   esimTransactionId?: true
+  esimTranNo?: true
   iccid?: true
   qrCode?: true
   qrCodeUrl?: true
   activationCode?: true
   smdpAddress?: true
+  smdpStatus?: true
+  supplierEsimStatus?: true
+  apn?: true
   esimRawResponse?: true
   esimIssuedAt?: true
+  profileIssuedAt?: true
+  profileLastCheckedAt?: true
+  profileCheckAttempts?: true
   emailSent?: true
   emailSentAt?: true
   emailAttempts?: true
@@ -254,13 +286,20 @@ export type OrderMaxAggregateInputType = {
   paidAt?: true
   esimOrderId?: true
   esimTransactionId?: true
+  esimTranNo?: true
   iccid?: true
   qrCode?: true
   qrCodeUrl?: true
   activationCode?: true
   smdpAddress?: true
+  smdpStatus?: true
+  supplierEsimStatus?: true
+  apn?: true
   esimRawResponse?: true
   esimIssuedAt?: true
+  profileIssuedAt?: true
+  profileLastCheckedAt?: true
+  profileCheckAttempts?: true
   emailSent?: true
   emailSentAt?: true
   emailAttempts?: true
@@ -297,13 +336,20 @@ export type OrderCountAggregateInputType = {
   paidAt?: true
   esimOrderId?: true
   esimTransactionId?: true
+  esimTranNo?: true
   iccid?: true
   qrCode?: true
   qrCodeUrl?: true
   activationCode?: true
   smdpAddress?: true
+  smdpStatus?: true
+  supplierEsimStatus?: true
+  apn?: true
   esimRawResponse?: true
   esimIssuedAt?: true
+  profileIssuedAt?: true
+  profileLastCheckedAt?: true
+  profileCheckAttempts?: true
   emailSent?: true
   emailSentAt?: true
   emailAttempts?: true
@@ -427,13 +473,20 @@ export type OrderGroupByOutputType = {
   paidAt: Date | null
   esimOrderId: string | null
   esimTransactionId: string | null
+  esimTranNo: string | null
   iccid: string | null
   qrCode: string | null
   qrCodeUrl: string | null
   activationCode: string | null
   smdpAddress: string | null
+  smdpStatus: string | null
+  supplierEsimStatus: string | null
+  apn: string | null
   esimRawResponse: string | null
   esimIssuedAt: Date | null
+  profileIssuedAt: Date | null
+  profileLastCheckedAt: Date | null
+  profileCheckAttempts: number
   emailSent: boolean
   emailSentAt: Date | null
   emailAttempts: number
@@ -493,13 +546,20 @@ export type OrderWhereInput = {
   paidAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   esimOrderId?: Prisma.StringNullableFilter<"Order"> | string | null
   esimTransactionId?: Prisma.StringNullableFilter<"Order"> | string | null
+  esimTranNo?: Prisma.StringNullableFilter<"Order"> | string | null
   iccid?: Prisma.StringNullableFilter<"Order"> | string | null
   qrCode?: Prisma.StringNullableFilter<"Order"> | string | null
   qrCodeUrl?: Prisma.StringNullableFilter<"Order"> | string | null
   activationCode?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpAddress?: Prisma.StringNullableFilter<"Order"> | string | null
+  smdpStatus?: Prisma.StringNullableFilter<"Order"> | string | null
+  supplierEsimStatus?: Prisma.StringNullableFilter<"Order"> | string | null
+  apn?: Prisma.StringNullableFilter<"Order"> | string | null
   esimRawResponse?: Prisma.StringNullableFilter<"Order"> | string | null
   esimIssuedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileIssuedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileLastCheckedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileCheckAttempts?: Prisma.IntFilter<"Order"> | number
   emailSent?: Prisma.BoolFilter<"Order"> | boolean
   emailSentAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   emailAttempts?: Prisma.IntFilter<"Order"> | number
@@ -536,13 +596,20 @@ export type OrderOrderByWithRelationInput = {
   paidAt?: Prisma.SortOrderInput | Prisma.SortOrder
   esimOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
   esimTransactionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  esimTranNo?: Prisma.SortOrderInput | Prisma.SortOrder
   iccid?: Prisma.SortOrderInput | Prisma.SortOrder
   qrCode?: Prisma.SortOrderInput | Prisma.SortOrder
   qrCodeUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   activationCode?: Prisma.SortOrderInput | Prisma.SortOrder
   smdpAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  smdpStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  supplierEsimStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  apn?: Prisma.SortOrderInput | Prisma.SortOrder
   esimRawResponse?: Prisma.SortOrderInput | Prisma.SortOrder
   esimIssuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileIssuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileLastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileCheckAttempts?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
@@ -582,13 +649,20 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   paymentMethod?: Prisma.StringNullableFilter<"Order"> | string | null
   paidAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   esimTransactionId?: Prisma.StringNullableFilter<"Order"> | string | null
+  esimTranNo?: Prisma.StringNullableFilter<"Order"> | string | null
   iccid?: Prisma.StringNullableFilter<"Order"> | string | null
   qrCode?: Prisma.StringNullableFilter<"Order"> | string | null
   qrCodeUrl?: Prisma.StringNullableFilter<"Order"> | string | null
   activationCode?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpAddress?: Prisma.StringNullableFilter<"Order"> | string | null
+  smdpStatus?: Prisma.StringNullableFilter<"Order"> | string | null
+  supplierEsimStatus?: Prisma.StringNullableFilter<"Order"> | string | null
+  apn?: Prisma.StringNullableFilter<"Order"> | string | null
   esimRawResponse?: Prisma.StringNullableFilter<"Order"> | string | null
   esimIssuedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileIssuedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileLastCheckedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileCheckAttempts?: Prisma.IntFilter<"Order"> | number
   emailSent?: Prisma.BoolFilter<"Order"> | boolean
   emailSentAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   emailAttempts?: Prisma.IntFilter<"Order"> | number
@@ -625,13 +699,20 @@ export type OrderOrderByWithAggregationInput = {
   paidAt?: Prisma.SortOrderInput | Prisma.SortOrder
   esimOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
   esimTransactionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  esimTranNo?: Prisma.SortOrderInput | Prisma.SortOrder
   iccid?: Prisma.SortOrderInput | Prisma.SortOrder
   qrCode?: Prisma.SortOrderInput | Prisma.SortOrder
   qrCodeUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   activationCode?: Prisma.SortOrderInput | Prisma.SortOrder
   smdpAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  smdpStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  supplierEsimStatus?: Prisma.SortOrderInput | Prisma.SortOrder
+  apn?: Prisma.SortOrderInput | Prisma.SortOrder
   esimRawResponse?: Prisma.SortOrderInput | Prisma.SortOrder
   esimIssuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileIssuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileLastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileCheckAttempts?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
@@ -676,13 +757,20 @@ export type OrderScalarWhereWithAggregatesInput = {
   paidAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   esimOrderId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   esimTransactionId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  esimTranNo?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   iccid?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   qrCode?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   qrCodeUrl?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   activationCode?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   smdpAddress?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  smdpStatus?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  supplierEsimStatus?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  apn?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   esimRawResponse?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   esimIssuedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  profileIssuedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  profileLastCheckedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  profileCheckAttempts?: Prisma.IntWithAggregatesFilter<"Order"> | number
   emailSent?: Prisma.BoolWithAggregatesFilter<"Order"> | boolean
   emailSentAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   emailAttempts?: Prisma.IntWithAggregatesFilter<"Order"> | number
@@ -719,13 +807,20 @@ export type OrderCreateInput = {
   paidAt?: Date | string | null
   esimOrderId?: string | null
   esimTransactionId?: string | null
+  esimTranNo?: string | null
   iccid?: string | null
   qrCode?: string | null
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
   esimRawResponse?: string | null
   esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
@@ -762,13 +857,20 @@ export type OrderUncheckedCreateInput = {
   paidAt?: Date | string | null
   esimOrderId?: string | null
   esimTransactionId?: string | null
+  esimTranNo?: string | null
   iccid?: string | null
   qrCode?: string | null
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
   esimRawResponse?: string | null
   esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
@@ -805,13 +907,20 @@ export type OrderUpdateInput = {
   paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -848,13 +957,20 @@ export type OrderUncheckedUpdateInput = {
   paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -891,13 +1007,20 @@ export type OrderCreateManyInput = {
   paidAt?: Date | string | null
   esimOrderId?: string | null
   esimTransactionId?: string | null
+  esimTranNo?: string | null
   iccid?: string | null
   qrCode?: string | null
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
   esimRawResponse?: string | null
   esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
@@ -934,13 +1057,20 @@ export type OrderUpdateManyMutationInput = {
   paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -977,13 +1107,20 @@ export type OrderUncheckedUpdateManyInput = {
   paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1020,13 +1157,20 @@ export type OrderCountOrderByAggregateInput = {
   paidAt?: Prisma.SortOrder
   esimOrderId?: Prisma.SortOrder
   esimTransactionId?: Prisma.SortOrder
+  esimTranNo?: Prisma.SortOrder
   iccid?: Prisma.SortOrder
   qrCode?: Prisma.SortOrder
   qrCodeUrl?: Prisma.SortOrder
   activationCode?: Prisma.SortOrder
   smdpAddress?: Prisma.SortOrder
+  smdpStatus?: Prisma.SortOrder
+  supplierEsimStatus?: Prisma.SortOrder
+  apn?: Prisma.SortOrder
   esimRawResponse?: Prisma.SortOrder
   esimIssuedAt?: Prisma.SortOrder
+  profileIssuedAt?: Prisma.SortOrder
+  profileLastCheckedAt?: Prisma.SortOrder
+  profileCheckAttempts?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
@@ -1045,6 +1189,7 @@ export type OrderAvgOrderByAggregateInput = {
   sellingPriceUsd?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  profileCheckAttempts?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
 }
@@ -1071,13 +1216,20 @@ export type OrderMaxOrderByAggregateInput = {
   paidAt?: Prisma.SortOrder
   esimOrderId?: Prisma.SortOrder
   esimTransactionId?: Prisma.SortOrder
+  esimTranNo?: Prisma.SortOrder
   iccid?: Prisma.SortOrder
   qrCode?: Prisma.SortOrder
   qrCodeUrl?: Prisma.SortOrder
   activationCode?: Prisma.SortOrder
   smdpAddress?: Prisma.SortOrder
+  smdpStatus?: Prisma.SortOrder
+  supplierEsimStatus?: Prisma.SortOrder
+  apn?: Prisma.SortOrder
   esimRawResponse?: Prisma.SortOrder
   esimIssuedAt?: Prisma.SortOrder
+  profileIssuedAt?: Prisma.SortOrder
+  profileLastCheckedAt?: Prisma.SortOrder
+  profileCheckAttempts?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
@@ -1114,13 +1266,20 @@ export type OrderMinOrderByAggregateInput = {
   paidAt?: Prisma.SortOrder
   esimOrderId?: Prisma.SortOrder
   esimTransactionId?: Prisma.SortOrder
+  esimTranNo?: Prisma.SortOrder
   iccid?: Prisma.SortOrder
   qrCode?: Prisma.SortOrder
   qrCodeUrl?: Prisma.SortOrder
   activationCode?: Prisma.SortOrder
   smdpAddress?: Prisma.SortOrder
+  smdpStatus?: Prisma.SortOrder
+  supplierEsimStatus?: Prisma.SortOrder
+  apn?: Prisma.SortOrder
   esimRawResponse?: Prisma.SortOrder
   esimIssuedAt?: Prisma.SortOrder
+  profileIssuedAt?: Prisma.SortOrder
+  profileLastCheckedAt?: Prisma.SortOrder
+  profileCheckAttempts?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
@@ -1139,6 +1298,7 @@ export type OrderSumOrderByAggregateInput = {
   sellingPriceUsd?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  profileCheckAttempts?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
 }
@@ -1215,13 +1375,20 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   paidAt?: boolean
   esimOrderId?: boolean
   esimTransactionId?: boolean
+  esimTranNo?: boolean
   iccid?: boolean
   qrCode?: boolean
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  smdpStatus?: boolean
+  supplierEsimStatus?: boolean
+  apn?: boolean
   esimRawResponse?: boolean
   esimIssuedAt?: boolean
+  profileIssuedAt?: boolean
+  profileLastCheckedAt?: boolean
+  profileCheckAttempts?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
@@ -1258,13 +1425,20 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   paidAt?: boolean
   esimOrderId?: boolean
   esimTransactionId?: boolean
+  esimTranNo?: boolean
   iccid?: boolean
   qrCode?: boolean
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  smdpStatus?: boolean
+  supplierEsimStatus?: boolean
+  apn?: boolean
   esimRawResponse?: boolean
   esimIssuedAt?: boolean
+  profileIssuedAt?: boolean
+  profileLastCheckedAt?: boolean
+  profileCheckAttempts?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
@@ -1301,13 +1475,20 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   paidAt?: boolean
   esimOrderId?: boolean
   esimTransactionId?: boolean
+  esimTranNo?: boolean
   iccid?: boolean
   qrCode?: boolean
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  smdpStatus?: boolean
+  supplierEsimStatus?: boolean
+  apn?: boolean
   esimRawResponse?: boolean
   esimIssuedAt?: boolean
+  profileIssuedAt?: boolean
+  profileLastCheckedAt?: boolean
+  profileCheckAttempts?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
@@ -1344,13 +1525,20 @@ export type OrderSelectScalar = {
   paidAt?: boolean
   esimOrderId?: boolean
   esimTransactionId?: boolean
+  esimTranNo?: boolean
   iccid?: boolean
   qrCode?: boolean
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  smdpStatus?: boolean
+  supplierEsimStatus?: boolean
+  apn?: boolean
   esimRawResponse?: boolean
   esimIssuedAt?: boolean
+  profileIssuedAt?: boolean
+  profileLastCheckedAt?: boolean
+  profileCheckAttempts?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
@@ -1365,7 +1553,7 @@ export type OrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "referenceNumber" | "packageCode" | "planName" | "customerName" | "customerEmail" | "customerPhone" | "sellingPriceUsd" | "amountPhpCentavos" | "usdToPhpRate" | "currency" | "status" | "paymentStatus" | "esimStatus" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "paymentMethod" | "paidAt" | "esimOrderId" | "esimTransactionId" | "iccid" | "qrCode" | "qrCodeUrl" | "activationCode" | "smdpAddress" | "esimRawResponse" | "esimIssuedAt" | "emailSent" | "emailSentAt" | "emailAttempts" | "processingAttempts" | "lastAttemptAt" | "lastError" | "webhookReceivedAt" | "completedAt" | "cancelledAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "referenceNumber" | "packageCode" | "planName" | "customerName" | "customerEmail" | "customerPhone" | "sellingPriceUsd" | "amountPhpCentavos" | "usdToPhpRate" | "currency" | "status" | "paymentStatus" | "esimStatus" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "paymentMethod" | "paidAt" | "esimOrderId" | "esimTransactionId" | "esimTranNo" | "iccid" | "qrCode" | "qrCodeUrl" | "activationCode" | "smdpAddress" | "smdpStatus" | "supplierEsimStatus" | "apn" | "esimRawResponse" | "esimIssuedAt" | "profileIssuedAt" | "profileLastCheckedAt" | "profileCheckAttempts" | "emailSent" | "emailSentAt" | "emailAttempts" | "processingAttempts" | "lastAttemptAt" | "lastError" | "webhookReceivedAt" | "completedAt" | "cancelledAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
 
 export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Order"
@@ -1392,13 +1580,20 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     paidAt: Date | null
     esimOrderId: string | null
     esimTransactionId: string | null
+    esimTranNo: string | null
     iccid: string | null
     qrCode: string | null
     qrCodeUrl: string | null
     activationCode: string | null
     smdpAddress: string | null
+    smdpStatus: string | null
+    supplierEsimStatus: string | null
+    apn: string | null
     esimRawResponse: string | null
     esimIssuedAt: Date | null
+    profileIssuedAt: Date | null
+    profileLastCheckedAt: Date | null
+    profileCheckAttempts: number
     emailSent: boolean
     emailSentAt: Date | null
     emailAttempts: number
@@ -1855,13 +2050,20 @@ export interface OrderFieldRefs {
   readonly paidAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly esimOrderId: Prisma.FieldRef<"Order", 'String'>
   readonly esimTransactionId: Prisma.FieldRef<"Order", 'String'>
+  readonly esimTranNo: Prisma.FieldRef<"Order", 'String'>
   readonly iccid: Prisma.FieldRef<"Order", 'String'>
   readonly qrCode: Prisma.FieldRef<"Order", 'String'>
   readonly qrCodeUrl: Prisma.FieldRef<"Order", 'String'>
   readonly activationCode: Prisma.FieldRef<"Order", 'String'>
   readonly smdpAddress: Prisma.FieldRef<"Order", 'String'>
+  readonly smdpStatus: Prisma.FieldRef<"Order", 'String'>
+  readonly supplierEsimStatus: Prisma.FieldRef<"Order", 'String'>
+  readonly apn: Prisma.FieldRef<"Order", 'String'>
   readonly esimRawResponse: Prisma.FieldRef<"Order", 'String'>
   readonly esimIssuedAt: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly profileIssuedAt: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly profileLastCheckedAt: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly profileCheckAttempts: Prisma.FieldRef<"Order", 'Int'>
   readonly emailSent: Prisma.FieldRef<"Order", 'Boolean'>
   readonly emailSentAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly emailAttempts: Prisma.FieldRef<"Order", 'Int'>

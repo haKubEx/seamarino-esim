@@ -37,6 +37,7 @@ export const EsimStatus = {
   NOT_ORDERED: 'NOT_ORDERED',
   PROCESSING: 'PROCESSING',
   ISSUED: 'ISSUED',
+  DELIVERED: 'DELIVERED',
   FAILED: 'FAILED'
 } as const
 

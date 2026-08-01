@@ -29,6 +29,7 @@ enum EsimStatus {
   NOT_ORDERED
   PROCESSING
   ISSUED
+  DELIVERED
   FAILED
 }
 
@@ -58,15 +59,26 @@ model Order {
   paymentMethod     String?
   paidAt            DateTime?
 
-  esimOrderId       String?   @unique
+  esimOrderId       String? @unique
   esimTransactionId String?
-  iccid             String?
-  qrCode            String?
-  qrCodeUrl         String?
-  activationCode    String?
-  smdpAddress       String?
-  esimRawResponse   String?
-  esimIssuedAt      DateTime?
+  esimTranNo        String?
+
+  iccid          String?
+  qrCode         String?
+  qrCodeUrl      String?
+  activationCode String?
+  smdpAddress    String?
+  smdpStatus     String?
+
+  supplierEsimStatus String?
+  apn                String?
+
+  esimRawResponse String?
+  esimIssuedAt    DateTime?
+
+  profileIssuedAt      DateTime?
+  profileLastCheckedAt DateTime?
+  profileCheckAttempts Int       @default(0)
 
   emailSent     Boolean   @default(false)
   emailSentAt   DateTime?
