@@ -8,29 +8,48 @@ export const dynamic = "force-dynamic";
 
 type PayMongoPayment = {
   id?: string;
+  type?: string;
   attributes?: {
     amount?: number;
     currency?: string;
     status?: string;
     source?: {
+      id?: string;
       type?: string;
     };
   };
 };
 
+type CheckoutSessionResource = {
+  id?: string;
+  type?: string;
+  attributes?: {
+    reference_number?: string;
+    status?: string;
+
+    payment_intent?: {
+      id?: string;
+      type?: string;
+    };
+
+    payments?: PayMongoPayment[];
+
+    metadata?: Record<string, string>;
+  };
+};
+
 type PayMongoWebhookPayload = {
   data?: {
+    id?: string;
     type?: string;
-    livemode?: boolean;
-    data?: {
-      id?: string;
-      attributes?: {
-        reference_number?: string;
-        payment_intent?: {
-          id?: string;
-        };
-        payments?: PayMongoPayment[];
-      };
+
+    attributes?: {
+      type?: string;
+      livemode?: boolean;
+      created_at?: number;
+
+      data?: CheckoutSessionResource;
+      previous_data?: Record<string, unknown>;
     };
   };
 };
@@ -42,20 +61,20 @@ type ParsedSignature = {
 };
 
 function parseSignatureHeader(
-  signatureHeader: string,
+  header: string,
 ): ParsedSignature | null {
   const values = new Map<string, string>();
 
-  for (const part of signatureHeader.split(",")) {
-    const trimmedPart = part.trim();
-    const separatorIndex = trimmedPart.indexOf("=");
+  for (const part of header.split(",")) {
+    const trimmed = part.trim();
+    const separatorIndex = trimmed.indexOf("=");
 
     if (separatorIndex === -1) {
       continue;
     }
 
-    const key = trimmedPart.slice(0, separatorIndex);
-    const value = trimmedPart.slice(separatorIndex + 1);
+    const key = trimmed.slice(0, separatorIndex);
+    const value = trimmed.slice(separatorIndex + 1);
 
     values.set(key, value);
   }
@@ -73,25 +92,20 @@ function parseSignatureHeader(
   };
 }
 
-function secureCompare(
-  expectedSignature: string,
-  receivedSignature: string,
+function safeCompare(
+  expected: string,
+  received: string,
 ) {
-  if (!expectedSignature || !receivedSignature) {
+  if (!expected || !received) {
     return false;
   }
 
-  const expectedBuffer = Buffer.from(
-    expectedSignature,
-    "utf8",
-  );
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  const receivedBuffer = Buffer.from(received, "utf8");
 
-  const receivedBuffer = Buffer.from(
-    receivedSignature,
-    "utf8",
-  );
-
-  if (expectedBuffer.length !== receivedBuffer.length) {
+  if (
+    expectedBuffer.length !== receivedBuffer.length
+  ) {
     return false;
   }
 
@@ -101,7 +115,7 @@ function secureCompare(
   );
 }
 
-function verifyPayMongoSignature({
+function verifySignature({
   rawBody,
   signatureHeader,
   webhookSecret,
@@ -112,17 +126,17 @@ function verifyPayMongoSignature({
   webhookSecret: string;
   liveMode: boolean;
 }) {
-  const parsedSignature =
+  const parsed =
     parseSignatureHeader(signatureHeader);
 
-  if (!parsedSignature) {
+  if (!parsed) {
     return false;
   }
 
   const signedPayload =
-    `${parsedSignature.timestamp}.${rawBody}`;
+    `${parsed.timestamp}.${rawBody}`;
 
-  const calculatedSignature = createHmac(
+  const expectedSignature = createHmac(
     "sha256",
     webhookSecret,
   )
@@ -130,22 +144,22 @@ function verifyPayMongoSignature({
     .digest("hex");
 
   const receivedSignature = liveMode
-    ? parsedSignature.liveSignature
-    : parsedSignature.testSignature;
+    ? parsed.liveSignature
+    : parsed.testSignature;
 
-  return secureCompare(
-    calculatedSignature,
+  return safeCompare(
+    expectedSignature,
     receivedSignature,
   );
 }
 
-function getPaidPayment(
+function findPaidPayment(
   payments: PayMongoPayment[] | undefined,
 ) {
   return payments?.find(
     (payment) =>
-      payment.attributes?.status?.toLowerCase() ===
-      "paid",
+      payment.attributes?.status
+        ?.toLowerCase() === "paid",
   );
 }
 
@@ -161,20 +175,27 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: "Webhook is not configured.",
+          error:
+            "Webhook secret is not configured.",
         },
         { status: 500 },
       );
     }
 
-    const signatureHeader = request.headers.get(
-      "paymongo-signature",
-    );
+    const signatureHeader =
+      request.headers.get(
+        "paymongo-signature",
+      );
 
     if (!signatureHeader) {
+      console.error(
+        "PayMongo signature header is missing.",
+      );
+
       return NextResponse.json(
         {
-          error: "Missing PayMongo signature.",
+          error:
+            "Missing PayMongo signature.",
         },
         { status: 401 },
       );
@@ -197,10 +218,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const liveMode = payload.data?.livemode === true;
+    const eventAttributes =
+      payload.data?.attributes;
+
+    const eventType =
+      eventAttributes?.type;
+
+    const liveMode =
+      eventAttributes?.livemode === true;
+
+    console.info("PAYMONGO WEBHOOK RECEIVED:", {
+      eventId: payload.data?.id,
+      eventType,
+      liveMode,
+    });
 
     const signatureIsValid =
-      verifyPayMongoSignature({
+      verifySignature({
         rawBody,
         signatureHeader,
         webhookSecret,
@@ -209,23 +243,27 @@ export async function POST(request: Request) {
 
     if (!signatureIsValid) {
       console.error(
-        "PayMongo webhook signature verification failed.",
+        "PayMongo webhook signature is invalid.",
       );
 
       return NextResponse.json(
         {
-          error: "Invalid webhook signature.",
+          error:
+            "Invalid webhook signature.",
         },
         { status: 401 },
       );
     }
 
-    const eventType = payload.data?.type;
-
     if (
       eventType !==
       "checkout_session.payment.paid"
     ) {
+      console.info(
+        "Ignoring PayMongo event:",
+        eventType,
+      );
+
       return NextResponse.json({
         received: true,
         ignored: true,
@@ -233,20 +271,32 @@ export async function POST(request: Request) {
       });
     }
 
-    const checkoutSession = payload.data?.data;
-    const attributes = checkoutSession?.attributes;
+    const checkoutSession =
+      eventAttributes?.data;
 
-    const checkoutSessionId = checkoutSession?.id;
+    const checkoutAttributes =
+      checkoutSession?.attributes;
+
+    const checkoutSessionId =
+      checkoutSession?.id;
+
     const referenceNumber =
-      attributes?.reference_number;
+      checkoutAttributes?.reference_number;
 
-    const paidPayment = getPaidPayment(
-      attributes?.payments,
-    );
+    const metadata =
+      checkoutAttributes?.metadata;
+
+    const metadataOrderId =
+      metadata?.order_id;
+
+    const paidPayment =
+      findPaidPayment(
+        checkoutAttributes?.payments,
+      );
 
     const paymentId =
       paidPayment?.id ??
-      attributes?.payment_intent?.id;
+      checkoutAttributes?.payment_intent?.id;
 
     const paymentMethod =
       paidPayment?.attributes?.source?.type;
@@ -257,27 +307,55 @@ export async function POST(request: Request) {
     const paidCurrency =
       paidPayment?.attributes?.currency;
 
-    if (!referenceNumber) {
+    console.info(
+      "PAYMONGO PAID SESSION DETAILS:",
+      {
+        checkoutSessionId,
+        referenceNumber,
+        metadataOrderId,
+        paymentId,
+        paymentMethod,
+        paidAmount,
+        paidCurrency,
+      },
+    );
+
+    if (
+      !referenceNumber &&
+      !metadataOrderId
+    ) {
+      console.error(
+        "Webhook has no reference number or order ID.",
+      );
+
       return NextResponse.json(
         {
           error:
-            "Webhook does not contain an order reference.",
+            "Webhook does not identify an order.",
         },
         { status: 400 },
       );
     }
 
-    const order = await prisma.order.findUnique({
-      where: {
-        referenceNumber,
-      },
-    });
+    const order = metadataOrderId
+      ? await prisma.order.findUnique({
+          where: {
+            id: metadataOrderId,
+          },
+        })
+      : await prisma.order.findUnique({
+          where: {
+            referenceNumber:
+              referenceNumber as string,
+          },
+        });
 
     if (!order) {
       console.error(
-        "Order not found for PayMongo webhook.",
+        "Order not found for paid webhook:",
         {
           referenceNumber,
+          metadataOrderId,
           checkoutSessionId,
         },
       );
@@ -296,17 +374,37 @@ export async function POST(request: Request) {
       order.status === "PROCESSING" ||
       order.status === "COMPLETED"
     ) {
+      console.info(
+        "Duplicate paid webhook ignored:",
+        {
+          orderId: order.id,
+          referenceNumber:
+            order.referenceNumber,
+        },
+      );
+
       return NextResponse.json({
         received: true,
         duplicate: true,
-        referenceNumber,
+        referenceNumber:
+          order.referenceNumber,
       });
     }
 
     if (
       typeof paidAmount === "number" &&
-      paidAmount !== order.amountPhpCentavos
+      paidAmount !==
+        order.amountPhpCentavos
     ) {
+      console.error(
+        "Paid amount does not match order:",
+        {
+          expected:
+            order.amountPhpCentavos,
+          received: paidAmount,
+        },
+      );
+
       await prisma.order.update({
         where: {
           id: order.id,
@@ -315,14 +413,16 @@ export async function POST(request: Request) {
           status: "FAILED",
           paymentStatus: "FAILED",
           lastError:
-            "Payment amount did not match the order amount.",
-          webhookReceivedAt: new Date(),
+            "PayMongo payment amount did not match the order amount.",
+          webhookReceivedAt:
+            new Date(),
         },
       });
 
       return NextResponse.json(
         {
-          error: "Payment amount mismatch.",
+          error:
+            "Payment amount mismatch.",
         },
         { status: 400 },
       );
@@ -341,14 +441,16 @@ export async function POST(request: Request) {
           status: "FAILED",
           paymentStatus: "FAILED",
           lastError:
-            "Payment currency did not match the order currency.",
-          webhookReceivedAt: new Date(),
+            "PayMongo payment currency did not match the order currency.",
+          webhookReceivedAt:
+            new Date(),
         },
       });
 
       return NextResponse.json(
         {
-          error: "Payment currency mismatch.",
+          error:
+            "Payment currency mismatch.",
         },
         { status: 400 },
       );
@@ -363,15 +465,19 @@ export async function POST(request: Request) {
       data: {
         status: "PAID",
         paymentStatus: "PAID",
+
         paymongoSessionId:
           checkoutSessionId ??
           order.paymongoSessionId,
+
         paymongoPaymentId:
           paymentId ??
           order.paymongoPaymentId,
+
         paymentMethod:
           paymentMethod ??
           order.paymentMethod,
+
         paidAt: now,
         webhookReceivedAt: now,
         lastError: null,
@@ -379,30 +485,32 @@ export async function POST(request: Request) {
     });
 
     console.info(
-      "PayMongo payment confirmed.",
+      "ORDER MARKED AS PAID:",
       {
-        referenceNumber,
+        orderId: order.id,
+        referenceNumber:
+          order.referenceNumber,
         checkoutSessionId,
         paymentId,
-        paymentMethod,
       },
     );
 
     return NextResponse.json({
       received: true,
       processed: true,
-      referenceNumber,
+      referenceNumber:
+        order.referenceNumber,
     });
   } catch (error) {
     console.error(
-      "PayMongo webhook processing error:",
+      "PAYMONGO WEBHOOK ERROR:",
       error,
     );
 
     return NextResponse.json(
       {
         error:
-          "Something went wrong while processing the webhook.",
+          "Webhook processing failed.",
       },
       { status: 500 },
     );
