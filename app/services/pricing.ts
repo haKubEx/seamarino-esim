@@ -245,7 +245,7 @@ export async function calculatePlanPrice(
    */
   const supplierCostUsd =
     roundCurrency(
-      rawSupplierPrice / 1000,
+      rawSupplierPrice / 10000,
     );
 
   const volumeBytes =

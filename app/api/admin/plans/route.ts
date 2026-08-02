@@ -80,19 +80,25 @@ function getBaseUrl() {
 }
 
 function getSupplierCostUsd(plan: SupplierPlan) {
-  const price = Number(plan.price);
+  const rawPrice = Number(plan.price);
 
-  if (!Number.isFinite(price) || price < 0) {
+  if (
+    !Number.isFinite(rawPrice) ||
+    rawPrice < 0
+  ) {
     return 0;
   }
 
   /*
-   * eSIM Access prices are commonly returned
-   * in thousandths of USD.
+   * eSIM Access package prices use:
+   * 10000 = $1.00 USD.
    */
-  return price / 1000;
+  return (
+    Math.round(
+      (rawPrice / 10000) * 100,
+    ) / 100
+  );
 }
-
 function getLocationName(plan: SupplierPlan) {
   if (plan.location?.trim()) {
     return plan.location.trim();
