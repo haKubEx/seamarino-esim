@@ -1,22 +1,54 @@
 import Link from "next/link";
 
 import { getCountryName } from "@/app/lib/countries";
-import { getSellingPrice } from "@/app/lib/pricing";
 import type { EsimPackage } from "@/app/types/esim";
 
-function formatGB(bytes: number) {
-  const gb = bytes / 1024 / 1024 / 1024;
+type StorefrontPlan = EsimPackage & {
+  displayName?: string;
+  sellingPriceUsd?: number;
+  sellingPricePhp?: number;
+  amountPhpCentavos?: number;
+  featured?: boolean;
+  enabled?: boolean;
+  isLocalPlan?: boolean;
+  markupAmountUsd?: number;
+  supplierCostUsd?: number;
+  volumeGb?: number;
+  volumeMb?: number;
+};
 
-  if (gb < 1) {
-    const mb = bytes / 1024 / 1024;
-    return `${Math.round(mb)} MB`;
+function formatData(bytes: number) {
+  if (
+    !Number.isFinite(bytes) ||
+    bytes <= 0
+  ) {
+    return "Data plan";
   }
 
-  return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`;
+  const megabytes =
+    bytes / 1024 / 1024;
+
+  const gigabytes =
+    bytes / 1024 / 1024 / 1024;
+
+  if (gigabytes < 1) {
+    return `${Math.round(megabytes)} MB`;
+  }
+
+  return `${
+    Number.isInteger(gigabytes)
+      ? gigabytes
+      : gigabytes.toFixed(1)
+  } GB`;
 }
 
-function formatDurationUnit(unit: string, duration: number) {
-  const normalized = unit.toLowerCase();
+function formatDurationUnit(
+  unit: string | undefined,
+  duration: number,
+) {
+  const normalized =
+    unit?.trim().toLowerCase() ||
+    "day";
 
   if (duration === 1) {
     return normalized.endsWith("s")
@@ -29,66 +61,168 @@ function formatDurationUnit(unit: string, duration: number) {
     : `${normalized}s`;
 }
 
-function formatNetwork(speed?: string) {
+function formatNetwork(
+  speed?: string,
+) {
   if (!speed?.trim()) {
     return "4G / LTE";
   }
 
-  return speed.replaceAll(",", " / ");
+  return speed.replaceAll(
+    ",",
+    " / ",
+  );
 }
 
-function getRegionName(plan: EsimPackage, locationCount: number) {
+function formatUsd(value: number) {
+  return new Intl.NumberFormat(
+    "en-US",
+    {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(value);
+}
+
+function formatPhp(value: number) {
+  return new Intl.NumberFormat(
+    "en-PH",
+    {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(value);
+}
+
+function getLocationCodes(
+  location: string | undefined,
+) {
+  if (!location?.trim()) {
+    return [];
+  }
+
+  return location
+    .split(",")
+    .map((code) =>
+      code.trim(),
+    )
+    .filter(Boolean);
+}
+
+function getRegionName(
+  plan: StorefrontPlan,
+  locationCount: number,
+) {
   const combinedText = [
+    plan.displayName,
     plan.name,
     plan.description,
     plan.saleNote,
+    plan.location,
+    plan.locationCode,
   ]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
 
-  if (combinedText.includes("global")) {
+  if (
+    combinedText.includes(
+      "global",
+    ) ||
+    combinedText.includes(
+      "worldwide",
+    )
+  ) {
     return "Global eSIM";
   }
 
-  if (combinedText.includes("europe")) {
+  if (
+    combinedText.includes(
+      "europe",
+    )
+  ) {
     return "Europe eSIM";
   }
 
-  if (combinedText.includes("asia")) {
+  if (
+    combinedText.includes(
+      "asia",
+    )
+  ) {
     return "Asia eSIM";
   }
 
-  if (combinedText.includes("africa")) {
+  if (
+    combinedText.includes(
+      "africa",
+    )
+  ) {
     return "Africa eSIM";
   }
 
   if (
-    combinedText.includes("middle east") ||
-    combinedText.includes("mideast")
+    combinedText.includes(
+      "middle east",
+    ) ||
+    combinedText.includes(
+      "mideast",
+    )
   ) {
     return "Middle East eSIM";
   }
 
   if (
-    combinedText.includes("north america") ||
-    combinedText.includes("usa canada")
+    combinedText.includes(
+      "north america",
+    ) ||
+    combinedText.includes(
+      "usa canada",
+    )
   ) {
     return "North America eSIM";
   }
 
   if (
-    combinedText.includes("south america") ||
-    combinedText.includes("latin america")
+    combinedText.includes(
+      "south america",
+    ) ||
+    combinedText.includes(
+      "latin america",
+    )
   ) {
     return "South America eSIM";
   }
 
   if (
-    combinedText.includes("caribbean") ||
-    combinedText.includes("balkan")
+    combinedText.includes(
+      "caribbean",
+    )
   ) {
-    return plan.name || "Regional eSIM";
+    return "Caribbean eSIM";
+  }
+
+  if (
+    combinedText.includes(
+      "balkan",
+    )
+  ) {
+    return "Balkans eSIM";
+  }
+
+  if (
+    combinedText.includes(
+      "combo",
+    )
+  ) {
+    return (
+      plan.displayName ||
+      plan.name ||
+      "Combo eSIM"
+    );
   }
 
   return `${locationCount}-Country eSIM`;
@@ -109,7 +243,10 @@ function DataIcon() {
         strokeLinejoin="round"
       />
 
-      <path d="M14 3v5h5" strokeLinejoin="round" />
+      <path
+        d="M14 3v5h5"
+        strokeLinejoin="round"
+      />
 
       <path
         d="M10 12h4M10 15h4"
@@ -129,7 +266,13 @@ function CalendarIcon() {
       className="h-5 w-5"
       aria-hidden="true"
     >
-      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <rect
+        x="3"
+        y="5"
+        width="18"
+        height="16"
+        rx="2"
+      />
 
       <path
         d="M8 3v4M16 3v4M3 10h18"
@@ -150,11 +293,8 @@ function SignalIcon() {
       aria-hidden="true"
     >
       <path d="M5 18h2v2H5v-2Z" />
-
       <path d="M9 14h2v6H9v-6Z" />
-
       <path d="M13 10h2v10h-2V10Z" />
-
       <path d="M17 6h2v14h-2V6Z" />
     </svg>
   );
@@ -182,29 +322,97 @@ function ArrowIcon() {
 export default function PlanCard({
   plan,
 }: {
-  plan: EsimPackage;
+  plan: StorefrontPlan;
 }) {
-  const locations = plan.location
-    .split(",")
-    .map((code) => code.trim())
-    .filter(Boolean);
+  const locations =
+    getLocationCodes(
+      plan.location,
+    );
 
-  const isRegion = locations.length > 1;
-  const countryCode = locations[0] ?? "";
+  const locationCount =
+    locations.length;
 
-  const destinationName = isRegion
-    ? getRegionName(plan, locations.length)
-    : getCountryName(countryCode);
+  const isRegion =
+    plan.isLocalPlan === false ||
+    locationCount > 1;
 
-  const sellingPrice = getSellingPrice(
-    plan.price,
-    plan.volume,
-  );
+  const countryCode =
+    locations[0] ||
+    plan.locationCode?.trim() ||
+    "";
 
-  const formattedValidity = `${plan.duration} ${formatDurationUnit(
-    plan.durationUnit,
-    plan.duration,
-  )}`;
+  const destinationName =
+    isRegion
+      ? getRegionName(
+          plan,
+          locationCount,
+        )
+      : getCountryName(
+          countryCode,
+        );
+
+  const planName =
+    plan.displayName?.trim() ||
+    plan.name?.trim() ||
+    `${destinationName} mobile data plan`;
+
+  const rawDuration =
+    Number(plan.duration);
+
+  const duration =
+    Number.isFinite(
+      rawDuration,
+    ) &&
+    rawDuration > 0
+      ? rawDuration
+      : 1;
+
+  const formattedValidity =
+    `${duration} ${formatDurationUnit(
+      plan.durationUnit,
+      duration,
+    )}`;
+
+  const sellingPricePhp =
+    Number(
+      plan.sellingPricePhp,
+    );
+
+  const sellingPriceUsd =
+    Number(
+      plan.sellingPriceUsd,
+    );
+
+  const amountPhpCentavos =
+    Number(
+      plan.amountPhpCentavos,
+    );
+
+  const validPhpPrice =
+    Number.isFinite(
+      sellingPricePhp,
+    ) &&
+    sellingPricePhp > 0
+      ? sellingPricePhp
+      : Number.isFinite(
+            amountPhpCentavos,
+          ) &&
+          amountPhpCentavos > 0
+        ? amountPhpCentavos /
+          100
+        : 0;
+
+  const validUsdPrice =
+    Number.isFinite(
+      sellingPriceUsd,
+    ) &&
+    sellingPriceUsd > 0
+      ? sellingPriceUsd
+      : 0;
+
+  const isFeatured =
+    plan.featured === true ||
+    plan.favorite === true;
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-2 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-950/10">
@@ -213,11 +421,14 @@ export default function PlanCard({
         aria-hidden="true"
       />
 
-      {plan.favorite && (
+      {isFeatured && (
         <div className="absolute right-4 top-4 z-10">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-black text-amber-800 shadow-sm">
-            <span aria-hidden="true">★</span>
-            Popular
+            <span aria-hidden="true">
+              ★
+            </span>
+
+            Featured
           </span>
         </div>
       )}
@@ -227,7 +438,9 @@ export default function PlanCard({
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
             {isRegion ? (
               <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sky-100 to-blue-100 text-3xl">
-                <span aria-hidden="true">🌍</span>
+                <span aria-hidden="true">
+                  🌍
+                </span>
               </div>
             ) : countryCode ? (
               <img
@@ -237,7 +450,10 @@ export default function PlanCard({
                 loading="lazy"
               />
             ) : (
-              <span className="text-3xl" aria-hidden="true">
+              <span
+                className="text-3xl"
+                aria-hidden="true"
+              >
                 🌐
               </span>
             )}
@@ -246,7 +462,9 @@ export default function PlanCard({
           <div className="min-w-0 pt-1">
             <p className="text-xs font-black uppercase tracking-[0.17em] text-blue-600">
               {isRegion
-                ? `${locations.length} countries`
+                ? locationCount > 1
+                  ? `${locationCount} countries`
+                  : "Regional eSIM"
                 : "Local eSIM"}
             </p>
 
@@ -258,7 +476,7 @@ export default function PlanCard({
 
         <div className="mt-5 min-h-[52px]">
           <p className="line-clamp-2 text-sm font-medium leading-6 text-slate-600">
-            {plan.name || `${destinationName} mobile data plan`}
+            {planName}
           </p>
         </div>
 
@@ -273,7 +491,9 @@ export default function PlanCard({
             </p>
 
             <p className="mt-1 truncate text-sm font-black text-slate-950">
-              {formatGB(plan.volume)}
+              {formatData(
+                plan.volume,
+              )}
             </p>
           </div>
 
@@ -302,9 +522,13 @@ export default function PlanCard({
 
             <p
               className="mt-1 truncate text-sm font-black text-slate-950"
-              title={formatNetwork(plan.speed)}
+              title={formatNetwork(
+                plan.speed,
+              )}
             >
-              {formatNetwork(plan.speed)}
+              {formatNetwork(
+                plan.speed,
+              )}
             </p>
           </div>
         </div>
@@ -318,6 +542,12 @@ export default function PlanCard({
           <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
             Digital eSIM
           </span>
+
+          {!isRegion && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-bold text-violet-700">
+              Local plan
+            </span>
+          )}
         </div>
 
         <div className="mt-auto pt-6">
@@ -327,15 +557,30 @@ export default function PlanCard({
                 Price
               </p>
 
-              <div className="mt-1 flex items-end gap-1.5">
-                <span className="text-3xl font-black tracking-tight text-[#0A2D62]">
-                  ${sellingPrice}
-                </span>
+              {validPhpPrice > 0 ? (
+                <>
+                  <div className="mt-1">
+                    <span className="text-3xl font-black tracking-tight text-[#0A2D62]">
+                      {formatPhp(
+                        validPhpPrice,
+                      )}
+                    </span>
+                  </div>
 
-                <span className="pb-1 text-xs font-bold text-slate-500">
-                  USD
-                </span>
-              </div>
+                  {validUsdPrice > 0 && (
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                      About{" "}
+                      {formatUsd(
+                        validUsdPrice,
+                      )}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="mt-1 text-lg font-black text-slate-700">
+                  Price unavailable
+                </p>
+              )}
             </div>
 
             <div className="text-right">
@@ -350,7 +595,9 @@ export default function PlanCard({
           </div>
 
           <Link
-            href={`/shop/${encodeURIComponent(plan.packageCode)}`}
+            href={`/shop/${encodeURIComponent(
+              plan.packageCode,
+            )}`}
             aria-label={`View ${destinationName} eSIM plan`}
             className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0A2D62] to-blue-700 px-5 py-4 text-sm font-black text-white shadow-lg shadow-blue-950/15 transition duration-300 hover:from-blue-800 hover:to-blue-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-100"
           >
