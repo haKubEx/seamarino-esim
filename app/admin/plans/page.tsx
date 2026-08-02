@@ -514,9 +514,18 @@ export default function AdminPlansPage() {
                       {plan.displayName}
                     </h2>
 
-                    <p className="mt-1 text-slate-500">
-                      {plan.locationName}
-                    </p>
+                    <div className="mt-2 max-w-full">
+  <p
+    className="truncate text-slate-500"
+    title={plan.locationName}
+  >
+    {plan.isGlobalPlan
+      ? "120+ countries and regions"
+      : plan.locationName.includes(",")
+        ? `${plan.locationName.split(",").length} countries covered`
+        : plan.locationName}
+  </p>
+</div>
 
                     <p className="mt-3 text-sm font-semibold text-slate-500">
                       {formatVolume(
