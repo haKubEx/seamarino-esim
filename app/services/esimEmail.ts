@@ -420,7 +420,7 @@ function createEmailHtml(
                       "
                     >
                       <a
-                        href="https://seamarinoesim.vercel.app/contact"
+                        href="https://www.seamarinoesim.com/contact"
                         style="
                           display: inline-block;
                           border-radius: 14px;
