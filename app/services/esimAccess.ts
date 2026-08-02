@@ -4,19 +4,30 @@ import crypto from "crypto";
 
 import type { EsimPackage } from "@/app/types/esim";
 
-type EsimAccessResponse = {
+type EsimAccessPackageListResponse = {
   success?: boolean;
   errorCode?: string;
   errorMsg?: string;
+
   obj?: {
     packageList?: unknown[];
   };
+
   packageList?: unknown[];
 };
 
-function getEsimAccessConfig() {
-  const accessCode = process.env.ESIM_ACCESS_CODE?.trim();
-  const secretKey = process.env.ESIM_SECRET_KEY?.trim();
+type EsimAccessConfig = {
+  accessCode: string;
+  secretKey: string;
+  baseUrl: string;
+};
+
+function getEsimAccessConfig(): EsimAccessConfig {
+  const accessCode =
+    process.env.ESIM_ACCESS_CODE?.trim();
+
+  const secretKey =
+    process.env.ESIM_SECRET_KEY?.trim();
 
   const baseUrl = (
     process.env.ESIM_BASE_URL?.trim() ||
@@ -42,6 +53,60 @@ function getEsimAccessConfig() {
   };
 }
 
+function createSignature({
+  timestamp,
+  requestId,
+  accessCode,
+  requestBody,
+  secretKey,
+}: {
+  timestamp: string;
+  requestId: string;
+  accessCode: string;
+  requestBody: string;
+  secretKey: string;
+}) {
+  const signData =
+    timestamp +
+    requestId +
+    accessCode +
+    requestBody;
+
+  return crypto
+    .createHmac(
+      "sha256",
+      secretKey,
+    )
+    .update(signData)
+    .digest("hex")
+    .toLowerCase();
+}
+
+async function parseJsonResponse(
+  response: Response,
+): Promise<EsimAccessPackageListResponse> {
+  const responseText =
+    await response.text();
+
+  try {
+    return JSON.parse(
+      responseText,
+    ) as EsimAccessPackageListResponse;
+  } catch {
+    console.error(
+      "ESIM ACCESS INVALID JSON RESPONSE:",
+      {
+        status: response.status,
+        responseText,
+      },
+    );
+
+    throw new Error(
+      `eSIM Access returned invalid JSON with HTTP ${response.status}.`,
+    );
+  }
+}
+
 export async function fetchEsimAccessPlans(): Promise<
   EsimPackage[]
 > {
@@ -51,64 +116,75 @@ export async function fetchEsimAccessPlans(): Promise<
     baseUrl,
   } = getEsimAccessConfig();
 
-  const endpoint = `${baseUrl}/api/v1/open/package/list`;
+  const endpoint =
+    `${baseUrl}/api/v1/open/package/list`;
 
-  const requestBody = JSON.stringify({
-    type: "BASE",
-  });
+  const requestBody =
+    JSON.stringify({
+      type: "BASE",
+    });
 
-  const timestamp = Date.now().toString();
-  const requestId = crypto.randomUUID();
+  const timestamp =
+    Date.now().toString();
 
-  const signData =
-    timestamp +
-    requestId +
-    accessCode +
-    requestBody;
+  const requestId =
+    crypto.randomUUID();
 
-  const signature = crypto
-    .createHmac("sha256", secretKey)
-    .update(signData)
-    .digest("hex")
-    .toLowerCase();
+  const signature =
+    createSignature({
+      timestamp,
+      requestId,
+      accessCode,
+      requestBody,
+      secretKey,
+    });
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      "RT-AccessCode": accessCode,
-      "RT-RequestID": requestId,
-      "RT-Signature": signature,
-      "RT-Timestamp": timestamp,
-    },
-    body: requestBody,
-    cache: "no-store",
-  });
+  const response =
+    await fetch(endpoint, {
+      method: "POST",
 
-  const responseText = await response.text();
+      headers: {
+        Accept:
+          "application/json",
 
-  let data: EsimAccessResponse;
+        "Content-Type":
+          "application/json",
 
-  try {
-    data = JSON.parse(
-      responseText,
-    ) as EsimAccessResponse;
-  } catch {
-    console.error(
-      "Invalid eSIM Access response:",
-      responseText,
+        "RT-AccessCode":
+          accessCode,
+
+        "RT-RequestID":
+          requestId,
+
+        "RT-Signature":
+          signature,
+
+        "RT-Timestamp":
+          timestamp,
+      },
+
+      body:
+        requestBody,
+
+      cache:
+        "no-store",
+    });
+
+  const data =
+    await parseJsonResponse(
+      response,
     );
-
-    throw new Error(
-      `eSIM Access returned invalid JSON with HTTP ${response.status}.`,
-    );
-  }
 
   if (!response.ok) {
     console.error(
-      "eSIM Access HTTP error:",
-      data,
+      "ESIM ACCESS HTTP ERROR:",
+      {
+        status:
+          response.status,
+
+        response:
+          data,
+      },
     );
 
     throw new Error(
@@ -119,7 +195,7 @@ export async function fetchEsimAccessPlans(): Promise<
 
   if (data.success === false) {
     console.error(
-      "eSIM Access API error:",
+      "ESIM ACCESS API ERROR:",
       data,
     );
 
@@ -137,7 +213,7 @@ export async function fetchEsimAccessPlans(): Promise<
 
   if (!Array.isArray(packageList)) {
     console.error(
-      "Unexpected eSIM Access response:",
+      "ESIM ACCESS INVALID PACKAGE LIST:",
       data,
     );
 

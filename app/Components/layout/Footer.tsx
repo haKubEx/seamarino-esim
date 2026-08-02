@@ -200,7 +200,7 @@ export default function Footer() {
           <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
 
             <p className="text-center text-slate-400 lg:text-left">
-              © 2026 Seamarino eSIM. All Rights Reserved.
+              © 2025 Seamarino eSIM. All Rights Reserved.
             </p>
 
             <div className="flex flex-wrap justify-center gap-3">
