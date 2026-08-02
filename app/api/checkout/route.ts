@@ -111,9 +111,7 @@ function formatData(bytes: number) {
     const megabytes =
       bytes / 1024 / 1024;
 
-    return `${Math.round(
-      megabytes,
-    )} MB`;
+    return `${Math.round(megabytes)} MB`;
   }
 
   const formattedGigabytes =
@@ -252,15 +250,9 @@ function getSafeDatabaseInformation() {
       "unknown",
 
     usesLocalHost:
-      databaseUrl.includes(
-        "127.0.0.1",
-      ) ||
-      databaseUrl.includes(
-        "localhost",
-      ) ||
-      databaseUrl.startsWith(
-        "file:",
-      ),
+      databaseUrl.includes("127.0.0.1") ||
+      databaseUrl.includes("localhost") ||
+      databaseUrl.startsWith("file:"),
   };
 }
 
@@ -282,7 +274,7 @@ function findPlan(
   return plans.find(
     (plan) =>
       plan.packageCode.trim() ===
-      packageCode,
+      packageCode.trim(),
   );
 }
 
@@ -304,9 +296,7 @@ export async function POST(
     stage = "READ_ENVIRONMENT";
 
     const secretKey =
-      process.env
-        .PAYMONGO_SECRET_KEY
-        ?.trim();
+      process.env.PAYMONGO_SECRET_KEY?.trim();
 
     const appUrl = getAppUrl();
 
@@ -416,15 +406,11 @@ export async function POST(
     }
 
     const packageCode = String(
-      formData.get(
-        "packageCode",
-      ) ?? "",
+      formData.get("packageCode") ?? "",
     ).trim();
 
     const fullName = String(
-      formData.get(
-        "fullName",
-      ) ?? "",
+      formData.get("fullName") ?? "",
     ).trim();
 
     const email = String(
@@ -438,9 +424,8 @@ export async function POST(
     ).trim();
 
     const acceptedTerms =
-      formData.get(
-        "acceptedTerms",
-      ) === "on";
+      formData.get("acceptedTerms") ===
+      "on";
 
     if (!packageCode) {
       return NextResponse.json(
@@ -511,7 +496,7 @@ export async function POST(
     stage = "LOAD_PLANS";
 
     console.info(
-      "CHECKOUT: Loading plan",
+      "CHECKOUT: Loading selected plan",
       {
         packageCode,
       },
@@ -541,14 +526,12 @@ export async function POST(
       "LOAD_PLAN_SETTING";
 
     const planSetting =
-      await prisma.planSetting.findUnique(
-        {
-          where: {
-            packageCode:
-              plan.packageCode,
-          },
+      await prisma.planSetting.findUnique({
+        where: {
+          packageCode:
+            plan.packageCode,
         },
-      );
+      });
 
     if (
       planSetting?.enabled === false
@@ -573,13 +556,12 @@ export async function POST(
       "CALCULATE_PRICE";
 
     /*
-     * The price is calculated on the server.
-     * A price sent by the browser is never trusted.
+     * This calculates the price again on
+     * the server using the automatic local
+     * GB markup. The browser price is never trusted.
      */
     const pricing =
-      await calculatePlanPrice(
-        plan,
-      );
+      await calculatePlanPrice(plan);
 
     const sellingPriceUsd =
       pricing.sellingPriceUsd;
@@ -650,14 +632,29 @@ export async function POST(
       "CHECKOUT: Creating pending order",
       {
         referenceNumber,
+
         packageCode:
           plan.packageCode,
+
         planName,
+
+        supplierCostUsd:
+          pricing.supplierCostUsd,
+
+        isLocalPlan:
+          pricing.isLocalPlan,
+
+        volumeGb:
+          pricing.volumeGb,
+
+        markupAmountUsd:
+          pricing.markupAmountUsd,
+
         sellingPriceUsd,
+
         usdToPhpRate,
+
         amountInCentavos,
-        markupPercent:
-          pricing.markupPercent,
       },
     );
 
@@ -702,45 +699,32 @@ export async function POST(
     createdOrderId =
       order.id;
 
-    console.info(
-      "CHECKOUT: Order created",
-      {
-        orderId:
-          order.id,
-
-        referenceNumber,
-      },
-    );
-
     const authorization =
       Buffer.from(
         `${secretKey}:`,
       ).toString("base64");
 
-    const duration =
+    const rawDuration =
       Number(plan.duration);
 
-    const safeDuration =
-      Number.isFinite(duration) &&
-      duration > 0
-        ? duration
+    const duration =
+      Number.isFinite(rawDuration) &&
+      rawDuration > 0
+        ? rawDuration
         : 1;
 
     const validity =
-      `${safeDuration} ${formatDurationUnit(
+      `${duration} ${formatDurationUnit(
         plan.durationUnit,
-        safeDuration,
+        duration,
       )}`;
 
     const checkoutPayload = {
       data: {
         attributes: {
           billing: {
-            name:
-              fullName,
-
+            name: fullName,
             email,
-
             phone,
           },
 
@@ -834,8 +818,20 @@ export async function POST(
                 2,
               ),
 
-            markup_percent:
-              pricing.markupPercent.toString(),
+            local_plan:
+              pricing.isLocalPlan
+                ? "true"
+                : "false",
+
+            volume_gb:
+              pricing.volumeGb.toFixed(
+                2,
+              ),
+
+            markup_amount_usd:
+              pricing.markupAmountUsd.toFixed(
+                2,
+              ),
 
             selling_price_usd:
               sellingPriceUsd.toFixed(
@@ -922,9 +918,7 @@ export async function POST(
         paymongoResponse,
       );
 
-    if (
-      !paymongoResponse.ok
-    ) {
+    if (!paymongoResponse.ok) {
       const paymentError =
         getPayMongoErrorMessage(
           paymongoData,
@@ -932,8 +926,7 @@ export async function POST(
 
       await prisma.order.update({
         where: {
-          id:
-            order.id,
+          id: order.id,
         },
 
         data: {
@@ -1003,8 +996,7 @@ export async function POST(
 
       await prisma.order.update({
         where: {
-          id:
-            order.id,
+          id: order.id,
         },
 
         data: {
@@ -1031,8 +1023,7 @@ export async function POST(
             "The payment provider did not return a valid checkout link.",
         },
         {
-          status:
-            502,
+          status: 502,
         },
       );
     }
@@ -1042,8 +1033,7 @@ export async function POST(
 
     await prisma.order.update({
       where: {
-        id:
-          order.id,
+        id: order.id,
       },
 
       data: {
@@ -1078,8 +1068,14 @@ export async function POST(
         supplierCostUsd:
           pricing.supplierCostUsd,
 
-        markupPercent:
-          pricing.markupPercent,
+        isLocalPlan:
+          pricing.isLocalPlan,
+
+        volumeGb:
+          pricing.volumeGb,
+
+        markupAmountUsd:
+          pricing.markupAmountUsd,
 
         sellingPriceUsd,
 
@@ -1095,9 +1091,7 @@ export async function POST(
     );
   } catch (error) {
     const errorMessage =
-      getErrorMessage(
-        error,
-      );
+      getErrorMessage(error);
 
     console.error(
       "CHECKOUT ROUTE ERROR:",
@@ -1147,7 +1141,6 @@ export async function POST(
           "UNABLE TO SAVE CHECKOUT ERROR:",
           {
             createdOrderId,
-
             databaseError,
           },
         );
@@ -1166,8 +1159,7 @@ export async function POST(
             : undefined,
       },
       {
-        status:
-          500,
+        status: 500,
       },
     );
   }
