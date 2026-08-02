@@ -7,6 +7,7 @@ import type { EsimPackage } from "@/app/types/esim";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 type UpdatePlanBody = {
   packageCode?: unknown;
@@ -63,6 +64,14 @@ function getLocationName(
   return "Unknown";
 }
 
+function normalizeSearchValue(
+  value: unknown,
+) {
+  return typeof value === "string"
+    ? value.trim()
+    : "";
+}
+
 export async function GET(
   request: Request,
 ) {
@@ -71,7 +80,8 @@ export async function GET(
   }
 
   try {
-    const url = new URL(request.url);
+    const url =
+      new URL(request.url);
 
     const search =
       url.searchParams
@@ -85,143 +95,169 @@ export async function GET(
     const savedSettings =
       await prisma.planSetting.findMany();
 
-    const settingMap = new Map(
-      savedSettings.map((setting) => [
-        setting.packageCode,
-        setting,
-      ]),
-    );
+    const settingMap =
+      new Map(
+        savedSettings.map(
+          (setting) => [
+            setting.packageCode,
+            setting,
+          ],
+        ),
+      );
 
     const matchingPlans =
-      supplierPlans.filter((plan) => {
-        const packageCode =
-          plan.packageCode?.trim();
-
-        if (!packageCode) {
-          return false;
-        }
-
-        if (!search) {
-          return true;
-        }
-
-        const searchableText = [
-          packageCode,
-          plan.name,
-          plan.location,
-          plan.locationCode,
-          plan.description,
-          plan.saleNote,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        return searchableText.includes(
-          search,
-        );
-      });
-
-    const plans = await Promise.all(
-      matchingPlans.map(
-        async (plan) => {
+      supplierPlans.filter(
+        (plan) => {
           const packageCode =
-            plan.packageCode.trim();
+            plan.packageCode?.trim();
 
-          const setting =
-            settingMap.get(
-              packageCode,
-            );
+          if (!packageCode) {
+            return false;
+          }
 
-          const pricing =
-            await calculatePlanPrice(
-              plan,
-            );
+          if (!search) {
+            return true;
+          }
 
-          const displayName =
-            setting?.customName?.trim() ||
-            plan.name ||
-            packageCode;
-
-          return {
+          const searchableText = [
             packageCode,
+            normalizeSearchValue(
+              plan.name,
+            ),
+            normalizeSearchValue(
+              plan.location,
+            ),
+            normalizeSearchValue(
+              plan.locationCode,
+            ),
+            normalizeSearchValue(
+              plan.description,
+            ),
+            normalizeSearchValue(
+              plan.saleNote,
+            ),
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
 
-            supplierName:
+          return searchableText.includes(
+            search,
+          );
+        },
+      );
+
+    const plans =
+      await Promise.all(
+        matchingPlans.map(
+          async (plan) => {
+            const packageCode =
+              plan.packageCode.trim();
+
+            const setting =
+              settingMap.get(
+                packageCode,
+              );
+
+            const pricing =
+              await calculatePlanPrice(
+                plan,
+              );
+
+            const displayName =
+              setting?.customName?.trim() ||
               plan.name ||
+              packageCode;
+
+            return {
               packageCode,
 
-            displayName,
+              supplierName:
+                plan.name ||
+                packageCode,
 
-            customName:
-              setting?.customName ??
-              null,
+              displayName,
 
-            locationName:
-              getLocationName(plan),
+              customName:
+                setting?.customName ??
+                null,
 
-            locationCode:
-              plan.locationCode ??
-              null,
+              locationName:
+                getLocationName(plan),
 
-            volume:
-              plan.volume,
+              locationCode:
+                plan.locationCode ??
+                null,
 
-            duration:
-              plan.duration,
+              volume:
+                plan.volume,
 
-            durationUnit:
-              plan.durationUnit,
+              duration:
+                plan.duration,
 
-            enabled:
-              setting?.enabled ??
-              true,
+              durationUnit:
+                plan.durationUnit,
 
-            featured:
-              setting?.featured ??
-              false,
+              enabled:
+                setting?.enabled ??
+                true,
 
-            supplierCostUsd:
-              pricing.supplierCostUsd,
+              featured:
+                setting?.featured ??
+                false,
 
-            markupAmountUsd:
-              pricing.markupAmountUsd,
+              supplierCostUsd:
+                pricing.supplierCostUsd,
 
-            sellingPriceUsd:
-              pricing.sellingPriceUsd,
+              markupAmountUsd:
+                pricing.markupAmountUsd,
 
-            sellingPricePhp:
-              pricing.sellingPricePhp,
+              sellingPriceUsd:
+                pricing.sellingPriceUsd,
 
-            amountPhpCentavos:
-              pricing.amountPhpCentavos,
+              sellingPricePhp:
+                pricing.sellingPricePhp,
 
-            usdToPhpRate:
-              pricing.usdToPhpRate,
+              amountPhpCentavos:
+                pricing.amountPhpCentavos,
 
-            isLocalPlan:
-              pricing.isLocalPlan,
+              usdToPhpRate:
+                pricing.usdToPhpRate,
 
-            volumeGb:
-              pricing.volumeGb,
+              isGlobalPlan:
+                pricing.isGlobalPlan,
 
-            volumeMb:
-              pricing.volumeMb,
+              volumeGb:
+                pricing.volumeGb,
 
-            updatedAt:
-              setting?.updatedAt ??
-              null,
-          };
-        },
-      ),
-    );
+              volumeMb:
+                pricing.volumeMb,
+
+              updatedAt:
+                setting?.updatedAt ??
+                null,
+            };
+          },
+        ),
+      );
 
     plans.sort((a, b) => {
       if (
-        a.featured !== b.featured
+        a.featured !==
+        b.featured
       ) {
         return a.featured
           ? -1
           : 1;
+      }
+
+      if (
+        a.isGlobalPlan !==
+        b.isGlobalPlan
+      ) {
+        return a.isGlobalPlan
+          ? 1
+          : -1;
       }
 
       return a.displayName.localeCompare(
@@ -243,6 +279,7 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
+
         error:
           error instanceof Error
             ? error.message
@@ -314,6 +351,13 @@ export async function PUT(
           enabled,
           featured,
           customName,
+
+          /*
+           * The old percentage field is
+           * retained only for compatibility
+           * with the current Prisma model.
+           */
+          markupPercent: 0,
         },
 
         create: {
@@ -321,21 +365,16 @@ export async function PUT(
           enabled,
           featured,
           customName,
-
-          /*
-           * Keep this only because your
-           * existing Prisma model still
-           * contains markupPercent.
-           * It is no longer used for pricing.
-           */
           markupPercent: 0,
         },
       });
 
     return NextResponse.json({
       success: true,
+
       message:
         "Plan settings updated successfully.",
+
       setting,
     });
   } catch (error) {
@@ -347,6 +386,7 @@ export async function PUT(
     return NextResponse.json(
       {
         success: false,
+
         error:
           error instanceof Error
             ? error.message

@@ -230,28 +230,23 @@ function getPayMongoErrorMessage(
   );
 }
 
-function getSafeDatabaseInformation() {
+function getDatabaseInformation() {
   const databaseUrl =
     process.env.DATABASE_URL;
 
   if (!databaseUrl) {
     return {
       exists: false,
-      protocol: "missing",
-      usesLocalHost: false,
+      usesLocalDatabase: false,
     };
   }
 
   return {
     exists: true,
 
-    protocol:
-      databaseUrl.split(":")[0] ??
-      "unknown",
-
-    usesLocalHost:
-      databaseUrl.includes("127.0.0.1") ||
+    usesLocalDatabase:
       databaseUrl.includes("localhost") ||
+      databaseUrl.includes("127.0.0.1") ||
       databaseUrl.startsWith("file:"),
   };
 }
@@ -271,10 +266,13 @@ function findPlan(
   plans: EsimPackage[],
   packageCode: string,
 ) {
+  const normalizedPackageCode =
+    packageCode.trim();
+
   return plans.find(
     (plan) =>
       plan.packageCode.trim() ===
-      packageCode.trim(),
+      normalizedPackageCode,
   );
 }
 
@@ -295,43 +293,15 @@ export async function POST(
   try {
     stage = "READ_ENVIRONMENT";
 
-    const secretKey =
+    const paymongoSecretKey =
       process.env.PAYMONGO_SECRET_KEY?.trim();
 
     const appUrl = getAppUrl();
 
     const databaseInformation =
-      getSafeDatabaseInformation();
+      getDatabaseInformation();
 
-    console.info(
-      "CHECKOUT ENVIRONMENT CHECK:",
-      {
-        stage,
-        appUrl,
-
-        paymongoSecretExists:
-          Boolean(secretKey),
-
-        databaseUrlExists:
-          databaseInformation.exists,
-
-        databaseProtocol:
-          databaseInformation.protocol,
-
-        databaseUsesLocalHost:
-          databaseInformation
-            .usesLocalHost,
-
-        nodeEnvironment:
-          process.env.NODE_ENV,
-
-        vercelEnvironment:
-          process.env.VERCEL_ENV ??
-          "not-vercel",
-      },
-    );
-
-    if (!secretKey) {
+    if (!paymongoSecretKey) {
       console.error(
         "PAYMONGO_SECRET_KEY is missing.",
       );
@@ -364,7 +334,7 @@ export async function POST(
     }
 
     if (
-      databaseInformation.usesLocalHost
+      databaseInformation.usesLocalDatabase
     ) {
       console.error(
         "DATABASE_URL points to a local database.",
@@ -495,13 +465,6 @@ export async function POST(
 
     stage = "LOAD_PLANS";
 
-    console.info(
-      "CHECKOUT: Loading selected plan",
-      {
-        packageCode,
-      },
-    );
-
     const plans =
       await getPlans();
 
@@ -555,11 +518,6 @@ export async function POST(
     stage =
       "CALCULATE_PRICE";
 
-    /*
-     * This calculates the price again on
-     * the server using the automatic local
-     * GB markup. The browser price is never trusted.
-     */
     const pricing =
       await calculatePlanPrice(plan);
 
@@ -598,7 +556,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Payment conversion is temporarily unavailable.",
+            "The USD-to-PHP exchange rate is invalid.",
         },
         {
           status: 500,
@@ -626,7 +584,8 @@ export async function POST(
     referenceNumber =
       createReferenceNumber();
 
-    stage = "CREATE_ORDER";
+    stage =
+      "CREATE_ORDER";
 
     console.info(
       "CHECKOUT: Creating pending order",
@@ -641,11 +600,19 @@ export async function POST(
         supplierCostUsd:
           pricing.supplierCostUsd,
 
-        isLocalPlan:
-          pricing.isLocalPlan,
+        isGlobalPlan:
+          pricing.isGlobalPlan,
+
+        markupTable:
+          pricing.isGlobalPlan
+            ? "GLOBAL"
+            : "STANDARD",
 
         volumeGb:
           pricing.volumeGb,
+
+        volumeMb:
+          pricing.volumeMb,
 
         markupAmountUsd:
           pricing.markupAmountUsd,
@@ -684,9 +651,11 @@ export async function POST(
 
           usdToPhpRate,
 
-          currency: "PHP",
+          currency:
+            "PHP",
 
-          status: "PENDING",
+          status:
+            "PENDING",
 
           paymentStatus:
             "PENDING",
@@ -701,7 +670,7 @@ export async function POST(
 
     const authorization =
       Buffer.from(
-        `${secretKey}:`,
+        `${paymongoSecretKey}:`,
       ).toString("base64");
 
     const rawDuration =
@@ -723,8 +692,11 @@ export async function POST(
       data: {
         attributes: {
           billing: {
-            name: fullName,
+            name:
+              fullName,
+
             email,
+
             phone,
           },
 
@@ -818,13 +790,23 @@ export async function POST(
                 2,
               ),
 
-            local_plan:
-              pricing.isLocalPlan
+            global_plan:
+              pricing.isGlobalPlan
                 ? "true"
                 : "false",
 
+            markup_table:
+              pricing.isGlobalPlan
+                ? "global"
+                : "standard",
+
             volume_gb:
               pricing.volumeGb.toFixed(
+                2,
+              ),
+
+            volume_mb:
+              pricing.volumeMb.toFixed(
                 2,
               ),
 
@@ -861,36 +843,12 @@ export async function POST(
     stage =
       "CREATE_PAYMONGO_SESSION";
 
-    console.info(
-      "CHECKOUT: Creating PayMongo session",
-      {
-        orderId:
-          order.id,
-
-        referenceNumber,
-
-        paymentMethods:
-          getPaymentMethodTypes(),
-
-        successUrl:
-          checkoutPayload
-            .data
-            .attributes
-            .success_url,
-
-        cancelUrl:
-          checkoutPayload
-            .data
-            .attributes
-            .cancel_url,
-      },
-    );
-
     const paymongoResponse =
       await fetch(
         "https://api.paymongo.com/v2/checkout_sessions",
         {
-          method: "POST",
+          method:
+            "POST",
 
           headers: {
             Authorization:
@@ -926,7 +884,8 @@ export async function POST(
 
       await prisma.order.update({
         where: {
-          id: order.id,
+          id:
+            order.id,
         },
 
         data: {
@@ -937,26 +896,23 @@ export async function POST(
             new Date(),
 
           processingAttempts: {
-            increment: 1,
+            increment:
+              1,
           },
         },
       });
 
       console.error(
         "PAYMONGO CHECKOUT SESSION ERROR:",
-        JSON.stringify(
-          {
-            status:
-              paymongoResponse.status,
+        {
+          status:
+            paymongoResponse.status,
 
-            referenceNumber,
+          referenceNumber,
 
-            response:
-              paymongoData,
-          },
-          null,
-          2,
-        ),
+          response:
+            paymongoData,
+        },
       );
 
       return NextResponse.json(
@@ -996,7 +952,8 @@ export async function POST(
 
       await prisma.order.update({
         where: {
-          id: order.id,
+          id:
+            order.id,
         },
 
         data: {
@@ -1007,15 +964,11 @@ export async function POST(
             new Date(),
 
           processingAttempts: {
-            increment: 1,
+            increment:
+              1,
           },
         },
       });
-
-      console.error(
-        "PAYMONGO INVALID RESPONSE:",
-        paymongoData,
-      );
 
       return NextResponse.json(
         {
@@ -1023,7 +976,8 @@ export async function POST(
             "The payment provider did not return a valid checkout link.",
         },
         {
-          status: 502,
+          status:
+            502,
         },
       );
     }
@@ -1033,7 +987,8 @@ export async function POST(
 
     await prisma.order.update({
       where: {
-        id: order.id,
+        id:
+          order.id,
       },
 
       data: {
@@ -1068,11 +1023,19 @@ export async function POST(
         supplierCostUsd:
           pricing.supplierCostUsd,
 
-        isLocalPlan:
-          pricing.isLocalPlan,
+        isGlobalPlan:
+          pricing.isGlobalPlan,
+
+        markupTable:
+          pricing.isGlobalPlan
+            ? "GLOBAL"
+            : "STANDARD",
 
         volumeGb:
           pricing.volumeGb,
+
+        volumeMb:
+          pricing.volumeMb,
 
         markupAmountUsd:
           pricing.markupAmountUsd,
@@ -1132,7 +1095,8 @@ export async function POST(
               new Date(),
 
             processingAttempts: {
-              increment: 1,
+              increment:
+                1,
             },
           },
         });
@@ -1159,7 +1123,8 @@ export async function POST(
             : undefined,
       },
       {
-        status: 500,
+        status:
+          500,
       },
     );
   }
@@ -1175,10 +1140,12 @@ export async function GET() {
         "Open an eSIM plan and complete the checkout form.",
     },
     {
-      status: 405,
+      status:
+        405,
 
       headers: {
-        Allow: "POST",
+        Allow:
+          "POST",
       },
     },
   );

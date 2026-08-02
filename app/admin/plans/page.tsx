@@ -28,7 +28,8 @@ type AdminPlan = {
   amountPhpCentavos: number;
   usdToPhpRate: number;
 
-  isLocalPlan: boolean;
+  isGlobalPlan: boolean;
+
   volumeGb: number;
   volumeMb: number;
 
@@ -43,33 +44,45 @@ type PlansResponse = {
   error?: string;
 };
 
-function formatUsd(value: number) {
+function formatUsd(
+  value: number,
+) {
   if (!Number.isFinite(value)) {
     return "$0.00";
   }
 
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return new Intl.NumberFormat(
+    "en-US",
+    {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(value);
 }
 
-function formatPhp(value: number) {
+function formatPhp(
+  value: number,
+) {
   if (!Number.isFinite(value)) {
     return "₱0.00";
   }
 
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return new Intl.NumberFormat(
+    "en-PH",
+    {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(value);
 }
 
-function formatVolume(bytes: number) {
+function formatVolume(
+  bytes: number,
+) {
   if (
     !Number.isFinite(bytes) ||
     bytes <= 0
@@ -115,6 +128,20 @@ function formatDurationUnit(
     : `${normalized}s`;
 }
 
+function getSafeNumber(
+  value: unknown,
+  fallback = 0,
+) {
+  const numericValue =
+    Number(value);
+
+  return Number.isFinite(
+    numericValue,
+  )
+    ? numericValue
+    : fallback;
+}
+
 export default function AdminPlansPage() {
   const [adminKey, setAdminKey] =
     useState("");
@@ -150,6 +177,7 @@ export default function AdminPlansPage() {
       setError(
         "Enter your admin key.",
       );
+
       return;
     }
 
@@ -173,17 +201,19 @@ export default function AdminPlansPage() {
           ? `?${params.toString()}`
           : "";
 
-      const response = await fetch(
-        `/api/admin/plans${query}`,
-        {
-          method: "GET",
-          cache: "no-store",
-          headers: {
-            "x-admin-key":
-              adminKey.trim(),
+      const response =
+        await fetch(
+          `/api/admin/plans${query}`,
+          {
+            method: "GET",
+            cache: "no-store",
+
+            headers: {
+              "x-admin-key":
+                adminKey.trim(),
+            },
           },
-        },
-      );
+        );
 
       const data =
         (await response.json()) as PlansResponse;
@@ -198,7 +228,9 @@ export default function AdminPlansPage() {
         );
       }
 
-      setPlans(data.plans ?? []);
+      setPlans(
+        data.plans ?? [],
+      );
 
       setMessage(
         `${data.total ?? 0} plans loaded.`,
@@ -218,16 +250,18 @@ export default function AdminPlansPage() {
     packageCode: string,
     changes: Partial<AdminPlan>,
   ) {
-    setPlans((currentPlans) =>
-      currentPlans.map((plan) =>
-        plan.packageCode ===
-        packageCode
-          ? {
-              ...plan,
-              ...changes,
-            }
-          : plan,
-      ),
+    setPlans(
+      (currentPlans) =>
+        currentPlans.map(
+          (plan) =>
+            plan.packageCode ===
+            packageCode
+              ? {
+                  ...plan,
+                  ...changes,
+                }
+              : plan,
+        ),
     );
   }
 
@@ -238,6 +272,7 @@ export default function AdminPlansPage() {
       setError(
         "Enter your admin key.",
       );
+
       return;
     }
 
@@ -249,28 +284,35 @@ export default function AdminPlansPage() {
       setError("");
       setMessage("");
 
-      const response = await fetch(
-        "/api/admin/plans",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type":
-              "application/json",
-            "x-admin-key":
-              adminKey.trim(),
+      const response =
+        await fetch(
+          "/api/admin/plans",
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              "x-admin-key":
+                adminKey.trim(),
+            },
+
+            body: JSON.stringify({
+              packageCode:
+                plan.packageCode,
+
+              enabled:
+                plan.enabled,
+
+              featured:
+                plan.featured,
+
+              customName:
+                plan.customName,
+            }),
           },
-          body: JSON.stringify({
-            packageCode:
-              plan.packageCode,
-            enabled:
-              plan.enabled,
-            featured:
-              plan.featured,
-            customName:
-              plan.customName,
-          }),
-        },
-      );
+        );
 
       const data =
         (await response.json()) as PlansResponse;
@@ -315,7 +357,7 @@ export default function AdminPlansPage() {
 
           <p className="mt-4 max-w-3xl text-lg leading-8 text-blue-100">
             Review supplier costs,
-            automatic local-plan markup,
+            automatic markup, customer
             selling prices, and storefront
             visibility.
           </p>
@@ -401,53 +443,33 @@ export default function AdminPlansPage() {
         <section className="mt-6 grid gap-5">
           {plans.map((plan) => {
             const supplierCostUsd =
-              Number.isFinite(
-                Number(
-                  plan.supplierCostUsd,
-                ),
-              )
-                ? Number(
-                    plan.supplierCostUsd,
-                  )
-                : 0;
+              getSafeNumber(
+                plan.supplierCostUsd,
+              );
 
             const markupAmountUsd =
-              Number.isFinite(
-                Number(
-                  plan.markupAmountUsd,
-                ),
-              )
-                ? Number(
-                    plan.markupAmountUsd,
-                  )
-                : 0;
+              getSafeNumber(
+                plan.markupAmountUsd,
+              );
 
             const sellingPriceUsd =
-              Number.isFinite(
-                Number(
-                  plan.sellingPriceUsd,
-                ),
-              )
-                ? Number(
-                    plan.sellingPriceUsd,
-                  )
-                : supplierCostUsd +
-                  markupAmountUsd;
+              getSafeNumber(
+                plan.sellingPriceUsd,
+                supplierCostUsd +
+                  markupAmountUsd,
+              );
+
+            const usdToPhpRate =
+              getSafeNumber(
+                plan.usdToPhpRate,
+              );
 
             const sellingPricePhp =
-              Number.isFinite(
-                Number(
-                  plan.sellingPricePhp,
-                ),
-              )
-                ? Number(
-                    plan.sellingPricePhp,
-                  )
-                : sellingPriceUsd *
-                  Number(
-                    plan.usdToPhpRate ||
-                      0,
-                  );
+              getSafeNumber(
+                plan.sellingPricePhp,
+                sellingPriceUsd *
+                  usdToPhpRate,
+              );
 
             return (
               <article
@@ -458,19 +480,21 @@ export default function AdminPlansPage() {
                   <div>
                     <div className="flex flex-wrap gap-2">
                       <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
-                        {plan.packageCode}
+                        {
+                          plan.packageCode
+                        }
                       </span>
 
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-black ${
-                          plan.isLocalPlan
-                            ? "bg-violet-50 text-violet-700"
-                            : "bg-slate-100 text-slate-700"
+                          plan.isGlobalPlan
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-violet-50 text-violet-700"
                         }`}
                       >
-                        {plan.isLocalPlan
-                          ? "LOCAL"
-                          : "REGIONAL / GLOBAL"}
+                        {plan.isGlobalPlan
+                          ? "GLOBAL"
+                          : "LOCAL / REGIONAL / COMBO"}
                       </span>
 
                       {plan.featured && (
@@ -531,11 +555,11 @@ export default function AdminPlansPage() {
                         )}
                       </p>
 
-                      {!plan.isLocalPlan && (
-                        <p className="mt-1 text-xs font-semibold text-slate-400">
-                          No local-plan markup
-                        </p>
-                      )}
+                      <p className="mt-1 text-xs font-semibold text-slate-400">
+                        {plan.isGlobalPlan
+                          ? "Global markup table"
+                          : "Standard markup table"}
+                      </p>
                     </div>
 
                     <div>

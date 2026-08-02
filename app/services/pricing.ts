@@ -11,19 +11,13 @@ export type CalculatedPlanPrice = {
   sellingPricePhp: number;
   amountPhpCentavos: number;
   usdToPhpRate: number;
-  isLocalPlan: boolean;
   volumeGb: number;
   volumeMb: number;
+  isGlobalPlan: boolean;
 };
 
 function roundCurrency(value: number) {
   return Math.round(value * 100) / 100;
-}
-
-function normalizeText(value: unknown) {
-  return typeof value === "string"
-    ? value.trim().toLowerCase()
-    : "";
 }
 
 function getVolumeMb(volumeBytes: number) {
@@ -48,18 +42,35 @@ function getVolumeGb(volumeBytes: number) {
   return volumeBytes / 1024 / 1024 / 1024;
 }
 
-function approximatelyEqual(
-  firstValue: number,
-  secondValue: number,
-  tolerance: number,
+function normalizeText(value: unknown) {
+  return typeof value === "string"
+    ? value.trim().toLowerCase()
+    : "";
+}
+
+function isGlobalPlan(
+  plan: EsimPackage,
 ) {
+  const searchableText = [
+    plan.name,
+    plan.packageCode,
+    plan.location,
+    plan.locationCode,
+    plan.description,
+    plan.saleNote,
+  ]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    Math.abs(firstValue - secondValue) <=
-    tolerance
+    searchableText.includes("global") ||
+    searchableText.includes("worldwide") ||
+    searchableText.includes("world wide")
   );
 }
 
-function getLocalPlanMarkupUsd(
+function getStandardMarkupUsd(
   volumeBytes: number,
 ) {
   const volumeMb =
@@ -68,141 +79,99 @@ function getLocalPlanMarkupUsd(
   const volumeGb =
     getVolumeGb(volumeBytes);
 
-  /*
-   * Local plans smaller than 1 GB.
-   */
-  if (
-    approximatelyEqual(
-      volumeMb,
-      100,
-      1,
-    )
-  ) {
+  if (volumeMb <= 100) {
     return 0.5;
   }
 
-  if (
-    approximatelyEqual(
-      volumeMb,
-      500,
-      1,
-    )
-  ) {
+  if (volumeMb <= 500) {
     return 0.7;
   }
 
-  /*
-   * Whole-GB local plans.
-   */
-  const roundedGb =
-    Math.round(volumeGb);
+  if (volumeGb <= 1) {
+    return 1;
+  }
 
-  const markupByGb: Record<
-    number,
-    number
-  > = {
-    1: 1,
-    3: 2,
-    5: 3,
-    10: 3,
-    15: 3,
-    20: 3,
-    30: 3,
-    50: 5.5,
-  };
+  if (volumeGb <= 3) {
+    return 2;
+  }
 
-  return markupByGb[roundedGb] ?? 0;
+  if (volumeGb <= 5) {
+    return 3;
+  }
+
+  if (volumeGb <= 10) {
+    return 3;
+  }
+
+  if (volumeGb <= 15) {
+    return 3;
+  }
+
+  if (volumeGb <= 20) {
+    return 3;
+  }
+
+  if (volumeGb <= 30) {
+    return 3;
+  }
+
+  if (volumeGb <= 50) {
+    return 5.5;
+  }
+
+  return 5.5;
 }
 
-function isExcludedPackage(
-  plan: EsimPackage,
+function getGlobalMarkupUsd(
+  volumeBytes: number,
 ) {
-  const searchableText = [
-    plan.name,
-    plan.packageCode,
-    plan.location,
-    plan.locationCode,
-  ]
-    .map(normalizeText)
-    .filter(Boolean)
-    .join(" ");
+  const volumeMb =
+    getVolumeMb(volumeBytes);
 
-  const excludedWords = [
-    "global",
-    "regional",
-    "region",
-    "combo",
-    "multi-country",
-    "multi country",
-    "world",
-    "worldwide",
-    "europe",
-    "asia",
-    "africa",
-    "middle east",
-    "north america",
-    "south america",
-    "oceania",
-    "balkan",
-    "balkans",
-    "caribbean",
-  ];
+  const volumeGb =
+    getVolumeGb(volumeBytes);
 
-  return excludedWords.some((word) =>
-    searchableText.includes(word),
-  );
-}
-
-function countLocationCodes(
-  location: string | undefined,
-) {
-  if (!location?.trim()) {
-    return 0;
+  if (volumeMb <= 100) {
+    return 1;
   }
 
-  return location
-    .split(",")
-    .map((code) => code.trim())
-    .filter(Boolean).length;
-}
-
-function determineIsLocalPlan(
-  plan: EsimPackage,
-) {
-  if (isExcludedPackage(plan)) {
-    return false;
+  if (volumeMb <= 500) {
+    return 1;
   }
 
-  const locationCount =
-    countLocationCodes(
-      plan.location,
-    );
-
-  /*
-   * More than one location means regional,
-   * combo, or multi-country.
-   */
-  if (locationCount > 1) {
-    return false;
+  if (volumeGb <= 1) {
+    return 2;
   }
 
-  /*
-   * A single location normally means
-   * a local-country package.
-   */
-  if (locationCount === 1) {
-    return true;
+  if (volumeGb <= 3) {
+    return 4;
   }
 
-  if (
-    typeof plan.locationCode ===
-      "string" &&
-    plan.locationCode.trim()
-  ) {
-    return true;
+  if (volumeGb <= 5) {
+    return 6;
   }
 
-  return false;
+  if (volumeGb <= 10) {
+    return 8;
+  }
+
+  if (volumeGb <= 15) {
+    return 9;
+  }
+
+  if (volumeGb <= 20) {
+    return 10;
+  }
+
+  if (volumeGb <= 30) {
+    return 12;
+  }
+
+  if (volumeGb <= 50) {
+    return 15;
+  }
+
+  return 15;
 }
 
 export async function calculatePlanPrice(
@@ -237,11 +206,8 @@ export async function calculatePlanPrice(
   }
 
   /*
-   * eSIM Access returns prices in
-   * thousandths of one US dollar.
-   *
-   * Example:
-   * 47000 = $47.00
+   * eSIM Access price format:
+   * 10000 = $1.00 USD
    */
   const supplierCostUsd =
     roundCurrency(
@@ -250,6 +216,17 @@ export async function calculatePlanPrice(
 
   const volumeBytes =
     Number(plan.volume);
+
+  if (
+    !Number.isFinite(
+      volumeBytes,
+    ) ||
+    volumeBytes <= 0
+  ) {
+    throw new Error(
+      "The data allowance for this plan is invalid.",
+    );
+  }
 
   const volumeMb =
     getVolumeMb(
@@ -261,24 +238,24 @@ export async function calculatePlanPrice(
       volumeBytes,
     );
 
-  const isLocalPlan =
-    determineIsLocalPlan(
-      plan,
-    );
+  const globalPlan =
+    isGlobalPlan(plan);
 
   /*
-   * Apply automatic markup only to
-   * local-country plans.
+   * Local, regional, and combo plans
+   * use the standard markup table.
    *
-   * Regional, combo, and global plans
-   * receive no automatic local markup.
+   * Global plans use the separate
+   * global markup table.
    */
   const markupAmountUsd =
-    isLocalPlan
-      ? getLocalPlanMarkupUsd(
+    globalPlan
+      ? getGlobalMarkupUsd(
           volumeBytes,
         )
-      : 0;
+      : getStandardMarkupUsd(
+          volumeBytes,
+        );
 
   const usdToPhpRate =
     await getUsdToPhpRate();
@@ -329,8 +306,9 @@ export async function calculatePlanPrice(
     sellingPricePhp,
     amountPhpCentavos,
     usdToPhpRate,
-    isLocalPlan,
     volumeGb,
     volumeMb,
+    isGlobalPlan:
+      globalPlan,
   };
 }
