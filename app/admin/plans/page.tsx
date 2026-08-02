@@ -1,699 +1,511 @@
-"use client";
+import { NextResponse } from "next/server";
 
+import { getCountryName } from "@/app/lib/countries";
+import { prisma } from "@/app/lib/prisma";
+import { fetchEsimAccessPlans } from "@/app/services/esimAccess";
 import {
-  FormEvent,
-  useState,
-} from "react";
+  calculatePlanPrice,
+  type CalculatedPlanPrice,
+} from "@/app/services/pricing";
+import type { EsimPackage } from "@/app/types/esim";
 
-type AdminPlan = {
-  packageCode: string;
-  supplierName: string;
-  displayName: string;
-  customName: string | null;
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
-  locationName: string;
-  locationCode: string | null;
-
-  volume: number;
-  duration: number;
-  durationUnit: string;
-
-  enabled: boolean;
-  featured: boolean;
-
-  supplierCostUsd: number;
-  markupAmountUsd: number;
-  sellingPriceUsd: number;
-  sellingPricePhp: number;
-  amountPhpCentavos: number;
-  usdToPhpRate: number;
-
-  isGlobalPlan: boolean;
-
-  volumeGb: number;
-  volumeMb: number;
-
-  updatedAt: string | null;
+type UpdatePlanBody = {
+  packageCode?: unknown;
+  enabled?: unknown;
+  featured?: unknown;
+  customName?: unknown;
 };
 
-type PlansResponse = {
-  success: boolean;
-  plans?: AdminPlan[];
-  total?: number;
-  message?: string;
-  error?: string;
-};
+function isAuthorized(request: Request) {
+  const configuredKey =
+    process.env.ADMIN_API_KEY?.trim();
 
-function formatUsd(
-  value: number,
-) {
-  if (!Number.isFinite(value)) {
-    return "$0.00";
-  }
+  const suppliedKey =
+    request.headers
+      .get("x-admin-key")
+      ?.trim();
 
-  return new Intl.NumberFormat(
-    "en-US",
-    {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    },
-  ).format(value);
-}
-
-function formatPhp(
-  value: number,
-) {
-  if (!Number.isFinite(value)) {
-    return "₱0.00";
-  }
-
-  return new Intl.NumberFormat(
-    "en-PH",
-    {
-      style: "currency",
-      currency: "PHP",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    },
-  ).format(value);
-}
-
-function formatVolume(
-  bytes: number,
-) {
-  if (
-    !Number.isFinite(bytes) ||
-    bytes <= 0
-  ) {
-    return "—";
-  }
-
-  const megabytes =
-    bytes / 1024 / 1024;
-
-  const gigabytes =
-    bytes / 1024 / 1024 / 1024;
-
-  if (gigabytes < 1) {
-    return `${Math.round(
-      megabytes,
-    )} MB`;
-  }
-
-  return `${
-    Number.isInteger(gigabytes)
-      ? gigabytes
-      : gigabytes.toFixed(1)
-  } GB`;
-}
-
-function formatDurationUnit(
-  unit: string,
-  duration: number,
-) {
-  const normalized =
-    unit?.trim().toLowerCase() ||
-    "day";
-
-  if (duration === 1) {
-    return normalized.endsWith("s")
-      ? normalized.slice(0, -1)
-      : normalized;
-  }
-
-  return normalized.endsWith("s")
-    ? normalized
-    : `${normalized}s`;
-}
-
-function getSafeNumber(
-  value: unknown,
-  fallback = 0,
-) {
-  const numericValue =
-    Number(value);
-
-  return Number.isFinite(
-    numericValue,
-  )
-    ? numericValue
-    : fallback;
-}
-
-export default function AdminPlansPage() {
-  const [adminKey, setAdminKey] =
-    useState("");
-
-  const [search, setSearch] =
-    useState("");
-
-  const [plans, setPlans] =
-    useState<AdminPlan[]>([]);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [
-    savingPackageCode,
-    setSavingPackageCode,
-  ] = useState<string | null>(
-    null,
+  return Boolean(
+    configuredKey &&
+      suppliedKey &&
+      configuredKey === suppliedKey,
   );
+}
 
-  const [error, setError] =
-    useState("");
+function unauthorizedResponse() {
+  return NextResponse.json(
+    {
+      success: false,
+      error: "Unauthorized.",
+    },
+    {
+      status: 401,
+    },
+  );
+}
 
-  const [message, setMessage] =
-    useState("");
+function normalizeText(value: unknown) {
+  return typeof value === "string"
+    ? value.trim()
+    : "";
+}
 
-  async function loadPlans(
-    event?: FormEvent<HTMLFormElement>,
-  ) {
-    event?.preventDefault();
+function getLocationCodes(
+  plan: EsimPackage,
+) {
+  const location =
+    normalizeText(plan.location);
 
-    if (!adminKey.trim()) {
-      setError(
-        "Enter your admin key.",
+  if (!location) {
+    const locationCode =
+      normalizeText(
+        plan.locationCode,
       );
 
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError("");
-      setMessage("");
-
-      const params =
-        new URLSearchParams();
-
-      if (search.trim()) {
-        params.set(
-          "search",
-          search.trim(),
-        );
-      }
-
-      const query =
-        params.toString()
-          ? `?${params.toString()}`
-          : "";
-
-      const response =
-        await fetch(
-          `/api/admin/plans${query}`,
-          {
-            method: "GET",
-            cache: "no-store",
-
-            headers: {
-              "x-admin-key":
-                adminKey.trim(),
-            },
-          },
-        );
-
-      const data =
-        (await response.json()) as PlansResponse;
-
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-        throw new Error(
-          data.error ||
-            "Unable to load plans.",
-        );
-      }
-
-      setPlans(
-        data.plans ?? [],
-      );
-
-      setMessage(
-        `${data.total ?? 0} plans loaded.`,
-      );
-    } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : "Unable to load plans.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    return locationCode
+      ? [locationCode]
+      : [];
   }
 
-  function updateLocalPlan(
-    packageCode: string,
-    changes: Partial<AdminPlan>,
-  ) {
-    setPlans(
-      (currentPlans) =>
-        currentPlans.map(
-          (plan) =>
-            plan.packageCode ===
-            packageCode
-              ? {
-                  ...plan,
-                  ...changes,
-                }
-              : plan,
+  return location
+    .split(",")
+    .map((code) =>
+      code.trim(),
+    )
+    .filter(Boolean);
+}
+
+function getCoverageLabel(
+  plan: EsimPackage,
+  pricing: CalculatedPlanPrice,
+) {
+  const locationCodes =
+    getLocationCodes(plan);
+
+  /*
+   * Do not show the full comma-separated
+   * country-code list for Global plans.
+   */
+  if (pricing.isGlobalPlan) {
+    return "120+ countries and regions";
+  }
+
+  /*
+   * Regional and combo plans show only
+   * the number of countries covered.
+   */
+  if (locationCodes.length > 1) {
+    return `${locationCodes.length} countries covered`;
+  }
+
+  /*
+   * Local plans show the readable
+   * country name where possible.
+   */
+  const countryCode =
+    locationCodes[0];
+
+  if (countryCode) {
+    const countryName =
+      getCountryName(countryCode);
+
+    if (
+      countryName &&
+      countryName !== countryCode
+    ) {
+      return countryName;
+    }
+
+    return countryCode;
+  }
+
+  return "Coverage information unavailable";
+}
+
+function getSearchableText(
+  plan: EsimPackage,
+) {
+  return [
+    plan.packageCode,
+    plan.name,
+    plan.location,
+    plan.locationCode,
+    plan.description,
+    plan.saleNote,
+  ]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+/*
+ * calculatePlanPrice normally rejects a disabled plan.
+ *
+ * The admin page still needs to show pricing for disabled
+ * plans so they can be reviewed and enabled again.
+ *
+ * For disabled plans, we use a temporary package code only
+ * for the pricing preview. This prevents the pricing service
+ * from finding the disabled PlanSetting row while preserving
+ * the original plan data and pricing rules.
+ */
+async function calculateAdminPricing(
+  plan: EsimPackage,
+  enabled: boolean,
+) {
+  if (enabled) {
+    return calculatePlanPrice(plan);
+  }
+
+  const previewPlan: EsimPackage = {
+    ...plan,
+    packageCode:
+      `ADMIN-PREVIEW-${plan.packageCode}`,
+  };
+
+  return calculatePlanPrice(
+    previewPlan,
+  );
+}
+
+export async function GET(
+  request: Request,
+) {
+  if (!isAuthorized(request)) {
+    return unauthorizedResponse();
+  }
+
+  try {
+    const url =
+      new URL(request.url);
+
+    const search =
+      url.searchParams
+        .get("search")
+        ?.trim()
+        .toLowerCase() ?? "";
+
+    const [
+      supplierPlans,
+      savedSettings,
+    ] = await Promise.all([
+      fetchEsimAccessPlans(),
+      prisma.planSetting.findMany(),
+    ]);
+
+    const settingMap =
+      new Map(
+        savedSettings.map(
+          (setting) => [
+            setting.packageCode,
+            setting,
+          ],
         ),
-    );
-  }
-
-  async function savePlan(
-    plan: AdminPlan,
-  ) {
-    if (!adminKey.trim()) {
-      setError(
-        "Enter your admin key.",
       );
 
-      return;
-    }
+    const matchingPlans =
+      supplierPlans.filter(
+        (plan) => {
+          const packageCode =
+            plan.packageCode?.trim();
 
-    try {
-      setSavingPackageCode(
-        plan.packageCode,
+          if (!packageCode) {
+            return false;
+          }
+
+          if (!search) {
+            return true;
+          }
+
+          return getSearchableText(
+            plan,
+          ).includes(search);
+        },
       );
 
-      setError("");
-      setMessage("");
+    const plans =
+      await Promise.all(
+        matchingPlans.map(
+          async (plan) => {
+            const packageCode =
+              plan.packageCode.trim();
 
-      const response =
-        await fetch(
-          "/api/admin/plans",
-          {
-            method: "PUT",
+            const setting =
+              settingMap.get(
+                packageCode,
+              );
 
-            headers: {
-              "Content-Type":
-                "application/json",
+            const enabled =
+              setting?.enabled ??
+              true;
 
-              "x-admin-key":
-                adminKey.trim(),
-            },
+            const featured =
+              setting?.featured ??
+              false;
 
-            body: JSON.stringify({
-              packageCode:
-                plan.packageCode,
+            const pricing =
+              await calculateAdminPricing(
+                plan,
+                enabled,
+              );
 
-              enabled:
-                plan.enabled,
+            const supplierName =
+              plan.name ||
+              packageCode;
 
-              featured:
-                plan.featured,
+            const displayName =
+              setting?.customName?.trim() ||
+              supplierName;
+
+            return {
+              packageCode,
+
+              supplierName,
+              displayName,
 
               customName:
-                plan.customName,
-            }),
+                setting?.customName ??
+                null,
+
+              locationName:
+                getCoverageLabel(
+                  plan,
+                  pricing,
+                ),
+
+              locationCode:
+                plan.locationCode ??
+                null,
+
+              volume:
+                Number(plan.volume),
+
+              duration:
+                Number(plan.duration),
+
+              durationUnit:
+                plan.durationUnit,
+
+              enabled,
+              featured,
+
+              supplierCostUsd:
+                pricing.supplierCostUsd,
+
+              markupAmountUsd:
+                pricing.markupAmountUsd,
+
+              sellingPriceUsd:
+                pricing.sellingPriceUsd,
+
+              sellingPricePhp:
+                pricing.sellingPricePhp,
+
+              amountPhpCentavos:
+                pricing.amountPhpCentavos,
+
+              usdToPhpRate:
+                pricing.usdToPhpRate,
+
+              isGlobalPlan:
+                pricing.isGlobalPlan,
+
+              markupTable:
+                pricing.isGlobalPlan
+                  ? "GLOBAL"
+                  : "STANDARD",
+
+              volumeGb:
+                pricing.volumeGb,
+
+              volumeMb:
+                pricing.volumeMb,
+
+              updatedAt:
+                setting?.updatedAt ??
+                null,
+            };
           },
-        );
+        ),
+      );
 
-      const data =
-        (await response.json()) as PlansResponse;
-
+    plans.sort((a, b) => {
       if (
-        !response.ok ||
-        !data.success
+        a.featured !==
+        b.featured
       ) {
-        throw new Error(
-          data.error ||
-            "Unable to save plan.",
-        );
+        return a.featured
+          ? -1
+          : 1;
       }
 
-      setMessage(
-        `${plan.packageCode} was saved successfully.`,
+      if (
+        a.isGlobalPlan !==
+        b.isGlobalPlan
+      ) {
+        return a.isGlobalPlan
+          ? 1
+          : -1;
+      }
+
+      return a.displayName.localeCompare(
+        b.displayName,
       );
-    } catch (saveError) {
-      setError(
-        saveError instanceof Error
-          ? saveError.message
-          : "Unable to save plan.",
-      );
-    } finally {
-      setSavingPackageCode(
-        null,
-      );
-    }
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        total: plans.length,
+        plans,
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate",
+        },
+      },
+    );
+  } catch (error) {
+    console.error(
+      "ADMIN PLANS GET ERROR:",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to retrieve plans.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
+export async function PUT(
+  request: Request,
+) {
+  if (!isAuthorized(request)) {
+    return unauthorizedResponse();
   }
 
-  return (
-    <main className="min-h-screen bg-slate-100 px-4 py-10 sm:px-6">
-      <div className="mx-auto max-w-7xl">
-        <section className="rounded-[2rem] bg-gradient-to-br from-[#071f45] via-[#0A2D62] to-blue-700 p-8 text-white shadow-xl sm:p-10">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-300">
-            Seamarino Administration
-          </p>
+  try {
+    const body =
+      (await request.json()) as UpdatePlanBody;
 
-          <h1 className="mt-4 text-4xl font-black sm:text-6xl">
-            Plans Management
-          </h1>
+    const packageCode =
+      typeof body.packageCode ===
+      "string"
+        ? body.packageCode.trim()
+        : "";
 
-          <p className="mt-4 max-w-3xl text-lg leading-8 text-blue-100">
-            Review supplier costs,
-            automatic markup, customer
-            selling prices, and storefront
-            visibility.
-          </p>
+    if (!packageCode) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Package code is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
-          <div className="mt-7 flex flex-wrap gap-3">
-            <a
-              href="/admin"
-              className="rounded-xl border border-white/30 px-5 py-3 font-black text-white transition hover:bg-white/10"
-            >
-              Dashboard
-            </a>
+    const enabled =
+      typeof body.enabled ===
+      "boolean"
+        ? body.enabled
+        : true;
 
-            <a
-              href="/admin/orders"
-              className="rounded-xl border border-white/30 px-5 py-3 font-black text-white transition hover:bg-white/10"
-            >
-              Orders
-            </a>
+    const featured =
+      typeof body.featured ===
+      "boolean"
+        ? body.featured
+        : false;
 
-            <a
-              href="/"
-              className="rounded-xl bg-white px-5 py-3 font-black text-[#0A2D62]"
-            >
-              Storefront
-            </a>
-          </div>
-        </section>
+    const customName =
+      typeof body.customName ===
+        "string" &&
+      body.customName.trim()
+        ? body.customName
+            .trim()
+            .slice(0, 255)
+        : null;
 
-        <form
-          onSubmit={loadPlans}
-          className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <div className="grid gap-4 lg:grid-cols-[300px_1fr_auto]">
-            <input
-              type="password"
-              value={adminKey}
-              onChange={(event) =>
-                setAdminKey(
-                  event.target.value,
-                )
-              }
-              autoComplete="current-password"
-              placeholder="Enter ADMIN_API_KEY"
-              className="h-14 rounded-2xl border border-slate-300 px-5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
+    const setting =
+      await prisma.planSetting.upsert({
+        where: {
+          packageCode,
+        },
 
-            <input
-              type="search"
-              value={search}
-              onChange={(event) =>
-                setSearch(
-                  event.target.value,
-                )
-              }
-              placeholder="Search country, package code, or plan"
-              className="h-14 rounded-2xl border border-slate-300 px-5 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
+        update: {
+          enabled,
+          featured,
+          customName,
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-14 rounded-2xl bg-[#0A2D62] px-7 font-black text-white disabled:opacity-50"
-            >
-              {loading
-                ? "Loading..."
-                : "Load Plans"}
-            </button>
-          </div>
-        </form>
+          /*
+           * Retained for compatibility with
+           * your existing Prisma model.
+           *
+           * Percentage markup is no longer
+           * used by the pricing service.
+           */
+          markupPercent: 0,
+        },
 
-        {error && (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-            {error}
-          </div>
-        )}
+        create: {
+          packageCode,
+          enabled,
+          featured,
+          customName,
+          markupPercent: 0,
+        },
+      });
 
-        {message && (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
-            {message}
-          </div>
-        )}
+    return NextResponse.json(
+      {
+        success: true,
 
-        <section className="mt-6 grid gap-5">
-          {plans.map((plan) => {
-            const supplierCostUsd =
-              getSafeNumber(
-                plan.supplierCostUsd,
-              );
+        message:
+          "Plan settings updated successfully.",
 
-            const markupAmountUsd =
-              getSafeNumber(
-                plan.markupAmountUsd,
-              );
+        setting,
+      },
+      {
+        status: 200,
+      },
+    );
+  } catch (error) {
+    console.error(
+      "ADMIN PLANS UPDATE ERROR:",
+      error,
+    );
 
-            const sellingPriceUsd =
-              getSafeNumber(
-                plan.sellingPriceUsd,
-                supplierCostUsd +
-                  markupAmountUsd,
-              );
+    return NextResponse.json(
+      {
+        success: false,
 
-            const usdToPhpRate =
-              getSafeNumber(
-                plan.usdToPhpRate,
-              );
-
-            const sellingPricePhp =
-              getSafeNumber(
-                plan.sellingPricePhp,
-                sellingPriceUsd *
-                  usdToPhpRate,
-              );
-
-            return (
-              <article
-                key={plan.packageCode}
-                className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
-              >
-                <div className="grid gap-7 xl:grid-cols-[1.15fr_1fr_1fr_auto] xl:items-center">
-                  <div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
-                        {
-                          plan.packageCode
-                        }
-                      </span>
-
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-black ${
-                          plan.isGlobalPlan
-                            ? "bg-amber-50 text-amber-700"
-                            : "bg-violet-50 text-violet-700"
-                        }`}
-                      >
-                        {plan.isGlobalPlan
-                          ? "GLOBAL"
-                          : "LOCAL / REGIONAL / COMBO"}
-                      </span>
-
-                      {plan.featured && (
-                        <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-amber-700">
-                          FEATURED
-                        </span>
-                      )}
-
-                      {!plan.enabled && (
-                        <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
-                          HIDDEN
-                        </span>
-                      )}
-                    </div>
-
-                    <h2 className="mt-4 text-2xl font-black text-slate-950">
-                      {plan.displayName}
-                    </h2>
-
-                    <div className="mt-2 max-w-full">
-  <p
-    className="truncate text-slate-500"
-    title={plan.locationName}
-  >
-    {plan.isGlobalPlan
-      ? "120+ countries and regions"
-      : plan.locationName.includes(",")
-        ? `${plan.locationName.split(",").length} countries covered`
-        : plan.locationName}
-  </p>
-</div>
-
-                    <p className="mt-3 text-sm font-semibold text-slate-500">
-                      {formatVolume(
-                        plan.volume,
-                      )}{" "}
-                      • {plan.duration}{" "}
-                      {formatDurationUnit(
-                        plan.durationUnit,
-                        plan.duration,
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="space-y-5">
-                    <div>
-                      <p className="text-sm font-bold text-slate-500">
-                        Supplier cost
-                      </p>
-
-                      <p className="mt-1 text-3xl font-black text-slate-950">
-                        {formatUsd(
-                          supplierCostUsd,
-                        )}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-bold text-slate-500">
-                        Automatic markup
-                      </p>
-
-                      <p className="mt-1 text-2xl font-black text-blue-700">
-                        +
-                        {formatUsd(
-                          markupAmountUsd,
-                        )}
-                      </p>
-
-                      <p className="mt-1 text-xs font-semibold text-slate-400">
-                        {plan.isGlobalPlan
-                          ? "Global markup table"
-                          : "Standard markup table"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-bold text-slate-500">
-                        Customer selling price
-                      </p>
-
-                      <p className="mt-1 text-3xl font-black text-emerald-700">
-                        {formatUsd(
-                          sellingPriceUsd,
-                        )}
-                      </p>
-
-                      <p className="mt-1 text-sm font-black text-slate-600">
-                        {formatPhp(
-                          sellingPricePhp,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-5">
-                    <div>
-                      <label className="mb-2 block text-sm font-bold text-slate-700">
-                        Custom plan name
-                      </label>
-
-                      <input
-                        type="text"
-                        value={
-                          plan.customName ??
-                          ""
-                        }
-                        onChange={(event) =>
-                          updateLocalPlan(
-                            plan.packageCode,
-                            {
-                              customName:
-                                event.target
-                                  .value,
-                            },
-                          )
-                        }
-                        placeholder={
-                          plan.supplierName
-                        }
-                        className="h-12 w-full rounded-xl border border-slate-300 px-4 outline-none focus:border-blue-500"
-                      />
-                    </div>
-
-                    <label className="flex items-center gap-3 font-bold text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={
-                          plan.enabled
-                        }
-                        onChange={(event) =>
-                          updateLocalPlan(
-                            plan.packageCode,
-                            {
-                              enabled:
-                                event.target
-                                  .checked,
-                            },
-                          )
-                        }
-                        className="h-5 w-5"
-                      />
-
-                      Enabled
-                    </label>
-
-                    <label className="flex items-center gap-3 font-bold text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={
-                          plan.featured
-                        }
-                        onChange={(event) =>
-                          updateLocalPlan(
-                            plan.packageCode,
-                            {
-                              featured:
-                                event.target
-                                  .checked,
-                            },
-                          )
-                        }
-                        className="h-5 w-5"
-                      />
-
-                      Featured
-                    </label>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void savePlan(plan)
-                    }
-                    disabled={
-                      savingPackageCode ===
-                      plan.packageCode
-                    }
-                    className="rounded-2xl bg-[#0A2D62] px-7 py-4 font-black text-white disabled:opacity-50"
-                  >
-                    {savingPackageCode ===
-                    plan.packageCode
-                      ? "Saving..."
-                      : "Save Plan"}
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-
-          {!loading &&
-            plans.length === 0 && (
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-16 text-center text-slate-500">
-                Enter your admin key and
-                click Load Plans.
-              </div>
-            )}
-        </section>
-      </div>
-    </main>
-  );
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to update plan settings.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
 }
