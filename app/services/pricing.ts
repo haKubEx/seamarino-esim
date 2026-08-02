@@ -13,10 +13,28 @@ export type CalculatedPlanPrice = {
   usdToPhpRate: number;
   isLocalPlan: boolean;
   volumeGb: number;
+  volumeMb: number;
 };
 
 function roundCurrency(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+function normalizeText(value: unknown) {
+  return typeof value === "string"
+    ? value.trim().toLowerCase()
+    : "";
+}
+
+function getVolumeMb(volumeBytes: number) {
+  if (
+    !Number.isFinite(volumeBytes) ||
+    volumeBytes <= 0
+  ) {
+    return 0;
+  }
+
+  return volumeBytes / 1024 / 1024;
 }
 
 function getVolumeGb(volumeBytes: number) {
@@ -27,23 +45,54 @@ function getVolumeGb(volumeBytes: number) {
     return 0;
   }
 
+  return volumeBytes / 1024 / 1024 / 1024;
+}
+
+function approximatelyEqual(
+  firstValue: number,
+  secondValue: number,
+  tolerance: number,
+) {
   return (
-    volumeBytes /
-    1024 /
-    1024 /
-    1024
+    Math.abs(firstValue - secondValue) <=
+    tolerance
   );
 }
 
 function getLocalPlanMarkupUsd(
   volumeBytes: number,
 ) {
+  const volumeMb =
+    getVolumeMb(volumeBytes);
+
   const volumeGb =
     getVolumeGb(volumeBytes);
 
   /*
-   * Round the supplier volume because
-   * packages normally represent whole GB values.
+   * Local plans smaller than 1 GB.
+   */
+  if (
+    approximatelyEqual(
+      volumeMb,
+      100,
+      1,
+    )
+  ) {
+    return 0.5;
+  }
+
+  if (
+    approximatelyEqual(
+      volumeMb,
+      500,
+      1,
+    )
+  ) {
+    return 0.7;
+  }
+
+  /*
+   * Whole-GB local plans.
    */
   const roundedGb =
     Math.round(volumeGb);
@@ -54,7 +103,7 @@ function getLocalPlanMarkupUsd(
   > = {
     1: 1,
     3: 2,
-    5: 2,
+    5: 3,
     10: 3,
     15: 3,
     20: 3,
@@ -63,12 +112,6 @@ function getLocalPlanMarkupUsd(
   };
 
   return markupByGb[roundedGb] ?? 0;
-}
-
-function normalizeText(value: unknown) {
-  return typeof value === "string"
-    ? value.trim().toLowerCase()
-    : "";
 }
 
 function isExcludedPackage(
@@ -84,10 +127,6 @@ function isExcludedPackage(
     .filter(Boolean)
     .join(" ");
 
-  /*
-   * These packages must not receive the
-   * automatic local-country markup.
-   */
   const excludedWords = [
     "global",
     "regional",
@@ -105,6 +144,7 @@ function isExcludedPackage(
     "south america",
     "oceania",
     "balkan",
+    "balkans",
     "caribbean",
   ];
 
@@ -134,23 +174,30 @@ function determineIsLocalPlan(
   }
 
   const locationCount =
-    countLocationCodes(plan.location);
+    countLocationCodes(
+      plan.location,
+    );
 
   /*
-   * A comma-separated location list indicates
-   * a regional or multi-country package.
+   * More than one location means regional,
+   * combo, or multi-country.
    */
   if (locationCount > 1) {
     return false;
   }
 
   /*
-   * A single location code normally indicates
-   * a local-country plan.
+   * A single location normally means
+   * a local-country package.
    */
+  if (locationCount === 1) {
+    return true;
+  }
+
   if (
-    locationCount === 1 ||
-    plan.locationCode?.trim()
+    typeof plan.locationCode ===
+      "string" &&
+    plan.locationCode.trim()
   ) {
     return true;
   }
@@ -164,7 +211,8 @@ export async function calculatePlanPrice(
   const planSetting =
     await prisma.planSetting.findUnique({
       where: {
-        packageCode: plan.packageCode,
+        packageCode:
+          plan.packageCode,
       },
     });
 
@@ -178,7 +226,9 @@ export async function calculatePlanPrice(
     Number(plan.price);
 
   if (
-    !Number.isFinite(rawSupplierPrice) ||
+    !Number.isFinite(
+      rawSupplierPrice,
+    ) ||
     rawSupplierPrice <= 0
   ) {
     throw new Error(
@@ -187,40 +237,56 @@ export async function calculatePlanPrice(
   }
 
   /*
-   * eSIM Access returns its price in
+   * eSIM Access returns prices in
    * thousandths of one US dollar.
    *
    * Example:
-   * 47000 becomes $47.00.
+   * 47000 = $47.00
    */
   const supplierCostUsd =
     roundCurrency(
       rawSupplierPrice / 1000,
     );
 
-  const volume =
+  const volumeBytes =
     Number(plan.volume);
 
+  const volumeMb =
+    getVolumeMb(
+      volumeBytes,
+    );
+
   const volumeGb =
-    getVolumeGb(volume);
+    getVolumeGb(
+      volumeBytes,
+    );
 
   const isLocalPlan =
-    determineIsLocalPlan(plan);
+    determineIsLocalPlan(
+      plan,
+    );
 
   /*
-   * Apply the GB markup only to local plans.
-   * Regional, combo, and global packages get $0.
+   * Apply automatic markup only to
+   * local-country plans.
+   *
+   * Regional, combo, and global plans
+   * receive no automatic local markup.
    */
   const markupAmountUsd =
     isLocalPlan
-      ? getLocalPlanMarkupUsd(volume)
+      ? getLocalPlanMarkupUsd(
+          volumeBytes,
+        )
       : 0;
 
   const usdToPhpRate =
     await getUsdToPhpRate();
 
   if (
-    !Number.isFinite(usdToPhpRate) ||
+    !Number.isFinite(
+      usdToPhpRate,
+    ) ||
     usdToPhpRate <= 0
   ) {
     throw new Error(
@@ -265,5 +331,6 @@ export async function calculatePlanPrice(
     usdToPhpRate,
     isLocalPlan,
     volumeGb,
+    volumeMb,
   };
 }
