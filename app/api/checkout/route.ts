@@ -1,16 +1,19 @@
+import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { getUsdToPhpRate } from "@/app/services/settings";
+
 import { prisma } from "@/app/lib/prisma";
-import { getSellingPrice } from "@/app/lib/pricing";
+import { calculatePlanPrice } from "@/app/services/pricing";
 import { getPlans } from "@/app/services/plans";
 import type { EsimPackage } from "@/app/types/esim";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 interface PayMongoError {
   detail?: string;
   code?: string;
+
   source?: {
     pointer?: string;
     attribute?: string;
@@ -21,12 +24,14 @@ interface PayMongoCheckoutResponse {
   data?: {
     id?: string;
     type?: string;
+
     attributes?: {
       checkout_url?: string;
       reference_number?: string;
       status?: string;
     };
   };
+
   errors?: PayMongoError[];
 }
 
@@ -35,6 +40,7 @@ type CheckoutStage =
   | "READ_ENVIRONMENT"
   | "READ_FORM"
   | "LOAD_PLANS"
+  | "LOAD_PLAN_SETTING"
   | "CALCULATE_PRICE"
   | "CREATE_ORDER"
   | "CREATE_PAYMONGO_SESSION"
@@ -43,6 +49,26 @@ type CheckoutStage =
 
 function normalizeAppUrl(value: string) {
   return value.trim().replace(/\/+$/, "");
+}
+
+function getAppUrl() {
+  const configuredUrl =
+    process.env.NEXT_PUBLIC_BASE_URL?.trim();
+
+  if (configuredUrl) {
+    return normalizeAppUrl(configuredUrl);
+  }
+
+  const vercelUrl =
+    process.env.VERCEL_URL?.trim();
+
+  if (vercelUrl) {
+    return normalizeAppUrl(
+      `https://${vercelUrl}`,
+    );
+  }
+
+  return "http://localhost:3000";
 }
 
 function createReferenceNumber() {
@@ -56,42 +82,56 @@ function createReferenceNumber() {
 }
 
 function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    email,
+  );
 }
 
 function isValidPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
 
-  return digits.length >= 7 && digits.length <= 15;
+  return (
+    digits.length >= 7 &&
+    digits.length <= 15
+  );
 }
 
 function formatData(bytes: number) {
-  const gb = bytes / 1024 / 1024 / 1024;
-
-  if (gb < 1) {
-    const mb = bytes / 1024 / 1024;
-
-    return `${Math.round(mb)} MB`;
+  if (
+    !Number.isFinite(bytes) ||
+    bytes <= 0
+  ) {
+    return "Data plan";
   }
 
-  const formattedGb = Number.isInteger(gb)
-    ? gb.toString()
-    : gb.toFixed(1);
+  const gigabytes =
+    bytes / 1024 / 1024 / 1024;
 
-  return `${formattedGb} GB`;
+  if (gigabytes < 1) {
+    const megabytes =
+      bytes / 1024 / 1024;
+
+    return `${Math.round(
+      megabytes,
+    )} MB`;
+  }
+
+  const formattedGigabytes =
+    Number.isInteger(gigabytes)
+      ? gigabytes.toString()
+      : gigabytes.toFixed(1);
+
+  return `${formattedGigabytes} GB`;
 }
 
 function formatDurationUnit(
-  durationUnit: string,
+  durationUnit: string | undefined,
   duration: number,
 ) {
-  const normalizedUnit = durationUnit
-    .trim()
-    .toLowerCase();
-
-  if (!normalizedUnit) {
-    return duration === 1 ? "day" : "days";
-  }
+  const normalizedUnit =
+    durationUnit
+      ?.trim()
+      .toLowerCase() || "day";
 
   if (duration === 1) {
     return normalizedUnit.endsWith("s")
@@ -108,13 +148,18 @@ function sanitizeMetadataValue(
   value: string,
   maximumLength = 255,
 ) {
-  return value.trim().slice(0, maximumLength);
+  return value
+    .trim()
+    .slice(0, maximumLength);
 }
 
 function getPaymentMethodTypes() {
   const configuredMethods =
-    process.env.PAYMONGO_PAYMENT_METHODS?.split(",")
-      .map((method) => method.trim().toLowerCase())
+    process.env.PAYMONGO_PAYMENT_METHODS
+      ?.split(",")
+      .map((method) =>
+        method.trim().toLowerCase(),
+      )
       .filter(Boolean);
 
   if (
@@ -124,13 +169,19 @@ function getPaymentMethodTypes() {
     return configuredMethods;
   }
 
-  return ["card", "gcash", "paymaya", "qrph"];
+  return [
+    "card",
+    "gcash",
+    "paymaya",
+    "qrph",
+  ];
 }
 
 async function readPayMongoResponse(
   response: Response,
 ): Promise<PayMongoCheckoutResponse> {
-  const responseText = await response.text();
+  const responseText =
+    await response.text();
 
   if (!responseText) {
     return {};
@@ -143,7 +194,10 @@ async function readPayMongoResponse(
   } catch {
     console.error(
       "PAYMONGO NON-JSON RESPONSE:",
-      responseText,
+      {
+        status: response.status,
+        responseText,
+      },
     );
 
     return {};
@@ -153,7 +207,8 @@ async function readPayMongoResponse(
 function getPayMongoErrorMessage(
   data: PayMongoCheckoutResponse,
 ) {
-  const firstError = data.errors?.[0];
+  const firstError =
+    data.errors?.[0];
 
   if (!firstError) {
     return "Unable to create the PayMongo checkout session.";
@@ -163,7 +218,10 @@ function getPayMongoErrorMessage(
     firstError.source?.pointer ||
     firstError.source?.attribute;
 
-  if (sourceInformation && firstError.detail) {
+  if (
+    sourceInformation &&
+    firstError.detail
+  ) {
     return `${firstError.detail} (${sourceInformation})`;
   }
 
@@ -175,7 +233,8 @@ function getPayMongoErrorMessage(
 }
 
 function getSafeDatabaseInformation() {
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl =
+    process.env.DATABASE_URL;
 
   if (!databaseUrl) {
     return {
@@ -187,65 +246,100 @@ function getSafeDatabaseInformation() {
 
   return {
     exists: true,
-    protocol: databaseUrl.split(":")[0] ?? "unknown",
+
+    protocol:
+      databaseUrl.split(":")[0] ??
+      "unknown",
+
     usesLocalHost:
-      databaseUrl.includes("127.0.0.1") ||
-      databaseUrl.includes("localhost") ||
-      databaseUrl.startsWith("file:"),
+      databaseUrl.includes(
+        "127.0.0.1",
+      ) ||
+      databaseUrl.includes(
+        "localhost",
+      ) ||
+      databaseUrl.startsWith(
+        "file:",
+      ),
   };
 }
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
-    return error.message.slice(0, 1500);
+    return error.message.slice(
+      0,
+      1500,
+    );
   }
 
   return "Unknown checkout error.";
 }
 
-export async function POST(request: Request) {
-  let stage: CheckoutStage = "START";
-  let createdOrderId: string | null = null;
-  let referenceNumber: string | null = null;
+function findPlan(
+  plans: EsimPackage[],
+  packageCode: string,
+) {
+  return plans.find(
+    (plan) =>
+      plan.packageCode.trim() ===
+      packageCode,
+  );
+}
+
+export async function POST(
+  request: Request,
+) {
+  let stage: CheckoutStage =
+    "START";
+
+  let createdOrderId:
+    | string
+    | null = null;
+
+  let referenceNumber:
+    | string
+    | null = null;
 
   try {
     stage = "READ_ENVIRONMENT";
 
     const secretKey =
-      process.env.PAYMONGO_SECRET_KEY?.trim();
+      process.env
+        .PAYMONGO_SECRET_KEY
+        ?.trim();
 
-    const configuredBaseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL?.trim();
-
-    const appUrl = normalizeAppUrl(
-      configuredBaseUrl ||
-        process.env.VERCEL_URL
-          ? configuredBaseUrl ||
-              `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000",
-    );
-
-    const usdToPhpRate =
-  await getUsdToPhpRate();
+    const appUrl = getAppUrl();
 
     const databaseInformation =
       getSafeDatabaseInformation();
 
-    console.info("CHECKOUT ENVIRONMENT CHECK:", {
-      stage,
-      appUrl,
-      paymongoSecretExists: Boolean(secretKey),
-      databaseUrlExists:
-        databaseInformation.exists,
-      databaseProtocol:
-        databaseInformation.protocol,
-      databaseUsesLocalHost:
-        databaseInformation.usesLocalHost,
-      usdToPhpRate,
-      nodeEnvironment: process.env.NODE_ENV,
-      vercelEnvironment:
-        process.env.VERCEL_ENV ?? "not-vercel",
-    });
+    console.info(
+      "CHECKOUT ENVIRONMENT CHECK:",
+      {
+        stage,
+        appUrl,
+
+        paymongoSecretExists:
+          Boolean(secretKey),
+
+        databaseUrlExists:
+          databaseInformation.exists,
+
+        databaseProtocol:
+          databaseInformation.protocol,
+
+        databaseUsesLocalHost:
+          databaseInformation
+            .usesLocalHost,
+
+        nodeEnvironment:
+          process.env.NODE_ENV,
+
+        vercelEnvironment:
+          process.env.VERCEL_ENV ??
+          "not-vercel",
+      },
+    );
 
     if (!secretKey) {
       console.error(
@@ -257,23 +351,31 @@ export async function POST(request: Request) {
           error:
             "Payment processing is temporarily unavailable.",
         },
-        { status: 500 },
+        {
+          status: 500,
+        },
       );
     }
 
     if (!databaseInformation.exists) {
-      console.error("DATABASE_URL is missing.");
+      console.error(
+        "DATABASE_URL is missing.",
+      );
 
       return NextResponse.json(
         {
           error:
             "Order processing is temporarily unavailable.",
         },
-        { status: 500 },
+        {
+          status: 500,
+        },
       );
     }
 
-    if (databaseInformation.usesLocalHost) {
+    if (
+      databaseInformation.usesLocalHost
+    ) {
       console.error(
         "DATABASE_URL points to a local database.",
       );
@@ -283,25 +385,9 @@ export async function POST(request: Request) {
           error:
             "The production database is not configured correctly.",
         },
-        { status: 500 },
-      );
-    }
-
-    if (
-      !Number.isFinite(usdToPhpRate) ||
-      usdToPhpRate <= 0
-    ) {
-      console.error(
-        "USD_TO_PHP_RATE is invalid:",
-        usdToPhpRate,
-      );
-
-      return NextResponse.json(
         {
-          error:
-            "Payment conversion is temporarily unavailable.",
+          status: 500,
         },
-        { status: 500 },
       );
     }
 
@@ -310,7 +396,8 @@ export async function POST(request: Request) {
     let formData: FormData;
 
     try {
-      formData = await request.formData();
+      formData =
+        await request.formData();
     } catch (error) {
       console.error(
         "CHECKOUT FORM PARSING ERROR:",
@@ -322,16 +409,22 @@ export async function POST(request: Request) {
           error:
             "The submitted checkout form is invalid.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
     const packageCode = String(
-      formData.get("packageCode") ?? "",
+      formData.get(
+        "packageCode",
+      ) ?? "",
     ).trim();
 
     const fullName = String(
-      formData.get("fullName") ?? "",
+      formData.get(
+        "fullName",
+      ) ?? "",
     ).trim();
 
     const email = String(
@@ -345,14 +438,19 @@ export async function POST(request: Request) {
     ).trim();
 
     const acceptedTerms =
-      formData.get("acceptedTerms") === "on";
+      formData.get(
+        "acceptedTerms",
+      ) === "on";
 
     if (!packageCode) {
       return NextResponse.json(
         {
-          error: "No eSIM plan was selected.",
+          error:
+            "No eSIM plan was selected.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -362,9 +460,12 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         {
-          error: "Please enter a valid full name.",
+          error:
+            "Please enter a valid full name.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -377,7 +478,9 @@ export async function POST(request: Request) {
           error:
             "Please enter a valid email address.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -387,7 +490,9 @@ export async function POST(request: Request) {
           error:
             "Please enter a valid phone number.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -397,22 +502,27 @@ export async function POST(request: Request) {
           error:
             "You must confirm eSIM compatibility and accept the terms.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
     stage = "LOAD_PLANS";
 
-    console.info("CHECKOUT: Loading plan", {
-      packageCode,
-    });
+    console.info(
+      "CHECKOUT: Loading plan",
+      {
+        packageCode,
+      },
+    );
 
-    const plans: EsimPackage[] =
+    const plans =
       await getPlans();
 
-    const plan = plans.find(
-      (item) =>
-        item.packageCode === packageCode,
+    const plan = findPlan(
+      plans,
+      packageCode,
     );
 
     if (!plan) {
@@ -421,21 +531,69 @@ export async function POST(request: Request) {
           error:
             "The selected eSIM plan is no longer available.",
         },
-        { status: 404 },
+        {
+          status: 404,
+        },
       );
     }
 
-    stage = "CALCULATE_PRICE";
+    stage =
+      "LOAD_PLAN_SETTING";
 
-    const sellingPriceUsd = Number(
-      getSellingPrice(
-        plan.price,
-        plan.volume,
-      ),
-    );
+    const planSetting =
+      await prisma.planSetting.findUnique(
+        {
+          where: {
+            packageCode:
+              plan.packageCode,
+          },
+        },
+      );
 
     if (
-      !Number.isFinite(sellingPriceUsd) ||
+      planSetting?.enabled === false
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "The selected eSIM plan is currently unavailable.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    const planName =
+      planSetting?.customName?.trim() ||
+      plan.name ||
+      plan.packageCode;
+
+    stage =
+      "CALCULATE_PRICE";
+
+    /*
+     * The price is calculated on the server.
+     * A price sent by the browser is never trusted.
+     */
+    const pricing =
+      await calculatePlanPrice(
+        plan,
+      );
+
+    const sellingPriceUsd =
+      pricing.sellingPriceUsd;
+
+    const usdToPhpRate =
+      pricing.usdToPhpRate;
+
+    const amountInCentavos =
+      pricing.amountPhpCentavos;
+
+    if (
+      !Number.isFinite(
+        sellingPriceUsd,
+      ) ||
       sellingPriceUsd <= 0
     ) {
       return NextResponse.json(
@@ -443,15 +601,28 @@ export async function POST(request: Request) {
           error:
             "The selected plan currently has an invalid price.",
         },
-        { status: 500 },
+        {
+          status: 500,
+        },
       );
     }
 
-    const amountInCentavos = Math.round(
-      sellingPriceUsd *
-        usdToPhpRate *
-        100,
-    );
+    if (
+      !Number.isFinite(
+        usdToPhpRate,
+      ) ||
+      usdToPhpRate <= 0
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Payment conversion is temporarily unavailable.",
+        },
+        {
+          status: 500,
+        },
+      );
+    }
 
     if (
       !Number.isSafeInteger(
@@ -464,7 +635,9 @@ export async function POST(request: Request) {
           error:
             "The converted payment amount is invalid.",
         },
-        { status: 500 },
+        {
+          status: 500,
+        },
       );
     }
 
@@ -477,8 +650,14 @@ export async function POST(request: Request) {
       "CHECKOUT: Creating pending order",
       {
         referenceNumber,
-        packageCode: plan.packageCode,
+        packageCode:
+          plan.packageCode,
+        planName,
+        sellingPriceUsd,
+        usdToPhpRate,
         amountInCentavos,
+        markupPercent:
+          pricing.markupPercent,
       },
     );
 
@@ -486,80 +665,124 @@ export async function POST(request: Request) {
       await prisma.order.create({
         data: {
           referenceNumber,
-          packageCode: plan.packageCode,
-          planName: plan.name,
-          customerName: fullName,
-          customerEmail: email,
-          customerPhone: phone,
+
+          packageCode:
+            plan.packageCode,
+
+          planName,
+
+          customerName:
+            fullName,
+
+          customerEmail:
+            email,
+
+          customerPhone:
+            phone,
+
           sellingPriceUsd,
+
           amountPhpCentavos:
             amountInCentavos,
+
           usdToPhpRate,
+
           currency: "PHP",
+
           status: "PENDING",
-          paymentStatus: "PENDING",
-          esimStatus: "NOT_ORDERED",
+
+          paymentStatus:
+            "PENDING",
+
+          esimStatus:
+            "NOT_ORDERED",
         },
       });
 
-    createdOrderId = order.id;
+    createdOrderId =
+      order.id;
 
     console.info(
       "CHECKOUT: Order created",
       {
-        orderId: order.id,
+        orderId:
+          order.id,
+
         referenceNumber,
       },
     );
 
-    const authorization = Buffer.from(
-      `${secretKey}:`,
-    ).toString("base64");
+    const authorization =
+      Buffer.from(
+        `${secretKey}:`,
+      ).toString("base64");
 
-    const validity = `${
-      plan.duration
-    } ${formatDurationUnit(
-      plan.durationUnit,
-      plan.duration,
-    )}`;
+    const duration =
+      Number(plan.duration);
+
+    const safeDuration =
+      Number.isFinite(duration) &&
+      duration > 0
+        ? duration
+        : 1;
+
+    const validity =
+      `${safeDuration} ${formatDurationUnit(
+        plan.durationUnit,
+        safeDuration,
+      )}`;
 
     const checkoutPayload = {
       data: {
         attributes: {
           billing: {
-            name: fullName,
+            name:
+              fullName,
+
             email,
+
             phone,
           },
 
           line_items: [
             {
-              name: plan.name.slice(
-                0,
-                255,
-              ),
-              description: `${formatData(
-                plan.volume,
-              )} eSIM — ${validity}`.slice(
-                0,
-                255,
-              ),
-              amount: amountInCentavos,
-              currency: "PHP",
-              quantity: 1,
+              name:
+                planName.slice(
+                  0,
+                  255,
+                ),
+
+              description:
+                `${formatData(
+                  plan.volume,
+                )} eSIM — ${validity}`.slice(
+                  0,
+                  255,
+                ),
+
+              amount:
+                amountInCentavos,
+
+              currency:
+                "PHP",
+
+              quantity:
+                1,
             },
           ],
 
           payment_method_types:
             getPaymentMethodTypes(),
 
-          success_url: `${appUrl}/checkout/success?reference=${encodeURIComponent(
-            referenceNumber,
-          )}`,
+          success_url:
+            `${appUrl}/checkout/success?reference=${encodeURIComponent(
+              referenceNumber,
+            )}`,
 
-          cancel_url: `${appUrl}/checkout?packageCode=${encodeURIComponent(
-            plan.packageCode,
-          )}&payment=cancelled`,
+          cancel_url:
+            `${appUrl}/checkout?packageCode=${encodeURIComponent(
+              plan.packageCode,
+            )}&payment=cancelled`,
 
           reference_number:
             referenceNumber,
@@ -588,7 +811,7 @@ export async function POST(request: Request) {
 
             plan_name:
               sanitizeMetadataValue(
-                plan.name,
+                planName,
               ),
 
             customer_name:
@@ -606,18 +829,32 @@ export async function POST(request: Request) {
                 phone,
               ),
 
-            selling_price_usd:
-              sellingPriceUsd.toFixed(2),
+            supplier_cost_usd:
+              pricing.supplierCostUsd.toFixed(
+                2,
+              ),
 
-            amount_php: (
-              amountInCentavos / 100
-            ).toFixed(2),
+            markup_percent:
+              pricing.markupPercent.toString(),
+
+            selling_price_usd:
+              sellingPriceUsd.toFixed(
+                2,
+              ),
+
+            amount_php:
+              (
+                amountInCentavos /
+                100
+              ).toFixed(2),
 
             usd_to_php_rate:
               usdToPhpRate.toString(),
 
             data_allowance:
-              formatData(plan.volume),
+              formatData(
+                plan.volume,
+              ),
 
             validity,
           },
@@ -625,20 +862,30 @@ export async function POST(request: Request) {
       },
     };
 
-    stage = "CREATE_PAYMONGO_SESSION";
+    stage =
+      "CREATE_PAYMONGO_SESSION";
 
     console.info(
       "CHECKOUT: Creating PayMongo session",
       {
-        orderId: order.id,
+        orderId:
+          order.id,
+
         referenceNumber,
+
         paymentMethods:
           getPaymentMethodTypes(),
+
         successUrl:
-          checkoutPayload.data.attributes
+          checkoutPayload
+            .data
+            .attributes
             .success_url,
+
         cancelUrl:
-          checkoutPayload.data.attributes
+          checkoutPayload
+            .data
+            .attributes
             .cancel_url,
       },
     );
@@ -648,17 +895,25 @@ export async function POST(request: Request) {
         "https://api.paymongo.com/v2/checkout_sessions",
         {
           method: "POST",
+
           headers: {
             Authorization:
               `Basic ${authorization}`,
+
             "Content-Type":
               "application/json",
-            Accept: "application/json",
+
+            Accept:
+              "application/json",
           },
-          body: JSON.stringify(
-            checkoutPayload,
-          ),
-          cache: "no-store",
+
+          body:
+            JSON.stringify(
+              checkoutPayload,
+            ),
+
+          cache:
+            "no-store",
         },
       );
 
@@ -667,7 +922,9 @@ export async function POST(request: Request) {
         paymongoResponse,
       );
 
-    if (!paymongoResponse.ok) {
+    if (
+      !paymongoResponse.ok
+    ) {
       const paymentError =
         getPayMongoErrorMessage(
           paymongoData,
@@ -675,11 +932,17 @@ export async function POST(request: Request) {
 
       await prisma.order.update({
         where: {
-          id: order.id,
+          id:
+            order.id,
         },
+
         data: {
-          lastError: paymentError,
-          lastAttemptAt: new Date(),
+          lastError:
+            paymentError,
+
+          lastAttemptAt:
+            new Date(),
+
           processingAttempts: {
             increment: 1,
           },
@@ -692,8 +955,11 @@ export async function POST(request: Request) {
           {
             status:
               paymongoResponse.status,
+
             referenceNumber,
-            response: paymongoData,
+
+            response:
+              paymongoData,
           },
           null,
           2,
@@ -702,13 +968,15 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         {
-          error: paymentError,
+          error:
+            paymentError,
         },
         {
           status:
             paymongoResponse.status >=
               400 &&
-            paymongoResponse.status < 600
+            paymongoResponse.status <
+              600
               ? paymongoResponse.status
               : 502,
         },
@@ -716,11 +984,15 @@ export async function POST(request: Request) {
     }
 
     const checkoutUrl =
-      paymongoData.data?.attributes
+      paymongoData
+        .data
+        ?.attributes
         ?.checkout_url;
 
     const checkoutSessionId =
-      paymongoData.data?.id;
+      paymongoData
+        .data
+        ?.id;
 
     if (
       !checkoutUrl ||
@@ -731,11 +1003,17 @@ export async function POST(request: Request) {
 
       await prisma.order.update({
         where: {
-          id: order.id,
+          id:
+            order.id,
         },
+
         data: {
-          lastError: missingDataError,
-          lastAttemptAt: new Date(),
+          lastError:
+            missingDataError,
+
+          lastAttemptAt:
+            new Date(),
+
           processingAttempts: {
             increment: 1,
           },
@@ -752,33 +1030,61 @@ export async function POST(request: Request) {
           error:
             "The payment provider did not return a valid checkout link.",
         },
-        { status: 502 },
+        {
+          status:
+            502,
+        },
       );
     }
 
-    stage = "SAVE_PAYMONGO_SESSION";
+    stage =
+      "SAVE_PAYMONGO_SESSION";
 
     await prisma.order.update({
       where: {
-        id: order.id,
+        id:
+          order.id,
       },
+
       data: {
         paymongoSessionId:
           checkoutSessionId,
-        lastError: null,
+
+        lastError:
+          null,
       },
     });
 
-    stage = "COMPLETE";
+    stage =
+      "COMPLETE";
 
     console.info(
       "CHECKOUT SESSION CREATED:",
       {
         stage,
-        orderId: order.id,
+
+        orderId:
+          order.id,
+
         referenceNumber,
+
         checkoutSessionId,
-        packageCode: plan.packageCode,
+
+        packageCode:
+          plan.packageCode,
+
+        planName,
+
+        supplierCostUsd:
+          pricing.supplierCostUsd,
+
+        markupPercent:
+          pricing.markupPercent,
+
+        sellingPriceUsd,
+
+        usdToPhpRate,
+
         amountInCentavos,
       },
     );
@@ -789,19 +1095,26 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     const errorMessage =
-      getErrorMessage(error);
+      getErrorMessage(
+        error,
+      );
 
     console.error(
       "CHECKOUT ROUTE ERROR:",
       {
         stage,
+
         createdOrderId,
+
         referenceNumber,
+
         errorName:
           error instanceof Error
             ? error.name
             : "UnknownError",
+
         errorMessage,
+
         error,
       },
     );
@@ -810,8 +1123,10 @@ export async function POST(request: Request) {
       try {
         await prisma.order.update({
           where: {
-            id: createdOrderId,
+            id:
+              createdOrderId,
           },
+
           data: {
             lastError:
               `[${stage}] ${errorMessage}`.slice(
@@ -832,6 +1147,7 @@ export async function POST(request: Request) {
           "UNABLE TO SAVE CHECKOUT ERROR:",
           {
             createdOrderId,
+
             databaseError,
           },
         );
@@ -842,13 +1158,17 @@ export async function POST(request: Request) {
       {
         error:
           "Something went wrong while starting your payment. Please try again.",
+
         stage:
           process.env.NODE_ENV ===
           "development"
             ? stage
             : undefined,
       },
-      { status: 500 },
+      {
+        status:
+          500,
+      },
     );
   }
 }
@@ -858,11 +1178,13 @@ export async function GET() {
     {
       message:
         "This checkout endpoint only accepts form submissions.",
+
       instruction:
         "Open an eSIM plan and complete the checkout form.",
     },
     {
       status: 405,
+
       headers: {
         Allow: "POST",
       },
