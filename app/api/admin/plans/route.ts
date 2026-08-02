@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { getCountryName } from "@/app/lib/countries";
 import { prisma } from "@/app/lib/prisma";
 import { fetchEsimAccessPlans } from "@/app/services/esimAccess";
-import { calculatePlanPrice } from "@/app/services/pricing";
+import {
+  calculatePlanPrice,
+  type CalculatedPlanPrice,
+} from "@/app/services/pricing";
 import type { EsimPackage } from "@/app/types/esim";
 
 export const runtime = "nodejs";
@@ -44,32 +48,78 @@ function unauthorizedResponse() {
   );
 }
 
-function getLocationName(
-  plan: EsimPackage,
-) {
-  if (
-    typeof plan.location === "string" &&
-    plan.location.trim()
-  ) {
-    return plan.location.trim();
-  }
-
-  if (
-    typeof plan.locationCode === "string" &&
-    plan.locationCode.trim()
-  ) {
-    return plan.locationCode.trim();
-  }
-
-  return "Unknown";
-}
-
-function normalizeSearchValue(
-  value: unknown,
-) {
+function normalizeText(value: unknown) {
   return typeof value === "string"
     ? value.trim()
     : "";
+}
+
+function getLocationCodes(
+  plan: EsimPackage,
+) {
+  const location =
+    normalizeText(plan.location);
+
+  if (location) {
+    return location
+      .split(",")
+      .map((code) => code.trim())
+      .filter(Boolean);
+  }
+
+  const locationCode =
+    normalizeText(
+      plan.locationCode,
+    );
+
+  return locationCode
+    ? [locationCode]
+    : [];
+}
+
+function getCoverageLabel(
+  plan: EsimPackage,
+  pricing: CalculatedPlanPrice,
+) {
+  const locationCodes =
+    getLocationCodes(plan);
+
+  if (pricing.isGlobalPlan) {
+    return "120+ countries and regions";
+  }
+
+  if (locationCodes.length > 1) {
+    return `${locationCodes.length} countries covered`;
+  }
+
+  const countryCode =
+    locationCodes[0];
+
+  if (countryCode) {
+    const countryName =
+      getCountryName(countryCode);
+
+    return countryName || countryCode;
+  }
+
+  return "Coverage information unavailable";
+}
+
+function getSearchableText(
+  plan: EsimPackage,
+) {
+  return [
+    plan.packageCode,
+    plan.name,
+    plan.location,
+    plan.locationCode,
+    plan.description,
+    plan.saleNote,
+  ]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 }
 
 export async function GET(
@@ -89,11 +139,13 @@ export async function GET(
         ?.trim()
         .toLowerCase() ?? "";
 
-    const supplierPlans =
-      await fetchEsimAccessPlans();
-
-    const savedSettings =
-      await prisma.planSetting.findMany();
+    const [
+      supplierPlans,
+      savedSettings,
+    ] = await Promise.all([
+      fetchEsimAccessPlans(),
+      prisma.planSetting.findMany(),
+    ]);
 
     const settingMap =
       new Map(
@@ -119,31 +171,9 @@ export async function GET(
             return true;
           }
 
-          const searchableText = [
-            packageCode,
-            normalizeSearchValue(
-              plan.name,
-            ),
-            normalizeSearchValue(
-              plan.location,
-            ),
-            normalizeSearchValue(
-              plan.locationCode,
-            ),
-            normalizeSearchValue(
-              plan.description,
-            ),
-            normalizeSearchValue(
-              plan.saleNote,
-            ),
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-
-          return searchableText.includes(
-            search,
-          );
+          return getSearchableText(
+            plan,
+          ).includes(search);
         },
       );
 
@@ -164,17 +194,18 @@ export async function GET(
                 plan,
               );
 
-            const displayName =
-              setting?.customName?.trim() ||
+            const supplierName =
               plan.name ||
               packageCode;
+
+            const displayName =
+              setting?.customName?.trim() ||
+              supplierName;
 
             return {
               packageCode,
 
-              supplierName:
-                plan.name ||
-                packageCode,
+              supplierName,
 
               displayName,
 
@@ -183,17 +214,20 @@ export async function GET(
                 null,
 
               locationName:
-                getLocationName(plan),
+                getCoverageLabel(
+                  plan,
+                  pricing,
+                ),
 
               locationCode:
                 plan.locationCode ??
                 null,
 
               volume:
-                plan.volume,
+                Number(plan.volume),
 
               duration:
-                plan.duration,
+                Number(plan.duration),
 
               durationUnit:
                 plan.durationUnit,
@@ -226,6 +260,11 @@ export async function GET(
 
               isGlobalPlan:
                 pricing.isGlobalPlan,
+
+              markupTable:
+                pricing.isGlobalPlan
+                  ? "GLOBAL"
+                  : "STANDARD",
 
               volumeGb:
                 pricing.volumeGb,
@@ -265,11 +304,20 @@ export async function GET(
       );
     });
 
-    return NextResponse.json({
-      success: true,
-      plans,
-      total: plans.length,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        plans,
+        total: plans.length,
+      },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate",
+        },
+      },
+    );
   } catch (error) {
     console.error(
       "ADMIN PLANS GET ERROR:",
@@ -338,7 +386,9 @@ export async function PUT(
       typeof body.customName ===
         "string" &&
       body.customName.trim()
-        ? body.customName.trim()
+        ? body.customName
+            .trim()
+            .slice(0, 255)
         : null;
 
     const setting =
@@ -351,12 +401,6 @@ export async function PUT(
           enabled,
           featured,
           customName,
-
-          /*
-           * The old percentage field is
-           * retained only for compatibility
-           * with the current Prisma model.
-           */
           markupPercent: 0,
         },
 
@@ -369,14 +413,19 @@ export async function PUT(
         },
       });
 
-    return NextResponse.json({
-      success: true,
+    return NextResponse.json(
+      {
+        success: true,
 
-      message:
-        "Plan settings updated successfully.",
+        message:
+          "Plan settings updated successfully.",
 
-      setting,
-    });
+        setting,
+      },
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
     console.error(
       "ADMIN PLANS UPDATE ERROR:",
