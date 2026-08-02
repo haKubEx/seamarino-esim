@@ -1,33 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/app/lib/prisma";
+import { fetchEsimAccessPlans } from "@/app/services/esimAccess";
+import { calculatePlanPrice } from "@/app/services/pricing";
+import type { EsimPackage } from "@/app/types/esim";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-type SupplierPlan = {
-  packageCode?: string;
-  name?: string;
-  slug?: string;
-  price?: number;
-  retailPrice?: number;
-  currencyCode?: string;
-  volume?: number;
-  duration?: number;
-  durationUnit?: string;
-  location?: string;
-  locationCode?: string;
-  locationNetworkList?: Array<{
-    locationName?: string;
-    locationCode?: string;
-  }>;
-};
 
 type UpdatePlanBody = {
   packageCode?: unknown;
   enabled?: unknown;
   featured?: unknown;
-  markupPercent?: unknown;
   customName?: unknown;
 };
 
@@ -36,7 +20,9 @@ function isAuthorized(request: Request) {
     process.env.ADMIN_API_KEY?.trim();
 
   const suppliedKey =
-    request.headers.get("x-admin-key")?.trim();
+    request.headers
+      .get("x-admin-key")
+      ?.trim();
 
   return Boolean(
     configuredKey &&
@@ -57,107 +43,29 @@ function unauthorizedResponse() {
   );
 }
 
-function getBaseUrl() {
-  const configuredUrl =
-    process.env.NEXT_PUBLIC_BASE_URL
-      ?.trim()
-      .replace(/\/+$/, "");
-
-  if (configuredUrl) {
-    return configuredUrl;
-  }
-
-  const vercelUrl =
-    process.env.VERCEL_URL
-      ?.trim()
-      .replace(/\/+$/, "");
-
-  if (vercelUrl) {
-    return `https://${vercelUrl}`;
-  }
-
-  return "http://localhost:3000";
-}
-
-function getSupplierCostUsd(plan: SupplierPlan) {
-  const rawPrice = Number(plan.price);
-
+function getLocationName(
+  plan: EsimPackage,
+) {
   if (
-    !Number.isFinite(rawPrice) ||
-    rawPrice < 0
+    typeof plan.location === "string" &&
+    plan.location.trim()
   ) {
-    return 0;
-  }
-
-  /*
-   * eSIM Access package prices use:
-   * 10000 = $1.00 USD.
-   */
-  return (
-    Math.round(
-      (rawPrice / 10000) * 100,
-    ) / 100
-  );
-}
-function getLocationName(plan: SupplierPlan) {
-  if (plan.location?.trim()) {
     return plan.location.trim();
   }
 
-  const firstLocation =
-    plan.locationNetworkList?.[0];
-
-  if (firstLocation?.locationName?.trim()) {
-    return firstLocation.locationName.trim();
-  }
-
-  if (plan.locationCode?.trim()) {
+  if (
+    typeof plan.locationCode === "string" &&
+    plan.locationCode.trim()
+  ) {
     return plan.locationCode.trim();
   }
 
   return "Unknown";
 }
 
-async function getSupplierPlans() {
-  const response = await fetch(
-    `${getBaseUrl()}/api/plans`,
-    {
-      method: "GET",
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-
-  const responseText = await response.text();
-
-  let data: unknown;
-
-  try {
-    data = JSON.parse(responseText);
-  } catch {
-    throw new Error(
-      "The plans API returned invalid JSON.",
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `Plans API failed with HTTP ${response.status}.`,
-    );
-  }
-
-  if (!Array.isArray(data)) {
-    throw new Error(
-      "The plans API returned an invalid plan list.",
-    );
-  }
-
-  return data as SupplierPlan[];
-}
-
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+) {
   if (!isAuthorized(request)) {
     return unauthorizedResponse();
   }
@@ -166,11 +74,13 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
 
     const search =
-      url.searchParams.get("search")?.trim().toLowerCase() ??
-      "";
+      url.searchParams
+        .get("search")
+        ?.trim()
+        .toLowerCase() ?? "";
 
     const supplierPlans =
-      await getSupplierPlans();
+      await fetchEsimAccessPlans();
 
     const savedSettings =
       await prisma.planSetting.findMany();
@@ -182,8 +92,8 @@ export async function GET(request: Request) {
       ]),
     );
 
-    const plans = supplierPlans
-      .filter((plan) => {
+    const matchingPlans =
+      supplierPlans.filter((plan) => {
         const packageCode =
           plan.packageCode?.trim();
 
@@ -198,81 +108,126 @@ export async function GET(request: Request) {
         const searchableText = [
           packageCode,
           plan.name,
-          plan.slug,
           plan.location,
           plan.locationCode,
-          getLocationName(plan),
+          plan.description,
+          plan.saleNote,
         ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
 
-        return searchableText.includes(search);
-      })
-      .map((plan) => {
-        const packageCode =
-          plan.packageCode as string;
+        return searchableText.includes(
+          search,
+        );
+      });
 
-        const setting =
-          settingMap.get(packageCode);
+    const plans = await Promise.all(
+      matchingPlans.map(
+        async (plan) => {
+          const packageCode =
+            plan.packageCode.trim();
 
-        const supplierCostUsd =
-          getSupplierCostUsd(plan);
+          const setting =
+            settingMap.get(
+              packageCode,
+            );
 
-        const markupPercent =
-          setting?.markupPercent ?? 20;
+          const pricing =
+            await calculatePlanPrice(
+              plan,
+            );
 
-        const sellingPriceUsd =
-          supplierCostUsd *
-          (1 + markupPercent / 100);
-
-        return {
-          packageCode,
-          supplierName:
-            plan.name ?? packageCode,
-          displayName:
+          const displayName =
             setting?.customName?.trim() ||
             plan.name ||
+            packageCode;
+
+          return {
             packageCode,
 
-          slug: plan.slug ?? null,
-          locationName:
-            getLocationName(plan),
-          locationCode:
-            plan.locationCode ?? null,
+            supplierName:
+              plan.name ||
+              packageCode,
 
-          volume:
-            plan.volume ?? null,
-          duration:
-            plan.duration ?? null,
-          durationUnit:
-            plan.durationUnit ?? null,
+            displayName,
 
-          currencyCode:
-            plan.currencyCode ?? "USD",
+            customName:
+              setting?.customName ??
+              null,
 
-          supplierPriceRaw:
-            plan.price ?? 0,
-          supplierCostUsd,
-          sellingPriceUsd,
+            locationName:
+              getLocationName(plan),
 
-          enabled:
-            setting?.enabled ?? true,
-          featured:
-            setting?.featured ?? false,
-          markupPercent,
-          customName:
-            setting?.customName ?? null,
+            locationCode:
+              plan.locationCode ??
+              null,
 
-          updatedAt:
-            setting?.updatedAt ?? null,
-        };
-      })
-      .sort((a, b) =>
-        a.displayName.localeCompare(
-          b.displayName,
-        ),
+            volume:
+              plan.volume,
+
+            duration:
+              plan.duration,
+
+            durationUnit:
+              plan.durationUnit,
+
+            enabled:
+              setting?.enabled ??
+              true,
+
+            featured:
+              setting?.featured ??
+              false,
+
+            supplierCostUsd:
+              pricing.supplierCostUsd,
+
+            markupAmountUsd:
+              pricing.markupAmountUsd,
+
+            sellingPriceUsd:
+              pricing.sellingPriceUsd,
+
+            sellingPricePhp:
+              pricing.sellingPricePhp,
+
+            amountPhpCentavos:
+              pricing.amountPhpCentavos,
+
+            usdToPhpRate:
+              pricing.usdToPhpRate,
+
+            isLocalPlan:
+              pricing.isLocalPlan,
+
+            volumeGb:
+              pricing.volumeGb,
+
+            volumeMb:
+              pricing.volumeMb,
+
+            updatedAt:
+              setting?.updatedAt ??
+              null,
+          };
+        },
+      ),
+    );
+
+    plans.sort((a, b) => {
+      if (
+        a.featured !== b.featured
+      ) {
+        return a.featured
+          ? -1
+          : 1;
+      }
+
+      return a.displayName.localeCompare(
+        b.displayName,
       );
+    });
 
     return NextResponse.json({
       success: true,
@@ -300,7 +255,9 @@ export async function GET(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(
+  request: Request,
+) {
   if (!isAuthorized(request)) {
     return unauthorizedResponse();
   }
@@ -310,7 +267,8 @@ export async function PUT(request: Request) {
       (await request.json()) as UpdatePlanBody;
 
     const packageCode =
-      typeof body.packageCode === "string"
+      typeof body.packageCode ===
+      "string"
         ? body.packageCode.trim()
         : "";
 
@@ -318,27 +276,8 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          error: "Package code is required.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    const markupPercent =
-      Number(body.markupPercent);
-
-    if (
-      !Number.isFinite(markupPercent) ||
-      markupPercent < 0 ||
-      markupPercent > 1000
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
           error:
-            "Markup percentage must be between 0 and 1000.",
+            "Package code is required.",
         },
         {
           status: 400,
@@ -347,17 +286,20 @@ export async function PUT(request: Request) {
     }
 
     const enabled =
-      typeof body.enabled === "boolean"
+      typeof body.enabled ===
+      "boolean"
         ? body.enabled
         : true;
 
     const featured =
-      typeof body.featured === "boolean"
+      typeof body.featured ===
+      "boolean"
         ? body.featured
         : false;
 
     const customName =
-      typeof body.customName === "string" &&
+      typeof body.customName ===
+        "string" &&
       body.customName.trim()
         ? body.customName.trim()
         : null;
@@ -367,18 +309,26 @@ export async function PUT(request: Request) {
         where: {
           packageCode,
         },
+
         update: {
           enabled,
           featured,
-          markupPercent,
           customName,
         },
+
         create: {
           packageCode,
           enabled,
           featured,
-          markupPercent,
           customName,
+
+          /*
+           * Keep this only because your
+           * existing Prisma model still
+           * contains markupPercent.
+           * It is no longer used for pricing.
+           */
+          markupPercent: 0,
         },
       });
 
