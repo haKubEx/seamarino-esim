@@ -14,17 +14,24 @@ export async function getAppSettings() {
 
     create: {
       id: "main",
-      usdToPhpRate: DEFAULT_USD_TO_PHP_RATE,
+      usdToPhpRate:
+        DEFAULT_USD_TO_PHP_RATE,
     },
   });
 }
 
 export async function getUsdToPhpRate() {
-  const settings = await getAppSettings();
+  const settings =
+    await getAppSettings();
 
-  const rate = Number(settings.usdToPhpRate);
+  const rate = Number(
+    settings.usdToPhpRate,
+  );
 
-  if (!Number.isFinite(rate) || rate <= 0) {
+  if (
+    !Number.isFinite(rate) ||
+    rate <= 0
+  ) {
     return DEFAULT_USD_TO_PHP_RATE;
   }
 

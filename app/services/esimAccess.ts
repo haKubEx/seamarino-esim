@@ -22,6 +22,8 @@ type EsimAccessConfig = {
   baseUrl: string;
 };
 
+const ESIM_ACCESS_TIMEOUT_MS = 20_000;
+
 function getEsimAccessConfig(): EsimAccessConfig {
   const accessCode =
     process.env.ESIM_ACCESS_CODE?.trim();
@@ -97,7 +99,8 @@ async function parseJsonResponse(
       "ESIM ACCESS INVALID JSON RESPONSE:",
       {
         status: response.status,
-        responseText,
+        responseText:
+          responseText.slice(0, 2000),
       },
     );
 
@@ -105,6 +108,23 @@ async function parseJsonResponse(
       `eSIM Access returned invalid JSON with HTTP ${response.status}.`,
     );
   }
+}
+
+function getAbortErrorMessage(
+  error: unknown,
+) {
+  if (
+    error instanceof Error &&
+    error.name === "AbortError"
+  ) {
+    return "The eSIM Access request timed out.";
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Unable to connect to eSIM Access.";
 }
 
 export async function fetchEsimAccessPlans(): Promise<
@@ -139,88 +159,137 @@ export async function fetchEsimAccessPlans(): Promise<
       secretKey,
     });
 
-  const response =
-    await fetch(endpoint, {
-      method: "POST",
+  const controller =
+    new AbortController();
 
-      headers: {
-        Accept:
-          "application/json",
+  const timeout =
+    setTimeout(() => {
+      controller.abort();
+    }, ESIM_ACCESS_TIMEOUT_MS);
 
-        "Content-Type":
-          "application/json",
-
-        "RT-AccessCode":
-          accessCode,
-
-        "RT-RequestID":
-          requestId,
-
-        "RT-Signature":
-          signature,
-
-        "RT-Timestamp":
-          timestamp,
-      },
-
-      body:
-        requestBody,
-
-      cache:
-        "no-store",
-    });
-
-  const data =
-    await parseJsonResponse(
-      response,
-    );
-
-  if (!response.ok) {
-    console.error(
-      "ESIM ACCESS HTTP ERROR:",
+  try {
+    console.info(
+      "ESIM ACCESS: Fetching package list",
       {
-        status:
-          response.status,
-
-        response:
-          data,
+        endpoint,
+        requestId,
       },
     );
 
-    throw new Error(
-      data.errorMsg ||
-        `eSIM Access request failed with HTTP ${response.status}.`,
-    );
-  }
+    const response =
+      await fetch(endpoint, {
+        method: "POST",
 
-  if (data.success === false) {
+        headers: {
+          Accept:
+            "application/json",
+
+          "Content-Type":
+            "application/json",
+
+          "RT-AccessCode":
+            accessCode,
+
+          "RT-RequestID":
+            requestId,
+
+          "RT-Signature":
+            signature,
+
+          "RT-Timestamp":
+            timestamp,
+        },
+
+        body:
+          requestBody,
+
+        cache:
+          "no-store",
+
+        signal:
+          controller.signal,
+      });
+
+    const data =
+      await parseJsonResponse(
+        response,
+      );
+
+    if (!response.ok) {
+      console.error(
+        "ESIM ACCESS HTTP ERROR:",
+        {
+          status:
+            response.status,
+
+          response:
+            data,
+        },
+      );
+
+      throw new Error(
+        data.errorMsg ||
+          `eSIM Access request failed with HTTP ${response.status}.`,
+      );
+    }
+
+    if (data.success === false) {
+      console.error(
+        "ESIM ACCESS API ERROR:",
+        data,
+      );
+
+      throw new Error(
+        data.errorMsg ||
+          data.errorCode ||
+          "eSIM Access returned an unsuccessful response.",
+      );
+    }
+
+    const packageList =
+      data.obj?.packageList ??
+      data.packageList ??
+      [];
+
+    if (!Array.isArray(packageList)) {
+      console.error(
+        "ESIM ACCESS INVALID PACKAGE LIST:",
+        data,
+      );
+
+      throw new Error(
+        "The eSIM Access response did not contain a valid package list.",
+      );
+    }
+
+    console.info(
+      "ESIM ACCESS: Package list received",
+      {
+        packageCount:
+          packageList.length,
+
+        requestId,
+      },
+    );
+
+    return packageList as EsimPackage[];
+  } catch (error) {
+    const message =
+      getAbortErrorMessage(
+        error,
+      );
+
     console.error(
-      "ESIM ACCESS API ERROR:",
-      data,
+      "ESIM ACCESS PACKAGE LIST ERROR:",
+      {
+        endpoint,
+        requestId,
+        error: message,
+      },
     );
 
-    throw new Error(
-      data.errorMsg ||
-        data.errorCode ||
-        "eSIM Access returned an unsuccessful response.",
-    );
+    throw new Error(message);
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const packageList =
-    data.obj?.packageList ??
-    data.packageList ??
-    [];
-
-  if (!Array.isArray(packageList)) {
-    console.error(
-      "ESIM ACCESS INVALID PACKAGE LIST:",
-      data,
-    );
-
-    throw new Error(
-      "The eSIM Access response did not contain a valid package list.",
-    );
-  }
-
-  return packageList as EsimPackage[];
 }

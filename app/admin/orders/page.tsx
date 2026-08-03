@@ -496,83 +496,117 @@ export default function AdminOrdersPage() {
         </section>
 
         <form
-          onSubmit={handleSearch}
-          className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_220px_auto_auto]">
-            <input
-              type="password"
-              value={adminKey}
-              onChange={(event) =>
-                setAdminKey(
-                  event.target.value,
-                )
+  onSubmit={handleSearch}
+  className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7"
+>
+  <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)_220px_auto_auto]">
+    <div>
+      <label
+        htmlFor="adminKey"
+        className="mb-2 block text-sm font-black text-slate-900"
+      >
+        Admin key
+      </label>
+
+      <input
+        id="adminKey"
+        type="password"
+        value={adminKey}
+        onChange={(event) =>
+          setAdminKey(
+            event.target.value,
+          )
+        }
+        autoComplete="current-password"
+        placeholder="Enter ADMIN_API_KEY"
+        className="h-16 w-full min-w-0 rounded-2xl border-2 border-slate-400 bg-white px-5 text-lg font-bold tracking-wide text-slate-950 shadow-sm outline-none transition placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-500 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label
+        htmlFor="orderSearch"
+        className="mb-2 block text-sm font-black text-slate-900"
+      >
+        Search orders
+      </label>
+
+      <input
+        id="orderSearch"
+        type="search"
+        value={search}
+        onChange={(event) =>
+          setSearch(
+            event.target.value,
+          )
+        }
+        placeholder="Reference, customer, email, phone, plan, or package"
+        className="h-16 w-full min-w-0 rounded-2xl border-2 border-slate-400 bg-white px-5 text-lg font-semibold text-slate-950 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-500 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+      />
+    </div>
+
+    <div>
+      <label
+        htmlFor="statusFilter"
+        className="mb-2 block text-sm font-black text-slate-900"
+      >
+        Order status
+      </label>
+
+      <select
+        id="statusFilter"
+        value={status}
+        onChange={(event) =>
+          setStatus(
+            event.target
+              .value as OrderStatusFilter,
+          )
+        }
+        className="h-16 w-full rounded-2xl border-2 border-slate-400 bg-white px-5 text-base font-black text-slate-900 shadow-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+      >
+        {ORDER_STATUSES.map(
+          (statusOption) => (
+            <option
+              key={
+                statusOption ||
+                "ALL"
               }
-              autoComplete="current-password"
-              placeholder="Enter ADMIN_API_KEY"
-              className="h-14 min-w-0 rounded-2xl border border-slate-300 px-5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-
-            <input
-              type="search"
-              value={search}
-              onChange={(event) =>
-                setSearch(
-                  event.target.value,
-                )
+              value={
+                statusOption
               }
-              placeholder="Search reference, customer, email, phone, plan, or package"
-              className="h-14 min-w-0 rounded-2xl border border-slate-300 px-5 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-
-            <select
-              value={status}
-              onChange={(event) =>
-                setStatus(
-                  event.target
-                    .value as OrderStatusFilter,
-                )
-              }
-              className="h-14 rounded-2xl border border-slate-300 bg-white px-5 font-bold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             >
-              {ORDER_STATUSES.map(
-                (statusOption) => (
-                  <option
-                    key={
-                      statusOption ||
-                      "ALL"
-                    }
-                    value={
-                      statusOption
-                    }
-                  >
-                    {statusOption ||
-                      "All statuses"}
-                  </option>
-                ),
-              )}
-            </select>
+              {statusOption ||
+                "All statuses"}
+            </option>
+          ),
+        )}
+      </select>
+    </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-14 rounded-2xl bg-[#0A2D62] px-7 font-black text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading
-                ? "Loading..."
-                : "Load Orders"}
-            </button>
+    <div className="flex items-end">
+      <button
+        type="submit"
+        disabled={loading}
+        className="h-16 w-full rounded-2xl bg-[#0A2D62] px-7 text-base font-black text-white shadow-md transition hover:bg-blue-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {loading
+          ? "Loading..."
+          : "Load Orders"}
+      </button>
+    </div>
 
-            <button
-              type="button"
-              onClick={clearFilters}
-              disabled={loading}
-              className="h-14 rounded-2xl border border-slate-300 bg-white px-6 font-black text-slate-700 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-50"
-            >
-              Clear
-            </button>
-          </div>
-        </form>
+    <div className="flex items-end">
+      <button
+        type="button"
+        onClick={clearFilters}
+        disabled={loading}
+        className="h-16 w-full rounded-2xl border-2 border-slate-300 bg-white px-6 text-base font-black text-slate-800 shadow-sm transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+</form>
 
         {error && (
           <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 font-semibold text-red-700">

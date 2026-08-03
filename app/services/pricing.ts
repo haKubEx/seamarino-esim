@@ -16,6 +16,20 @@ export type CalculatedPlanPrice = {
   isGlobalPlan: boolean;
 };
 
+export type CalculatePlanPriceOptions = {
+  /*
+   * Pass a preloaded exchange rate to avoid
+   * querying AppSetting repeatedly.
+   */
+  usdToPhpRate?: number;
+
+  /*
+   * Pass the preloaded PlanSetting enabled
+   * value to avoid querying PlanSetting again.
+   */
+  enabled?: boolean;
+};
+
 function roundCurrency(value: number) {
   return Math.round(value * 100) / 100;
 }
@@ -39,7 +53,12 @@ function getVolumeGb(volumeBytes: number) {
     return 0;
   }
 
-  return volumeBytes / 1024 / 1024 / 1024;
+  return (
+    volumeBytes /
+    1024 /
+    1024 /
+    1024
+  );
 }
 
 function normalizeText(value: unknown) {
@@ -65,8 +84,12 @@ function isGlobalPlan(
 
   return (
     searchableText.includes("global") ||
-    searchableText.includes("worldwide") ||
-    searchableText.includes("world wide")
+    searchableText.includes(
+      "worldwide",
+    ) ||
+    searchableText.includes(
+      "world wide",
+    )
   );
 }
 
@@ -174,18 +197,100 @@ function getGlobalMarkupUsd(
   return 15;
 }
 
-export async function calculatePlanPrice(
+function validatePackageCode(
   plan: EsimPackage,
-): Promise<CalculatedPlanPrice> {
+) {
+  const packageCode =
+    plan.packageCode?.trim();
+
+  if (!packageCode) {
+    throw new Error(
+      "The eSIM package code is missing.",
+    );
+  }
+
+  return packageCode;
+}
+
+async function resolvePlanEnabled({
+  packageCode,
+  suppliedEnabled,
+}: {
+  packageCode: string;
+  suppliedEnabled:
+    | boolean
+    | undefined;
+}) {
+  /*
+   * When the caller already loaded all plan
+   * settings, use that supplied value and do
+   * not perform another database query.
+   */
+  if (
+    typeof suppliedEnabled ===
+    "boolean"
+  ) {
+    return suppliedEnabled;
+  }
+
+  /*
+   * Backward-compatible fallback for routes
+   * that still call calculatePlanPrice(plan)
+   * without preloading PlanSetting.
+   */
   const planSetting =
     await prisma.planSetting.findUnique({
       where: {
-        packageCode:
-          plan.packageCode,
+        packageCode,
+      },
+
+      select: {
+        enabled: true,
       },
     });
 
-  if (planSetting?.enabled === false) {
+  return planSetting?.enabled ?? true;
+}
+
+async function resolveUsdToPhpRate(
+  suppliedRate:
+    | number
+    | undefined,
+) {
+  /*
+   * The public plans API passes one preloaded
+   * exchange rate for the whole package list.
+   */
+  if (
+    typeof suppliedRate ===
+    "number"
+  ) {
+    return suppliedRate;
+  }
+
+  /*
+   * Backward-compatible fallback for checkout
+   * and other individual-plan callers.
+   */
+  return getUsdToPhpRate();
+}
+
+export async function calculatePlanPrice(
+  plan: EsimPackage,
+  options: CalculatePlanPriceOptions = {},
+): Promise<CalculatedPlanPrice> {
+  const packageCode =
+    validatePackageCode(plan);
+
+  const enabled =
+    await resolvePlanEnabled({
+      packageCode,
+
+      suppliedEnabled:
+        options.enabled,
+    });
+
+  if (!enabled) {
     throw new Error(
       "The selected eSIM plan is currently unavailable.",
     );
@@ -207,6 +312,7 @@ export async function calculatePlanPrice(
 
   /*
    * eSIM Access price format:
+   *
    * 10000 = $1.00 USD
    */
   const supplierCostUsd =
@@ -229,25 +335,14 @@ export async function calculatePlanPrice(
   }
 
   const volumeMb =
-    getVolumeMb(
-      volumeBytes,
-    );
+    getVolumeMb(volumeBytes);
 
   const volumeGb =
-    getVolumeGb(
-      volumeBytes,
-    );
+    getVolumeGb(volumeBytes);
 
   const globalPlan =
     isGlobalPlan(plan);
 
-  /*
-   * Local, regional, and combo plans
-   * use the standard markup table.
-   *
-   * Global plans use the separate
-   * global markup table.
-   */
   const markupAmountUsd =
     globalPlan
       ? getGlobalMarkupUsd(
@@ -258,7 +353,9 @@ export async function calculatePlanPrice(
         );
 
   const usdToPhpRate =
-    await getUsdToPhpRate();
+    await resolveUsdToPhpRate(
+      options.usdToPhpRate,
+    );
 
   if (
     !Number.isFinite(

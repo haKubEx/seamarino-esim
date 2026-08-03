@@ -2,13 +2,21 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/app/lib/prisma";
 import { fetchEsimAccessPlans } from "@/app/services/esimAccess";
-import { calculatePlanPrice } from "@/app/services/pricing";
+import {
+  calculatePlanPrice,
+} from "@/app/services/pricing";
+import {
+  getUsdToPhpRate,
+} from "@/app/services/settings";
 import type { EsimPackage } from "@/app/types/esim";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
-function getLocationName(plan: EsimPackage) {
+function getLocationName(
+  plan: EsimPackage,
+) {
   if (
     typeof plan.location === "string" &&
     plan.location.trim()
@@ -28,11 +36,25 @@ function getLocationName(plan: EsimPackage) {
 
 export async function GET() {
   try {
+    console.log(
+      "Loading supplier plans...",
+    );
+
     const supplierPlans =
       await fetchEsimAccessPlans();
 
-    const savedSettings =
-      await prisma.planSetting.findMany();
+    console.log(
+      `Supplier plans: ${supplierPlans.length}`,
+    );
+
+    const [
+      savedSettings,
+      usdToPhpRate,
+    ] = await Promise.all([
+      prisma.planSetting.findMany(),
+
+      getUsdToPhpRate(),
+    ]);
 
     const settingMap = new Map(
       savedSettings.map((setting) => [
@@ -53,81 +75,111 @@ export async function GET() {
         const setting =
           settingMap.get(packageCode);
 
-        return setting?.enabled ?? true;
+        return (
+          setting?.enabled ?? true
+        );
       });
+
+    console.log(
+      `Enabled plans: ${enabledPlans.length}`,
+    );
 
     const pricedPlans =
       await Promise.all(
-        enabledPlans.map(async (plan) => {
-          const packageCode =
-            plan.packageCode.trim();
+        enabledPlans.map(
+          async (plan) => {
+            const packageCode =
+              plan.packageCode.trim();
 
-          const setting =
-            settingMap.get(packageCode);
+            const setting =
+              settingMap.get(
+                packageCode,
+              );
 
-          const pricing =
-            await calculatePlanPrice(plan);
+            const pricing =
+              await calculatePlanPrice(
+                plan,
+                {
+                  enabled:
+                    setting?.enabled ??
+                    true,
 
-          const displayName =
-            setting?.customName?.trim() ||
-            plan.name ||
-            packageCode;
+                  usdToPhpRate,
+                },
+              );
 
-          return {
-            ...plan,
+            const displayName =
+              setting?.customName?.trim() ||
+              plan.name ||
+              packageCode;
 
-            packageCode,
+            return {
+              ...plan,
 
-            name: displayName,
-            displayName,
+              packageCode,
 
-            locationName:
-              getLocationName(plan),
+              name:
+                displayName,
 
-            enabled:
-              setting?.enabled ?? true,
+              displayName,
 
-            featured:
-              setting?.featured ?? false,
+              locationName:
+                getLocationName(
+                  plan,
+                ),
 
-            supplierCostUsd:
-              pricing.supplierCostUsd,
+              enabled:
+                setting?.enabled ??
+                true,
 
-            markupAmountUsd:
-              pricing.markupAmountUsd,
+              featured:
+                setting?.featured ??
+                false,
 
-            sellingPriceUsd:
-              pricing.sellingPriceUsd,
+              supplierCostUsd:
+                pricing.supplierCostUsd,
 
-            sellingPricePhp:
-              pricing.sellingPricePhp,
+              markupAmountUsd:
+                pricing.markupAmountUsd,
 
-            amountPhpCentavos:
-              pricing.amountPhpCentavos,
+              sellingPriceUsd:
+                pricing.sellingPriceUsd,
 
-            usdToPhpRate:
-              pricing.usdToPhpRate,
+              sellingPricePhp:
+                pricing.sellingPricePhp,
 
-            isGlobalPlan:
-              pricing.isGlobalPlan,
+              amountPhpCentavos:
+                pricing.amountPhpCentavos,
 
-            markupTable:
-              pricing.isGlobalPlan
-                ? "GLOBAL"
-                : "STANDARD",
+              usdToPhpRate:
+                pricing.usdToPhpRate,
 
-            volumeGb:
-              pricing.volumeGb,
+              volumeGb:
+                pricing.volumeGb,
 
-            volumeMb:
-              pricing.volumeMb,
-          };
-        }),
+              volumeMb:
+                pricing.volumeMb,
+
+              isGlobalPlan:
+                pricing.isGlobalPlan,
+
+              markupTable:
+                pricing.isGlobalPlan
+                  ? "GLOBAL"
+                  : "STANDARD",
+            };
+          },
+        ),
       );
 
     pricedPlans.sort((a, b) => {
-      if (a.featured !== b.featured) {
-        return a.featured ? -1 : 1;
+      if (
+        a.featured !==
+        b.featured
+      ) {
+        return a.featured
+          ? -1
+          : 1;
       }
 
       if (
@@ -142,9 +194,15 @@ export async function GET() {
       return String(
         a.displayName,
       ).localeCompare(
-        String(b.displayName),
+        String(
+          b.displayName,
+        ),
       );
     });
+
+    console.log(
+      "Plans API completed.",
+    );
 
     return NextResponse.json(
       pricedPlans,
@@ -153,7 +211,7 @@ export async function GET() {
 
         headers: {
           "Cache-Control":
-            "no-store, no-cache, must-revalidate",
+            "no-store",
         },
       },
     );
@@ -170,7 +228,7 @@ export async function GET() {
         error:
           error instanceof Error
             ? error.message
-            : "Unable to load eSIM plans.",
+            : "Unable to load plans.",
       },
       {
         status: 500,
