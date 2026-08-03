@@ -1,3 +1,37 @@
+import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
+type EndpointResult = {
+  ok: boolean;
+  status: number;
+  data: unknown;
+};
+
+function getBaseUrl() {
+  const configuredUrl =
+    process.env.NEXT_PUBLIC_BASE_URL
+      ?.trim()
+      .replace(/\/+$/, "");
+
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  const vercelUrl =
+    process.env.VERCEL_URL
+      ?.trim()
+      .replace(/\/+$/, "");
+
+  if (vercelUrl) {
+    return `https://${vercelUrl}`;
+  }
+
+  return "http://localhost:3000";
+}
+
 function isAuthorized(request: Request) {
   const authorization =
     request.headers.get("authorization");
@@ -7,36 +41,6 @@ function isAuthorized(request: Request) {
 
   const cronSecret =
     process.env.CRON_SECRET?.trim();
-
-  const suppliedToken =
-    authorization?.startsWith("Bearer ")
-      ? authorization.slice(7)
-      : "";
-
-  console.info("FULFILLMENT AUTH CHECK:", {
-    hasAuthorizationHeader:
-      Boolean(authorization),
-
-    authorizationUsesBearer:
-      authorization?.startsWith(
-        "Bearer ",
-      ) ?? false,
-
-    suppliedTokenLength:
-      suppliedToken.length,
-
-    hasFulfillmentSecret:
-      Boolean(fulfillmentSecret),
-
-    fulfillmentSecretLength:
-      fulfillmentSecret?.length ?? 0,
-
-    hasCronSecret:
-      Boolean(cronSecret),
-
-    cronSecretLength:
-      cronSecret?.length ?? 0,
-  });
 
   if (!authorization) {
     return false;
@@ -54,5 +58,189 @@ function isAuthorized(request: Request) {
     (secret) =>
       authorization ===
       `Bearer ${secret}`,
+  );
+}
+
+async function callProtectedEndpoint({
+  url,
+  fulfillmentSecret,
+}: {
+  url: string;
+  fulfillmentSecret: string;
+}): Promise<EndpointResult> {
+  const response = await fetch(url, {
+    method: "POST",
+
+    headers: {
+      Accept: "application/json",
+
+      Authorization:
+        `Bearer ${fulfillmentSecret}`,
+    },
+
+    cache: "no-store",
+  });
+
+  const responseText =
+    await response.text();
+
+  let data: unknown;
+
+  try {
+    data = responseText
+      ? JSON.parse(responseText)
+      : null;
+  } catch {
+    data = {
+      rawResponse: responseText,
+    };
+  }
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+  };
+}
+
+async function runFulfillment() {
+  const fulfillmentSecret =
+    process.env.FULFILLMENT_SECRET?.trim();
+
+  if (!fulfillmentSecret) {
+    throw new Error(
+      "FULFILLMENT_SECRET is missing from the environment.",
+    );
+  }
+
+  const baseUrl = getBaseUrl();
+
+  const syncResult =
+    await callProtectedEndpoint({
+      url: `${baseUrl}/api/esim/sync`,
+      fulfillmentSecret,
+    });
+
+  const deliveryResult =
+    await callProtectedEndpoint({
+      url: `${baseUrl}/api/esim/deliver`,
+      fulfillmentSecret,
+    });
+
+  return {
+    baseUrl,
+    sync: syncResult,
+    delivery: deliveryResult,
+  };
+}
+
+async function handleFulfillmentRequest(
+  request: Request,
+) {
+  if (!isAuthorized(request)) {
+    console.error(
+      "FULFILLMENT CRON: Unauthorized request.",
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Unauthorized.",
+      },
+      {
+        status: 401,
+      },
+    );
+  }
+
+  try {
+    const result =
+      await runFulfillment();
+
+    const success =
+      result.sync.ok &&
+      result.delivery.ok;
+
+    if (!success) {
+      console.error(
+        "FULFILLMENT CRON: One or more jobs failed.",
+        {
+          baseUrl:
+            result.baseUrl,
+
+          syncStatus:
+            result.sync.status,
+
+          deliveryStatus:
+            result.delivery.status,
+
+          syncData:
+            result.sync.data,
+
+          deliveryData:
+            result.delivery.data,
+        },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success,
+
+        sync: {
+          status:
+            result.sync.status,
+
+          response:
+            result.sync.data,
+        },
+
+        delivery: {
+          status:
+            result.delivery.status,
+
+          response:
+            result.delivery.data,
+        },
+      },
+      {
+        status: success ? 200 : 502,
+      },
+    );
+  } catch (error) {
+    console.error(
+      "FULFILLMENT CRON ERROR:",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown fulfillment error.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
+export async function POST(
+  request: Request,
+) {
+  return handleFulfillmentRequest(
+    request,
+  );
+}
+
+export async function GET(
+  request: Request,
+) {
+  return handleFulfillmentRequest(
+    request,
   );
 }
