@@ -1,0 +1,52 @@
+﻿name: Seamarino eSIM Fulfillment
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fulfillment:
+    name: Run fulfillment
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Call fulfillment endpoint
+        env:
+          FULFILLMENT_SECRET: ${{ secrets.FULFILLMENT_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$FULFILLMENT_SECRET" ]; then
+            echo "FULFILLMENT_SECRET is not configured."
+            exit 1
+          fi
+
+          response_file="$(mktemp)"
+
+          http_status="$(
+            curl \
+              --silent \
+              --show-error \
+              --output "$response_file" \
+              --write-out "%{http_code}" \
+              --request POST \
+              --header "Accept: application/json" \
+              --header "Authorization: Bearer $FULFILLMENT_SECRET" \
+              --max-time 120 \
+              "https://www.seamarinoesim.com/api/cron/fulfillment"
+          )"
+
+          echo "HTTP status: $http_status"
+          cat "$response_file"
+          echo
+
+          if [ "$http_status" -lt 200 ] || [ "$http_status" -ge 300 ]; then
+            echo "Fulfillment endpoint failed."
+            exit 1
+          fi
