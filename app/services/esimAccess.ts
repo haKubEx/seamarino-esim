@@ -20,9 +20,42 @@ type EsimAccessConfig = {
   accessCode: string;
   secretKey: string;
   baseUrl: string;
+  timeoutMs: number;
+  retryCount: number;
+  retryDelayMs: number;
 };
 
-const ESIM_ACCESS_TIMEOUT_MS = 20_000;
+function getPositiveInteger(
+  value: string | undefined,
+  fallback: number,
+) {
+  const parsedValue = Number(value);
+
+  if (
+    !Number.isInteger(parsedValue) ||
+    parsedValue <= 0
+  ) {
+    return fallback;
+  }
+
+  return parsedValue;
+}
+
+function getNonNegativeInteger(
+  value: string | undefined,
+  fallback: number,
+) {
+  const parsedValue = Number(value);
+
+  if (
+    !Number.isInteger(parsedValue) ||
+    parsedValue < 0
+  ) {
+    return fallback;
+  }
+
+  return parsedValue;
+}
 
 function getEsimAccessConfig(): EsimAccessConfig {
   const accessCode =
@@ -35,6 +68,24 @@ function getEsimAccessConfig(): EsimAccessConfig {
     process.env.ESIM_BASE_URL?.trim() ||
     "https://api.esimaccess.com"
   ).replace(/\/+$/, "");
+
+  const timeoutMs =
+    getPositiveInteger(
+      process.env.ESIM_ACCESS_TIMEOUT_MS,
+      45_000,
+    );
+
+  const retryCount =
+    getNonNegativeInteger(
+      process.env.ESIM_ACCESS_RETRY_COUNT,
+      2,
+    );
+
+  const retryDelayMs =
+    getPositiveInteger(
+      process.env.ESIM_ACCESS_RETRY_DELAY_MS,
+      1_500,
+    );
 
   if (!accessCode) {
     throw new Error(
@@ -52,6 +103,9 @@ function getEsimAccessConfig(): EsimAccessConfig {
     accessCode,
     secretKey,
     baseUrl,
+    timeoutMs,
+    retryCount,
+    retryDelayMs,
   };
 }
 
@@ -100,7 +154,10 @@ async function parseJsonResponse(
       {
         status: response.status,
         responseText:
-          responseText.slice(0, 2000),
+          responseText.slice(
+            0,
+            2000,
+          ),
       },
     );
 
@@ -110,7 +167,7 @@ async function parseJsonResponse(
   }
 }
 
-function getAbortErrorMessage(
+function getRequestErrorMessage(
   error: unknown,
 ) {
   if (
@@ -127,15 +184,59 @@ function getAbortErrorMessage(
   return "Unable to connect to eSIM Access.";
 }
 
-export async function fetchEsimAccessPlans(): Promise<
-  EsimPackage[]
-> {
-  const {
-    accessCode,
-    secretKey,
-    baseUrl,
-  } = getEsimAccessConfig();
+function isRetryableError(
+  error: unknown,
+) {
+  if (!(error instanceof Error)) {
+    return true;
+  }
 
+  if (
+    error.name === "AbortError"
+  ) {
+    return true;
+  }
+
+  const message =
+    error.message.toLowerCase();
+
+  return (
+    message.includes("timed out") ||
+    message.includes("fetch failed") ||
+    message.includes("network") ||
+    message.includes("socket") ||
+    message.includes("connection") ||
+    message.includes("econnreset") ||
+    message.includes("etimedout")
+  );
+}
+
+function wait(
+  milliseconds: number,
+) {
+  return new Promise<void>(
+    (resolve) => {
+      setTimeout(
+        resolve,
+        milliseconds,
+      );
+    },
+  );
+}
+
+async function requestPackageList({
+  accessCode,
+  secretKey,
+  baseUrl,
+  timeoutMs,
+  attempt,
+}: {
+  accessCode: string;
+  secretKey: string;
+  baseUrl: string;
+  timeoutMs: number;
+  attempt: number;
+}): Promise<EsimPackage[]> {
   const endpoint =
     `${baseUrl}/api/v1/open/package/list`;
 
@@ -165,7 +266,7 @@ export async function fetchEsimAccessPlans(): Promise<
   const timeout =
     setTimeout(() => {
       controller.abort();
-    }, ESIM_ACCESS_TIMEOUT_MS);
+    }, timeoutMs);
 
   try {
     console.info(
@@ -173,42 +274,47 @@ export async function fetchEsimAccessPlans(): Promise<
       {
         endpoint,
         requestId,
+        attempt,
+        timeoutMs,
       },
     );
 
     const response =
-      await fetch(endpoint, {
-        method: "POST",
+      await fetch(
+        endpoint,
+        {
+          method: "POST",
 
-        headers: {
-          Accept:
-            "application/json",
+          headers: {
+            Accept:
+              "application/json",
 
-          "Content-Type":
-            "application/json",
+            "Content-Type":
+              "application/json",
 
-          "RT-AccessCode":
-            accessCode,
+            "RT-AccessCode":
+              accessCode,
 
-          "RT-RequestID":
-            requestId,
+            "RT-RequestID":
+              requestId,
 
-          "RT-Signature":
-            signature,
+            "RT-Signature":
+              signature,
 
-          "RT-Timestamp":
-            timestamp,
+            "RT-Timestamp":
+              timestamp,
+          },
+
+          body:
+            requestBody,
+
+          cache:
+            "no-store",
+
+          signal:
+            controller.signal,
         },
-
-        body:
-          requestBody,
-
-        cache:
-          "no-store",
-
-        signal:
-          controller.signal,
-      });
+      );
 
     const data =
       await parseJsonResponse(
@@ -221,6 +327,8 @@ export async function fetchEsimAccessPlans(): Promise<
         {
           status:
             response.status,
+
+          requestId,
 
           response:
             data,
@@ -236,7 +344,11 @@ export async function fetchEsimAccessPlans(): Promise<
     if (data.success === false) {
       console.error(
         "ESIM ACCESS API ERROR:",
-        data,
+        {
+          requestId,
+          response:
+            data,
+        },
       );
 
       throw new Error(
@@ -251,10 +363,18 @@ export async function fetchEsimAccessPlans(): Promise<
       data.packageList ??
       [];
 
-    if (!Array.isArray(packageList)) {
+    if (
+      !Array.isArray(
+        packageList,
+      )
+    ) {
       console.error(
         "ESIM ACCESS INVALID PACKAGE LIST:",
-        data,
+        {
+          requestId,
+          response:
+            data,
+        },
       );
 
       throw new Error(
@@ -269,27 +389,107 @@ export async function fetchEsimAccessPlans(): Promise<
           packageList.length,
 
         requestId,
+
+        attempt,
       },
     );
 
     return packageList as EsimPackage[];
-  } catch (error) {
-    const message =
-      getAbortErrorMessage(
-        error,
+  } finally {
+    clearTimeout(
+      timeout,
+    );
+  }
+}
+
+export async function fetchEsimAccessPlans(): Promise<
+  EsimPackage[]
+> {
+  const {
+    accessCode,
+    secretKey,
+    baseUrl,
+    timeoutMs,
+    retryCount,
+    retryDelayMs,
+  } = getEsimAccessConfig();
+
+  const maximumAttempts =
+    retryCount + 1;
+
+  let lastError:
+    | unknown = null;
+
+  for (
+    let attempt = 1;
+    attempt <= maximumAttempts;
+    attempt += 1
+  ) {
+    try {
+      return await requestPackageList({
+        accessCode,
+        secretKey,
+        baseUrl,
+        timeoutMs,
+        attempt,
+      });
+    } catch (error) {
+      lastError =
+        error;
+
+      const message =
+        getRequestErrorMessage(
+          error,
+        );
+
+      const retryable =
+        isRetryableError(
+          error,
+        );
+
+      console.error(
+        "ESIM ACCESS PACKAGE LIST ATTEMPT FAILED:",
+        {
+          attempt,
+          maximumAttempts,
+          retryable,
+          error:
+            message,
+        },
       );
 
-    console.error(
-      "ESIM ACCESS PACKAGE LIST ERROR:",
-      {
-        endpoint,
-        requestId,
-        error: message,
-      },
-    );
+      if (
+        !retryable ||
+        attempt >=
+          maximumAttempts
+      ) {
+        break;
+      }
 
-    throw new Error(message);
-  } finally {
-    clearTimeout(timeout);
+      const delay =
+        retryDelayMs *
+        attempt;
+
+      console.info(
+        "ESIM ACCESS: Retrying package list",
+        {
+          nextAttempt:
+            attempt + 1,
+
+          delayMs:
+            delay,
+        },
+      );
+
+      await wait(
+        delay,
+      );
+    }
   }
+
+  throw new Error(
+    getRequestErrorMessage(
+      lastError,
+    ),
+  );
 }

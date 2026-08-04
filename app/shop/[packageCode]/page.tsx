@@ -12,22 +12,35 @@ interface PlanDetailsPageProps {
   }>;
 }
 
-function formatData(bytes: number) {
-  const gb = bytes / 1024 / 1024 / 1024;
+function formatData(bytes: number): string {
+  const gb =
+    bytes / 1024 / 1024 / 1024;
 
   if (gb < 1) {
-    const mb = bytes / 1024 / 1024;
+    const mb =
+      bytes / 1024 / 1024;
+
     return `${Math.round(mb)} MB`;
   }
 
-  return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`;
+  return `${
+    Number.isInteger(gb)
+      ? gb
+      : gb.toFixed(1)
+  } GB`;
 }
 
-function formatDurationUnit(unit: string, duration: number) {
-  const normalized = unit.trim().toLowerCase();
+function formatDurationUnit(
+  unit: string,
+  duration: number,
+): string {
+  const normalized =
+    unit.trim().toLowerCase();
 
   if (!normalized) {
-    return duration === 1 ? "day" : "days";
+    return duration === 1
+      ? "day"
+      : "days";
   }
 
   if (duration === 1) {
@@ -41,57 +54,135 @@ function formatDurationUnit(unit: string, duration: number) {
     : `${normalized}s`;
 }
 
-function formatNetwork(speed?: string) {
+function formatNetwork(
+  speed?: string,
+): string {
   if (!speed?.trim()) {
     return "4G / LTE";
   }
 
-  return speed.replaceAll(",", " / ");
+  return speed.replaceAll(
+    ",",
+    " / ",
+  );
 }
 
-function getRegionName(plan: EsimPackage, locationCount: number) {
+function supportsTopUp(
+  value:
+    | string
+    | number
+    | boolean
+    | null
+    | undefined,
+): boolean {
+  if (
+    value === true ||
+    value === 1
+  ) {
+    return true;
+  }
+
+  if (
+    value === false ||
+    value === 0 ||
+    value === null ||
+    value === undefined
+  ) {
+    return false;
+  }
+
+  const normalized =
+    String(value)
+      .trim()
+      .toLowerCase();
+
+  return [
+    "1",
+    "true",
+    "yes",
+    "supported",
+  ].includes(normalized);
+}
+
+function getRegionName(
+  plan: EsimPackage,
+  locationCount: number,
+): string {
   const searchableText = [
     plan.name,
     plan.description,
     plan.saleNote,
   ]
-    .filter(Boolean)
+    .filter(
+      (
+        value,
+      ): value is string =>
+        Boolean(value),
+    )
     .join(" ")
     .toLowerCase();
 
-  if (searchableText.includes("global")) {
+  if (
+    searchableText.includes(
+      "global",
+    )
+  ) {
     return "Global eSIM";
   }
 
-  if (searchableText.includes("europe")) {
+  if (
+    searchableText.includes(
+      "europe",
+    )
+  ) {
     return "Europe eSIM";
   }
 
-  if (searchableText.includes("asia")) {
+  if (
+    searchableText.includes(
+      "asia",
+    )
+  ) {
     return "Asia eSIM";
   }
 
-  if (searchableText.includes("africa")) {
+  if (
+    searchableText.includes(
+      "africa",
+    )
+  ) {
     return "Africa eSIM";
   }
 
   if (
-    searchableText.includes("middle east") ||
-    searchableText.includes("mideast")
+    searchableText.includes(
+      "middle east",
+    ) ||
+    searchableText.includes(
+      "mideast",
+    )
   ) {
     return "Middle East eSIM";
   }
 
   if (
-    searchableText.includes("north america") ||
-    searchableText.includes("usa canada")
+    searchableText.includes(
+      "north america",
+    ) ||
+    searchableText.includes(
+      "usa canada",
+    )
   ) {
     return "North America eSIM";
   }
 
   if (
-    searchableText.includes("south america") ||
-    searchableText.includes("latin america")
+    searchableText.includes(
+      "south america",
+    ) ||
+    searchableText.includes(
+      "latin america",
+    )
   ) {
     return "South America eSIM";
   }
@@ -114,7 +205,10 @@ function DataIcon() {
         strokeLinejoin="round"
       />
 
-      <path d="M14 3v5h5" strokeLinejoin="round" />
+      <path
+        d="M14 3v5h5"
+        strokeLinejoin="round"
+      />
 
       <path
         d="M10 12h4M10 15h4"
@@ -134,7 +228,13 @@ function CalendarIcon() {
       className="h-6 w-6"
       aria-hidden="true"
     >
-      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <rect
+        x="3"
+        y="5"
+        width="18"
+        height="16"
+        rx="2"
+      />
 
       <path
         d="M8 3v4M16 3v4M3 10h18"
@@ -172,7 +272,11 @@ function GlobeIcon() {
       className="h-6 w-6"
       aria-hidden="true"
     >
-      <circle cx="12" cy="12" r="9" />
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+      />
 
       <path
         d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21M12 3C9.5 5.6 8.2 8.6 8.2 12S9.5 18.4 12 21"
@@ -204,40 +308,75 @@ function CheckIcon() {
 export default async function PlanDetailsPage({
   params,
 }: PlanDetailsPageProps) {
-  const { packageCode } = await params;
-  const decodedPackageCode = decodeURIComponent(packageCode);
+  const {
+    packageCode,
+  } = await params;
 
-  const plans: EsimPackage[] = await getPlans();
+  const decodedPackageCode =
+    decodeURIComponent(
+      packageCode,
+    );
 
-  const plan = plans.find(
-    (item) => item.packageCode === decodedPackageCode,
-  );
+  const plans:
+    EsimPackage[] =
+    await getPlans();
+
+  const plan =
+    plans.find(
+      (item) =>
+        item.packageCode ===
+        decodedPackageCode,
+    );
 
   if (!plan) {
     notFound();
   }
 
-  const locations = plan.location
-    .split(",")
-    .map((code) => code.trim())
-    .filter(Boolean);
+  const locations =
+    plan.location
+      .split(",")
+      .map(
+        (code) =>
+          code.trim(),
+      )
+      .filter(Boolean);
 
-  const isRegion = locations.length > 1;
-  const countryCode = locations[0] ?? "";
+  const isRegion =
+    locations.length > 1;
 
-  const destinationName = isRegion
-    ? getRegionName(plan, locations.length)
-    : getCountryName(countryCode);
+  const countryCode =
+    locations[0] ?? "";
 
-  const sellingPrice = getSellingPrice(
-    plan.price,
-    plan.volume,
-  );
+  const destinationName =
+    isRegion
+      ? getRegionName(
+          plan,
+          locations.length,
+        )
+      : getCountryName(
+          countryCode,
+        );
 
-  const validity = `${plan.duration} ${formatDurationUnit(
-    plan.durationUnit,
-    plan.duration,
-  )}`;
+  const sellingPrice =
+    getSellingPrice(
+      plan.price,
+      plan.volume,
+    );
+
+  const validity =
+    `${plan.duration} ${formatDurationUnit(
+      plan.durationUnit,
+      plan.duration,
+    )}`;
+
+  const topUpSupported =
+    supportsTopUp(
+      plan.supportTopUpType,
+    );
+
+  const descriptionList =
+    plan.descriptionList ??
+    [];
 
   const benefits = [
     "Digital eSIM delivered after successful payment",
@@ -264,7 +403,10 @@ export default async function PlanDetailsPage({
             href="/shop"
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-[#0A2D62] shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
           >
-            <span aria-hidden="true">←</span>
+            <span aria-hidden="true">
+              ←
+            </span>
+
             Back to plans
           </Link>
 
@@ -273,7 +415,9 @@ export default async function PlanDetailsPage({
               <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg">
                 {isRegion ? (
                   <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sky-100 to-blue-100 text-5xl">
-                    <span aria-hidden="true">🌍</span>
+                    <span aria-hidden="true">
+                      🌍
+                    </span>
                   </div>
                 ) : countryCode ? (
                   <img
@@ -282,7 +426,10 @@ export default async function PlanDetailsPage({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <span className="text-5xl" aria-hidden="true">
+                  <span
+                    className="text-5xl"
+                    aria-hidden="true"
+                  >
                     🌐
                   </span>
                 )}
@@ -305,9 +452,13 @@ export default async function PlanDetailsPage({
               </div>
             </div>
 
-            {plan.favorite && (
+            {plan.favorite ===
+              true && (
               <span className="inline-flex w-fit items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-black text-amber-800">
-                <span aria-hidden="true">★</span>
+                <span aria-hidden="true">
+                  ★
+                </span>
+
                 Popular plan
               </span>
             )}
@@ -323,7 +474,8 @@ export default async function PlanDetailsPage({
             </p>
 
             <h2 className="mt-3 text-3xl font-black text-slate-950">
-              Stay connected in {destinationName}
+              Stay connected in{" "}
+              {destinationName}
             </h2>
 
             <p className="mt-5 leading-8 text-slate-600">
@@ -342,7 +494,9 @@ export default async function PlanDetailsPage({
                 </p>
 
                 <p className="mt-1 text-xl font-black text-slate-950">
-                  {formatData(plan.volume)}
+                  {formatData(
+                    plan.volume,
+                  )}
                 </p>
               </div>
 
@@ -370,7 +524,9 @@ export default async function PlanDetailsPage({
                 </p>
 
                 <p className="mt-1 text-xl font-black text-slate-950">
-                  {formatNetwork(plan.speed)}
+                  {formatNetwork(
+                    plan.speed,
+                  )}
                 </p>
               </div>
 
@@ -392,10 +548,12 @@ export default async function PlanDetailsPage({
             </div>
           </section>
 
-          {plan.descriptionList?.length > 0 && (
+          {descriptionList.length >
+            0 && (
             <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
               <p className="text-sm font-black uppercase tracking-[0.2em] text-blue-600">
-                Included with this plan
+                Included with this
+                plan
               </p>
 
               <h2 className="mt-3 text-3xl font-black text-slate-950">
@@ -403,8 +561,13 @@ export default async function PlanDetailsPage({
               </h2>
 
               <ul className="mt-7 grid gap-4 sm:grid-cols-2">
-                {plan.descriptionList.map(
-                  (description, index) => (
+                {descriptionList.map(
+                  (
+                    description:
+                      string,
+                    index:
+                      number,
+                  ) => (
                     <li
                       key={`${description}-${index}`}
                       className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-slate-700"
@@ -414,7 +577,9 @@ export default async function PlanDetailsPage({
                       </span>
 
                       <span className="leading-7">
-                        {description}
+                        {
+                          description
+                        }
                       </span>
                     </li>
                   ),
@@ -429,24 +594,29 @@ export default async function PlanDetailsPage({
             </p>
 
             <h2 className="mt-3 text-3xl font-black text-slate-950">
-              Simple digital connectivity
+              Simple digital
+              connectivity
             </h2>
 
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
-              {benefits.map((benefit) => (
-                <div
-                  key={benefit}
-                  className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4"
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm">
-                    <CheckIcon />
-                  </span>
+              {benefits.map(
+                (
+                  benefit,
+                ) => (
+                  <div
+                    key={benefit}
+                    className="flex items-start gap-3 rounded-2xl bg-blue-50 p-4"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm">
+                      <CheckIcon />
+                    </span>
 
-                  <p className="font-semibold leading-7 text-slate-700">
-                    {benefit}
-                  </p>
-                </div>
-              ))}
+                    <p className="font-semibold leading-7 text-slate-700">
+                      {benefit}
+                    </p>
+                  </div>
+                ),
+              )}
             </div>
           </section>
         </div>
@@ -475,7 +645,9 @@ export default async function PlanDetailsPage({
                   </span>
 
                   <strong className="text-slate-950">
-                    {formatData(plan.volume)}
+                    {formatData(
+                      plan.volume,
+                    )}
                   </strong>
                 </div>
 
@@ -495,7 +667,9 @@ export default async function PlanDetailsPage({
                   </span>
 
                   <strong className="text-right text-slate-950">
-                    {formatNetwork(plan.speed)}
+                    {formatNetwork(
+                      plan.speed,
+                    )}
                   </strong>
                 </div>
 
@@ -505,7 +679,7 @@ export default async function PlanDetailsPage({
                   </span>
 
                   <strong className="text-slate-950">
-                    {plan.supportTopUpType > 0
+                    {topUpSupported
                       ? "Supported"
                       : "Not supported"}
                   </strong>
@@ -538,7 +712,8 @@ export default async function PlanDetailsPage({
                 </div>
 
                 <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Final amount for this eSIM package.
+                  Final amount for
+                  this eSIM package.
                 </p>
               </div>
 
@@ -549,12 +724,22 @@ export default async function PlanDetailsPage({
                 className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0A2D62] to-blue-700 px-6 py-4 font-black text-white shadow-lg shadow-blue-950/15 transition hover:-translate-y-0.5 hover:from-blue-800 hover:to-blue-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-100"
               >
                 Continue to Checkout
-                <span aria-hidden="true">→</span>
+
+                <span aria-hidden="true">
+                  →
+                </span>
               </Link>
 
               <div className="mt-5 space-y-2 text-center text-xs font-semibold text-slate-500">
-                <p>🔒 Secure online checkout</p>
-                <p>⚡ Digital delivery after payment</p>
+                <p>
+                  🔒 Secure online
+                  checkout
+                </p>
+
+                <p>
+                  ⚡ Digital delivery
+                  after payment
+                </p>
               </div>
             </div>
           </div>

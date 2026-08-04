@@ -9,6 +9,14 @@
 * 🟢 You can import this file directly.
 */
 
+export const UserRole = {
+  CUSTOMER: 'CUSTOMER',
+  ADMIN: 'ADMIN'
+} as const
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
 export const OrderStatus = {
   PENDING: 'PENDING',
   PAID: 'PAID',
@@ -42,3 +50,14 @@ export const EsimStatus = {
 } as const
 
 export type EsimStatus = (typeof EsimStatus)[keyof typeof EsimStatus]
+
+
+export const EmailDeliveryStatus = {
+  NOT_READY: 'NOT_READY',
+  PENDING: 'PENDING',
+  SENDING: 'SENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED'
+} as const
+
+export type EmailDeliveryStatus = (typeof EmailDeliveryStatus)[keyof typeof EmailDeliveryStatus]

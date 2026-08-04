@@ -56,6 +56,7 @@ export const ModelName = {
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
+  PasswordResetToken: 'PasswordResetToken',
   Order: 'Order',
   PlanSetting: 'PlanSetting'
 } as const
@@ -89,9 +90,11 @@ export const UserScalarFieldEnum = {
   id: 'id',
   name: 'name',
   email: 'email',
+  phone: 'phone',
   passwordHash: 'passwordHash',
   emailVerified: 'emailVerified',
   image: 'image',
+  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -136,6 +139,18 @@ export const VerificationTokenScalarFieldEnum = {
 export type VerificationTokenScalarFieldEnum = (typeof VerificationTokenScalarFieldEnum)[keyof typeof VerificationTokenScalarFieldEnum]
 
 
+export const PasswordResetTokenScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PasswordResetTokenScalarFieldEnum = (typeof PasswordResetTokenScalarFieldEnum)[keyof typeof PasswordResetTokenScalarFieldEnum]
+
+
 export const OrderScalarFieldEnum = {
   id: 'id',
   referenceNumber: 'referenceNumber',
@@ -165,6 +180,7 @@ export const OrderScalarFieldEnum = {
   qrCodeUrl: 'qrCodeUrl',
   activationCode: 'activationCode',
   smdpAddress: 'smdpAddress',
+  matchingId: 'matchingId',
   smdpStatus: 'smdpStatus',
   supplierEsimStatus: 'supplierEsimStatus',
   apn: 'apn',
@@ -173,9 +189,20 @@ export const OrderScalarFieldEnum = {
   profileIssuedAt: 'profileIssuedAt',
   profileLastCheckedAt: 'profileLastCheckedAt',
   profileCheckAttempts: 'profileCheckAttempts',
+  profileSyncClaimedAt: 'profileSyncClaimedAt',
+  profileSyncClaimId: 'profileSyncClaimId',
+  profileSyncLeaseUntil: 'profileSyncLeaseUntil',
+  emailDeliveryStatus: 'emailDeliveryStatus',
   emailSent: 'emailSent',
   emailSentAt: 'emailSentAt',
   emailAttempts: 'emailAttempts',
+  emailIdempotencyKey: 'emailIdempotencyKey',
+  resendEmailId: 'resendEmailId',
+  emailClaimedAt: 'emailClaimedAt',
+  emailClaimId: 'emailClaimId',
+  emailLeaseUntil: 'emailLeaseUntil',
+  emailLastAttemptAt: 'emailLastAttemptAt',
+  emailLastError: 'emailLastError',
   processingAttempts: 'processingAttempts',
   lastAttemptAt: 'lastAttemptAt',
   lastError: 'lastError',

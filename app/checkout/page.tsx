@@ -49,6 +49,32 @@ function formatNetwork(speed?: string) {
   return speed.replaceAll(",", " / ");
 }
 
+
+function supportsTopUp(
+  value: string | number | boolean | null | undefined,
+) {
+  if (value === true || value === 1) {
+    return true;
+  }
+
+  if (
+    value === false ||
+    value === 0 ||
+    value === null ||
+    value === undefined
+  ) {
+    return false;
+  }
+
+  const normalized = String(value)
+    .trim()
+    .toLowerCase();
+
+  return ["1", "true", "yes", "supported"].includes(
+    normalized,
+  );
+}
+
 function getRegionName(plan: EsimPackage, locationCount: number) {
   const searchableText = [
     plan.name,
@@ -558,7 +584,7 @@ export default async function CheckoutPage({
                   <span className="text-slate-600">Top-up</span>
 
                   <strong className="text-slate-950">
-                    {plan.supportTopUpType > 0
+                    {supportsTopUp(plan.supportTopUpType)
                       ? "Supported"
                       : "Not supported"}
                   </strong>

@@ -2,14 +2,24 @@ import "server-only";
 
 import crypto from "crypto";
 
+const DEFAULT_ESIM_ACCESS_BASE_URL =
+  "https://api.esimaccess.com";
+
+const ORDER_REQUEST_TIMEOUT_MS = 30_000;
+const MAX_RESPONSE_TEXT_LENGTH = 100_000;
+const MAX_TRANSACTION_ID_LENGTH = 50;
+const MAX_PACKAGE_CODE_LENGTH = 200;
+
+type EsimAccessOrderObject = {
+  orderNo?: string | null;
+};
+
 type EsimAccessOrderResponse = {
-  success?: boolean | string;
-  errorCode?: string | null;
+  success?: boolean | string | number;
+  errorCode?: string | number | null;
   errorMessage?: string | null;
   errorMsg?: string | null;
-  obj?: {
-    orderNo?: string;
-  };
+  obj?: EsimAccessOrderObject | null;
 };
 
 export type EsimPurchaseResult = {
@@ -18,16 +28,38 @@ export type EsimPurchaseResult = {
   rawResponse: EsimAccessOrderResponse;
 };
 
-function getEsimAccessConfig() {
+type EsimAccessConfig = {
+  accessCode: string;
+  secretKey: string;
+  baseUrl: string;
+};
+
+type CreateSignatureInput = {
+  timestamp: string;
+  requestId: string;
+  accessCode: string;
+  requestBody: string;
+  secretKey: string;
+};
+
+type PurchaseEsimProfileInput = {
+  packageCode: string;
+  transactionId: string;
+};
+
+function getEsimAccessConfig(): EsimAccessConfig {
   const accessCode =
     process.env.ESIM_ACCESS_CODE?.trim();
 
   const secretKey =
     process.env.ESIM_SECRET_KEY?.trim();
 
+  const configuredBaseUrl =
+    process.env.ESIM_BASE_URL?.trim();
+
   const baseUrl = (
-    process.env.ESIM_BASE_URL?.trim() ||
-    "https://api.esimaccess.com"
+    configuredBaseUrl ||
+    DEFAULT_ESIM_ACCESS_BASE_URL
   ).replace(/\/+$/, "");
 
   if (!accessCode) {
@@ -39,6 +71,25 @@ function getEsimAccessConfig() {
   if (!secretKey) {
     throw new Error(
       "ESIM_SECRET_KEY is missing from the environment.",
+    );
+  }
+
+  let parsedBaseUrl: URL;
+
+  try {
+    parsedBaseUrl = new URL(baseUrl);
+  } catch {
+    throw new Error(
+      "ESIM_BASE_URL is not a valid URL.",
+    );
+  }
+
+  if (
+    parsedBaseUrl.protocol !== "https:" &&
+    process.env.NODE_ENV === "production"
+  ) {
+    throw new Error(
+      "ESIM_BASE_URL must use HTTPS in production.",
     );
   }
 
@@ -55,13 +106,7 @@ function createSignature({
   accessCode,
   requestBody,
   secretKey,
-}: {
-  timestamp: string;
-  requestId: string;
-  accessCode: string;
-  requestBody: string;
-  secretKey: string;
-}) {
+}: CreateSignatureInput): string {
   const signData =
     timestamp +
     requestId +
@@ -70,16 +115,20 @@ function createSignature({
 
   return crypto
     .createHmac("sha256", secretKey)
-    .update(signData)
+    .update(signData, "utf8")
     .digest("hex")
     .toLowerCase();
 }
 
-function normalizeTransactionId(value: string) {
+function normalizeTransactionId(
+  value: string,
+): string {
   const normalized = value
     .trim()
     .replace(/[^a-zA-Z0-9_-]/g, "-")
-    .slice(0, 50);
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, MAX_TRANSACTION_ID_LENGTH);
 
   if (!normalized) {
     throw new Error(
@@ -90,39 +139,184 @@ function normalizeTransactionId(value: string) {
   return normalized;
 }
 
-function responseWasSuccessful(
-  success: boolean | string | undefined,
-) {
-  return success === true || success === "true";
-}
+function normalizePackageCode(
+  value: string,
+): string {
+  const normalized = value.trim();
 
-function getApiErrorMessage(
-  response: EsimAccessOrderResponse,
-) {
-  return (
-    response.errorMessage ||
-    response.errorMsg ||
-    response.errorCode ||
-    "eSIM Access rejected the order."
-  );
-}
-
-export async function purchaseEsimProfile({
-  packageCode,
-  transactionId,
-}: {
-  packageCode: string;
-  transactionId: string;
-}): Promise<EsimPurchaseResult> {
-  const normalizedPackageCode =
-    packageCode.trim();
-
-  if (!normalizedPackageCode) {
+  if (!normalized) {
     throw new Error(
       "The eSIM package code is missing.",
     );
   }
 
+  if (
+    normalized.length >
+    MAX_PACKAGE_CODE_LENGTH
+  ) {
+    throw new Error(
+      "The eSIM package code is too long.",
+    );
+  }
+
+  return normalized;
+}
+
+function responseWasSuccessful(
+  success:
+    | boolean
+    | string
+    | number
+    | undefined,
+): boolean {
+  if (success === true || success === 1) {
+    return true;
+  }
+
+  if (typeof success === "string") {
+    const normalized =
+      success.trim().toLowerCase();
+
+    return (
+      normalized === "true" ||
+      normalized === "1"
+    );
+  }
+
+  return false;
+}
+
+function stringifyApiValue(
+  value: string | number | null | undefined,
+): string | null {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return null;
+  }
+
+  const normalized =
+    String(value).trim();
+
+  return normalized || null;
+}
+
+function getApiErrorMessage(
+  response: EsimAccessOrderResponse,
+): string {
+  return (
+    stringifyApiValue(
+      response.errorMessage,
+    ) ||
+    stringifyApiValue(
+      response.errorMsg,
+    ) ||
+    stringifyApiValue(
+      response.errorCode,
+    ) ||
+    "eSIM Access rejected the order."
+  );
+}
+
+function createAbortErrorMessage(): string {
+  return (
+    "The eSIM Access order request timed out. " +
+    "The same transaction ID must be reused when retrying."
+  );
+}
+
+function getFetchErrorMessage(
+  error: unknown,
+): string {
+  if (
+    error instanceof Error &&
+    error.name === "AbortError"
+  ) {
+    return createAbortErrorMessage();
+  }
+
+  if (error instanceof Error) {
+    return (
+      "The eSIM Access order request failed: " +
+      error.message.slice(0, 1000)
+    );
+  }
+
+  return (
+    "The eSIM Access order request failed " +
+    "because of an unknown network error."
+  );
+}
+
+function parseOrderResponse({
+  responseText,
+  httpStatus,
+}: {
+  responseText: string;
+  httpStatus: number;
+}): EsimAccessOrderResponse {
+  if (!responseText.trim()) {
+    throw new Error(
+      `eSIM Access returned an empty response with HTTP ${httpStatus}.`,
+    );
+  }
+
+  if (
+    responseText.length >
+    MAX_RESPONSE_TEXT_LENGTH
+  ) {
+    throw new Error(
+      "eSIM Access returned an unexpectedly large order response.",
+    );
+  }
+
+  let parsedValue: unknown;
+
+  try {
+    parsedValue = JSON.parse(responseText);
+  } catch {
+    console.error(
+      "ESIM ACCESS: Invalid order JSON response",
+      {
+        httpStatus,
+        responsePreview:
+          responseText.slice(0, 2000),
+      },
+    );
+
+    throw new Error(
+      `eSIM Access returned invalid JSON with HTTP ${httpStatus}.`,
+    );
+  }
+
+  if (
+    typeof parsedValue !== "object" ||
+    parsedValue === null ||
+    Array.isArray(parsedValue)
+  ) {
+    throw new Error(
+      "eSIM Access returned an invalid order response structure.",
+    );
+  }
+
+  return parsedValue as EsimAccessOrderResponse;
+}
+
+export async function purchaseEsimProfile({
+  packageCode,
+  transactionId,
+}: PurchaseEsimProfileInput): Promise<EsimPurchaseResult> {
+  const normalizedPackageCode =
+    normalizePackageCode(packageCode);
+
+  /*
+   * This value must remain stable for every retry
+   * of the same customer order.
+   *
+   * eSIM Access uses transactionId to recognize
+   * duplicate order requests.
+   */
   const safeTransactionId =
     normalizeTransactionId(transactionId);
 
@@ -136,11 +330,11 @@ export async function purchaseEsimProfile({
     `${baseUrl}/api/v1/open/esim/order`;
 
   /*
-   * Price and amount are optional according to
-   * the eSIM Access API.
+   * Price and amount are optional in the
+   * eSIM Access order API.
    *
-   * We use packageCode + count so the supplier
-   * processes the current wholesale price.
+   * packageCode + count lets the supplier
+   * use the current wholesale package price.
    */
   const requestBody = JSON.stringify({
     transactionId: safeTransactionId,
@@ -166,6 +360,13 @@ export async function purchaseEsimProfile({
     secretKey,
   });
 
+  const abortController =
+    new AbortController();
+
+  const timeout = setTimeout(() => {
+    abortController.abort();
+  }, ORDER_REQUEST_TIMEOUT_MS);
+
   console.info(
     "ESIM ACCESS: Creating profile order",
     {
@@ -179,74 +380,100 @@ export async function purchaseEsimProfile({
     },
   );
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-
-    headers: {
-      Accept: "application/json",
-
-      "Content-Type":
-        "application/json",
-
-      "RT-AccessCode":
-        accessCode,
-
-      "RT-RequestID":
-        requestId,
-
-      "RT-Signature":
-        signature,
-
-      "RT-Timestamp":
-        timestamp,
-    },
-
-    body: requestBody,
-
-    cache: "no-store",
-  });
-
-  const responseText =
-    await response.text();
-
-  let responseData:
-    EsimAccessOrderResponse;
+  let response: Response;
 
   try {
-    responseData = JSON.parse(
-      responseText,
-    ) as EsimAccessOrderResponse;
-  } catch {
-    console.error(
-      "ESIM ACCESS: Invalid order response",
-      {
-        status: response.status,
-        responseText,
+    response = await fetch(endpoint, {
+      method: "POST",
+
+      headers: {
+        Accept: "application/json",
+
+        "Content-Type":
+          "application/json",
+
+        "RT-AccessCode":
+          accessCode,
+
+        "RT-RequestID":
+          requestId,
+
+        "RT-Signature":
+          signature,
+
+        "RT-Timestamp":
+          timestamp,
       },
-    );
 
-    throw new Error(
-      `eSIM Access returned invalid JSON with HTTP ${response.status}.`,
-    );
-  }
+      body: requestBody,
 
-  if (!response.ok) {
+      cache: "no-store",
+
+      signal:
+        abortController.signal,
+    });
+  } catch (error) {
+    const message =
+      getFetchErrorMessage(error);
+
     console.error(
-      "ESIM ACCESS: Order HTTP error",
+      "ESIM ACCESS: Order network failure",
       {
-        status: response.status,
         transactionId:
           safeTransactionId,
 
         packageCode:
           normalizedPackageCode,
 
-        response: responseData,
+        requestId,
+
+        error: message,
+      },
+    );
+
+    throw new Error(message);
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const responseText =
+    await response.text();
+
+  const responseData =
+    parseOrderResponse({
+      responseText,
+      httpStatus: response.status,
+    });
+
+  if (!response.ok) {
+    const apiError =
+      getApiErrorMessage(responseData);
+
+    console.error(
+      "ESIM ACCESS: Order HTTP error",
+      {
+        httpStatus:
+          response.status,
+
+        transactionId:
+          safeTransactionId,
+
+        packageCode:
+          normalizedPackageCode,
+
+        requestId,
+
+        errorCode:
+          responseData.errorCode,
+
+        errorMessage:
+          responseData.errorMessage ??
+          responseData.errorMsg,
       },
     );
 
     throw new Error(
-      getApiErrorMessage(responseData),
+      `eSIM Access order failed with HTTP ${response.status}: ${apiError}`,
     );
   }
 
@@ -255,6 +482,9 @@ export async function purchaseEsimProfile({
       responseData.success,
     )
   ) {
+    const apiError =
+      getApiErrorMessage(responseData);
+
     console.error(
       "ESIM ACCESS: Order rejected",
       {
@@ -264,13 +494,18 @@ export async function purchaseEsimProfile({
         packageCode:
           normalizedPackageCode,
 
-        response: responseData,
+        requestId,
+
+        errorCode:
+          responseData.errorCode,
+
+        errorMessage:
+          responseData.errorMessage ??
+          responseData.errorMsg,
       },
     );
 
-    throw new Error(
-      getApiErrorMessage(responseData),
-    );
+    throw new Error(apiError);
   }
 
   const orderNo =
@@ -278,12 +513,26 @@ export async function purchaseEsimProfile({
 
   if (!orderNo) {
     console.error(
-      "ESIM ACCESS: Missing order number",
-      responseData,
+      "ESIM ACCESS: Successful order response missing order number",
+      {
+        transactionId:
+          safeTransactionId,
+
+        packageCode:
+          normalizedPackageCode,
+
+        requestId,
+
+        success:
+          responseData.success,
+
+        errorCode:
+          responseData.errorCode,
+      },
     );
 
     throw new Error(
-      "eSIM Access accepted the request but did not return an order number.",
+      "eSIM Access accepted the order request but did not return an order number.",
     );
   }
 
@@ -291,16 +540,20 @@ export async function purchaseEsimProfile({
     "ESIM ACCESS: Profile order created",
     {
       orderNo,
+
       transactionId:
         safeTransactionId,
 
       packageCode:
         normalizedPackageCode,
+
+      requestId,
     },
   );
 
   return {
     orderNo,
+
     transactionId:
       safeTransactionId,
 

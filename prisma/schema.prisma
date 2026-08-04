@@ -7,6 +7,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
 enum OrderStatus {
   PENDING
   PAID
@@ -33,6 +38,14 @@ enum EsimStatus {
   FAILED
 }
 
+enum EmailDeliveryStatus {
+  NOT_READY
+  PENDING
+  SENDING
+  SENT
+  FAILED
+}
+
 model AppSetting {
   id           String   @id @default("main")
   usdToPhpRate Float    @default(58)
@@ -43,9 +56,11 @@ model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
+  phone         String?
   passwordHash  String
   emailVerified DateTime?
   image         String?
+  role          UserRole  @default(CUSTOMER)
 
   orders   Order[]
   accounts Account[]
@@ -53,6 +68,8 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([role])
 }
 
 model Account {
@@ -95,6 +112,18 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
 model Order {
   id              String @id @default(cuid())
   referenceNumber String @unique
@@ -125,33 +154,50 @@ model Order {
   paidAt            DateTime?
 
   esimOrderId       String? @unique
-  esimTransactionId String?
-  esimTranNo        String?
+  esimTransactionId String? @unique
+  esimTranNo        String? @unique
 
-  iccid          String?
-  qrCode         String?
-  qrCodeUrl      String?
-  activationCode String?
+  iccid          String? @unique
+  qrCode         String? @db.Text
+  qrCodeUrl      String? @db.Text
+  activationCode String? @db.Text
   smdpAddress    String?
+  matchingId     String?
   smdpStatus     String?
 
   supplierEsimStatus String?
   apn                String?
 
-  esimRawResponse String?
+  esimRawResponse String?   @db.Text
   esimIssuedAt    DateTime?
 
   profileIssuedAt      DateTime?
   profileLastCheckedAt DateTime?
   profileCheckAttempts Int       @default(0)
 
+  profileSyncClaimedAt  DateTime?
+  profileSyncClaimId    String?
+  profileSyncLeaseUntil DateTime?
+
+  emailDeliveryStatus EmailDeliveryStatus @default(NOT_READY)
+
   emailSent     Boolean   @default(false)
   emailSentAt   DateTime?
   emailAttempts Int       @default(0)
 
+  emailIdempotencyKey String? @unique
+  resendEmailId       String? @unique
+
+  emailClaimedAt  DateTime?
+  emailClaimId    String?
+  emailLeaseUntil DateTime?
+
+  emailLastAttemptAt DateTime?
+  emailLastError     String?   @db.Text
+
   processingAttempts Int       @default(0)
   lastAttemptAt      DateTime?
-  lastError          String?
+  lastError          String?   @db.Text
 
   webhookReceivedAt DateTime?
   completedAt       DateTime?
@@ -167,6 +213,11 @@ model Order {
   @@index([status])
   @@index([paymentStatus])
   @@index([esimStatus])
+  @@index([emailDeliveryStatus])
+  @@index([paymentStatus, status, esimStatus, profileLastCheckedAt])
+  @@index([paymentStatus, esimStatus, emailDeliveryStatus, emailLastAttemptAt])
+  @@index([profileSyncLeaseUntil])
+  @@index([emailLeaseUntil])
   @@index([createdAt])
 }
 

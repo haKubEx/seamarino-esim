@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import PlanCard from "./PlanCard";
 
-import type { EsimPackage } from "@/app/types/esim";
+import type {
+  EsimPackage,
+} from "@/app/types/esim";
 
 type SortOption =
   | "recommended"
@@ -12,6 +18,12 @@ type SortOption =
   | "price-high"
   | "data-high"
   | "validity-high";
+
+type PlansObjectResponse = {
+  success?: boolean;
+  plans?: unknown;
+  error?: unknown;
+};
 
 const PLANS_PER_PAGE = 24;
 
@@ -34,9 +46,16 @@ function SearchIcon() {
       className="h-5 w-5"
       aria-hidden="true"
     >
-      <circle cx="11" cy="11" r="7" />
+      <circle
+        cx="11"
+        cy="11"
+        r="7"
+      />
 
-      <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+      <path
+        d="m20 20-3.5-3.5"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -51,7 +70,10 @@ function SortIcon() {
       className="h-5 w-5"
       aria-hidden="true"
     >
-      <path d="M4 7h10M4 12h7M4 17h4" strokeLinecap="round" />
+      <path
+        d="M4 7h10M4 12h7M4 17h4"
+        strokeLinecap="round"
+      />
 
       <path
         d="m16 15 3 3 3-3M19 18V6"
@@ -72,126 +94,438 @@ function ClearIcon() {
       className="h-4 w-4"
       aria-hidden="true"
     >
-      <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" />
+      <path
+        d="m6 6 12 12M18 6 6 18"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
+function isEsimPackage(
+  value: unknown,
+): value is EsimPackage {
+  if (
+    !value ||
+    typeof value !==
+      "object"
+  ) {
+    return false;
+  }
+
+  const candidate =
+    value as Partial<EsimPackage>;
+
+  return (
+    typeof candidate.packageCode ===
+      "string" &&
+    candidate.packageCode.trim()
+      .length > 0 &&
+    typeof candidate.name ===
+      "string" &&
+    candidate.name.trim().length >
+      0 &&
+    Number.isFinite(
+      Number(candidate.price),
+    ) &&
+    Number(candidate.price) >
+      0 &&
+    Number.isFinite(
+      Number(candidate.volume),
+    ) &&
+    Number(candidate.volume) >
+      0 &&
+    Number.isFinite(
+      Number(candidate.duration),
+    ) &&
+    Number(candidate.duration) >
+      0
+  );
+}
+
+function getResponseError(
+  data: unknown,
+  fallback: string,
+) {
+  if (
+    data &&
+    typeof data ===
+      "object" &&
+    "error" in data
+  ) {
+    const errorValue =
+      (
+        data as PlansObjectResponse
+      ).error;
+
+    if (
+      typeof errorValue ===
+        "string" &&
+      errorValue.trim()
+    ) {
+      return errorValue.trim();
+    }
+  }
+
+  return fallback;
+}
+
+function getPlansFromResponse(
+  data: unknown,
+): unknown[] | null {
+  /*
+   * Supports:
+   *
+   * [
+   *   { packageCode: "...", ... }
+   * ]
+   */
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  /*
+   * Also supports:
+   *
+   * {
+   *   success: true,
+   *   plans: [...]
+   * }
+   */
+  if (
+    data &&
+    typeof data ===
+      "object" &&
+    "plans" in data
+  ) {
+    const plans =
+      (
+        data as PlansObjectResponse
+      ).plans;
+
+    if (Array.isArray(plans)) {
+      return plans;
+    }
+  }
+
+  return null;
+}
+
 export default function ShopPlans() {
-  const [plans, setPlans] = useState<EsimPackage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("recommended");
-  const [visibleCount, setVisibleCount] = useState(PLANS_PER_PAGE);
+  const [
+    plans,
+    setPlans,
+  ] = useState<
+    EsimPackage[]
+  >([]);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    reloadKey,
+    setReloadKey,
+  ] = useState(0);
+
+  const [
+    searchTerm,
+    setSearchTerm,
+  ] = useState("");
+
+  const [
+    sortBy,
+    setSortBy,
+  ] = useState<SortOption>(
+    "recommended",
+  );
+
+  const [
+    visibleCount,
+    setVisibleCount,
+  ] = useState(
+    PLANS_PER_PAGE,
+  );
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadPlans() {
       try {
         setLoading(true);
         setError("");
 
-        const response = await fetch("/api/plans", {
-          method: "GET",
-          cache: "no-store",
-        });
+        const response =
+          await fetch(
+            "/api/plans",
+            {
+              method: "GET",
+              cache: "no-store",
+
+              headers: {
+                Accept:
+                  "application/json",
+              },
+            },
+          );
+
+        const responseText =
+          await response.text();
+
+        let data: unknown = null;
+
+        if (
+          responseText.trim()
+        ) {
+          try {
+            data =
+              JSON.parse(
+                responseText,
+              ) as unknown;
+          } catch {
+            throw new Error(
+              `The plans server returned invalid JSON. HTTP ${response.status}.`,
+            );
+          }
+        }
 
         if (!response.ok) {
           throw new Error(
-            `Failed to load plans. Server responded with ${response.status}.`,
+            getResponseError(
+              data,
+              `Failed to load plans. Server responded with ${response.status}.`,
+            ),
           );
         }
 
-        const data: unknown = await response.json();
+        const returnedPlans =
+          getPlansFromResponse(
+            data,
+          );
 
-        if (!Array.isArray(data)) {
-          throw new Error("The plans API returned invalid data.");
+        if (!returnedPlans) {
+          throw new Error(
+            "The plans API returned an unexpected response format.",
+          );
         }
 
-        setPlans(data as EsimPackage[]);
-      } catch (caughtError) {
-        console.error("SHOP PLANS ERROR:", caughtError);
+        const validPlans =
+          returnedPlans.filter(
+            isEsimPackage,
+          );
 
-        setError(
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Failed to load eSIM plans.",
+        if (
+          returnedPlans.length >
+            0 &&
+          validPlans.length === 0
+        ) {
+          throw new Error(
+            "The plans API returned plans with invalid fields.",
+          );
+        }
+
+        if (!cancelled) {
+          setPlans(validPlans);
+        }
+      } catch (
+        caughtError
+      ) {
+        console.error(
+          "SHOP PLANS ERROR:",
+          caughtError,
         );
+
+        if (!cancelled) {
+          setPlans([]);
+
+          setError(
+            caughtError instanceof
+              Error
+              ? caughtError.message
+              : "Failed to load eSIM plans.",
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    loadPlans();
-  }, []);
+    void loadPlans();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
 
   useEffect(() => {
-    setVisibleCount(PLANS_PER_PAGE);
-  }, [searchTerm, sortBy]);
+    setVisibleCount(
+      PLANS_PER_PAGE,
+    );
+  }, [
+    searchTerm,
+    sortBy,
+  ]);
 
-  const filteredPlans = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
+  const filteredPlans =
+    useMemo(() => {
+      const query =
+        searchTerm
+          .trim()
+          .toLowerCase();
 
-    if (!query) {
-      return plans;
-    }
+      if (!query) {
+        return plans;
+      }
 
-    return plans.filter((plan) => {
-      const searchableText = [
-        plan.name,
-        plan.location,
-        plan.locationCode,
-        plan.description,
-        plan.saleNote,
-        plan.speed,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+      return plans.filter(
+        (plan) => {
+          const searchableText =
+            [
+              plan.packageCode,
+              plan.name,
+              plan.location,
+              plan.locationCode,
+              plan.description,
+              plan.saleNote,
+              plan.speed,
+            ]
+              .filter(
+                (
+                  value,
+                ): value is string =>
+                  typeof value ===
+                    "string" &&
+                  value.length >
+                    0,
+              )
+              .join(" ")
+              .toLowerCase();
 
-      return searchableText.includes(query);
-    });
-  }, [plans, searchTerm]);
+          return searchableText.includes(
+            query,
+          );
+        },
+      );
+    }, [
+      plans,
+      searchTerm,
+    ]);
 
-  const sortedPlans = useMemo(() => {
-    const sorted = [...filteredPlans];
+  const sortedPlans =
+    useMemo(() => {
+      const sorted = [
+        ...filteredPlans,
+      ];
 
-    switch (sortBy) {
-      case "price-low":
-        return sorted.sort(
-          (firstPlan, secondPlan) =>
-            firstPlan.price - secondPlan.price,
-        );
+      switch (sortBy) {
+        case "price-low":
+          return sorted.sort(
+            (
+              firstPlan,
+              secondPlan,
+            ) =>
+              firstPlan.price -
+              secondPlan.price,
+          );
 
-      case "price-high":
-        return sorted.sort(
-          (firstPlan, secondPlan) =>
-            secondPlan.price - firstPlan.price,
-        );
+        case "price-high":
+          return sorted.sort(
+            (
+              firstPlan,
+              secondPlan,
+            ) =>
+              secondPlan.price -
+              firstPlan.price,
+          );
 
-      case "data-high":
-        return sorted.sort(
-          (firstPlan, secondPlan) =>
-            secondPlan.volume - firstPlan.volume,
-        );
+        case "data-high":
+          return sorted.sort(
+            (
+              firstPlan,
+              secondPlan,
+            ) =>
+              secondPlan.volume -
+              firstPlan.volume,
+          );
 
-      case "validity-high":
-        return sorted.sort(
-          (firstPlan, secondPlan) =>
-            secondPlan.duration - firstPlan.duration,
-        );
+        case "validity-high":
+          return sorted.sort(
+            (
+              firstPlan,
+              secondPlan,
+            ) =>
+              secondPlan.duration -
+              firstPlan.duration,
+          );
 
-      default:
-        return sorted;
-    }
-  }, [filteredPlans, sortBy]);
+        case "recommended":
+        default:
+          return sorted.sort(
+            (
+              firstPlan,
+              secondPlan,
+            ) => {
+              const firstFeatured =
+                Boolean(
+                  firstPlan.featured,
+                );
 
-  const visiblePlans = sortedPlans.slice(0, visibleCount);
-  const hasMorePlans = visiblePlans.length < sortedPlans.length;
+              const secondFeatured =
+                Boolean(
+                  secondPlan.featured,
+                );
+
+              if (
+                firstFeatured !==
+                secondFeatured
+              ) {
+                return firstFeatured
+                  ? -1
+                  : 1;
+              }
+
+              return firstPlan.name.localeCompare(
+                secondPlan.name,
+              );
+            },
+          );
+      }
+    }, [
+      filteredPlans,
+      sortBy,
+    ]);
+
+  const visiblePlans =
+    sortedPlans.slice(
+      0,
+      visibleCount,
+    );
+
+  const hasMorePlans =
+    visiblePlans.length <
+    sortedPlans.length;
 
   function clearFilters() {
     setSearchTerm("");
-    setSortBy("recommended");
+
+    setSortBy(
+      "recommended",
+    );
+  }
+
+  function retryLoading() {
+    setReloadKey(
+      (currentKey) =>
+        currentKey + 1,
+    );
   }
 
   if (loading) {
@@ -204,39 +538,51 @@ export default function ShopPlans() {
 
           <div className="mt-5 flex gap-3">
             <div className="h-10 w-24 animate-pulse rounded-full bg-slate-100" />
+
             <div className="h-10 w-24 animate-pulse rounded-full bg-slate-100" />
+
             <div className="h-10 w-24 animate-pulse rounded-full bg-slate-100" />
           </div>
         </div>
 
         <div className="mt-12">
           <div className="h-5 w-40 animate-pulse rounded bg-slate-200" />
+
           <div className="mt-3 h-10 w-72 max-w-full animate-pulse rounded bg-slate-200" />
         </div>
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-[420px] animate-pulse rounded-3xl border border-slate-200 bg-white p-6"
-            >
-              <div className="h-14 w-14 rounded-2xl bg-slate-200" />
+          {Array.from({
+            length: 8,
+          }).map(
+            (
+              _,
+              index,
+            ) => (
+              <div
+                key={index}
+                className="h-[420px] animate-pulse rounded-3xl border border-slate-200 bg-white p-6"
+              >
+                <div className="h-14 w-14 rounded-2xl bg-slate-200" />
 
-              <div className="mt-6 h-5 w-2/3 rounded bg-slate-200" />
+                <div className="mt-6 h-5 w-2/3 rounded bg-slate-200" />
 
-              <div className="mt-3 h-4 w-full rounded bg-slate-100" />
+                <div className="mt-3 h-4 w-full rounded bg-slate-100" />
 
-              <div className="mt-8 grid grid-cols-3 gap-2">
-                <div className="h-16 rounded-2xl bg-slate-100" />
-                <div className="h-16 rounded-2xl bg-slate-100" />
-                <div className="h-16 rounded-2xl bg-slate-100" />
+                <div className="mt-8 grid grid-cols-3 gap-2">
+                  <div className="h-16 rounded-2xl bg-slate-100" />
+
+                  <div className="h-16 rounded-2xl bg-slate-100" />
+
+                  <div className="h-16 rounded-2xl bg-slate-100" />
+                </div>
+
+                <div className="mt-8 h-10 w-1/2 rounded bg-slate-200" />
+
+                <div className="mt-6 h-12 rounded-2xl bg-slate-200" />
               </div>
-
-              <div className="mt-8 h-10 w-1/2 rounded bg-slate-200" />
-
-              <div className="mt-6 h-12 rounded-2xl bg-slate-200" />
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </section>
     );
@@ -246,12 +592,13 @@ export default function ShopPlans() {
     return (
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="rounded-[2rem] border border-red-200 bg-red-50 px-6 py-14 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-3xl">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-3xl font-black text-red-700">
             !
           </div>
 
           <h2 className="mt-6 text-2xl font-black text-red-950">
-            Plans could not be loaded
+            Plans could not
+            be loaded
           </h2>
 
           <p className="mx-auto mt-3 max-w-xl leading-7 text-red-700">
@@ -260,7 +607,9 @@ export default function ShopPlans() {
 
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={
+              retryLoading
+            }
             className="mt-7 rounded-2xl bg-red-700 px-7 py-3.5 font-bold text-white transition hover:-translate-y-0.5 hover:bg-red-800"
           >
             Try Again
@@ -282,16 +631,20 @@ export default function ShopPlans() {
           <div className="flex flex-col gap-3 border-b border-slate-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">
-                Search destinations
+                Search
+                destinations
               </p>
 
               <h2 className="mt-2 text-2xl font-black text-slate-950">
-                Where do you need mobile data?
+                Where do you
+                need mobile
+                data?
               </h2>
             </div>
 
             <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
-              {plans.length.toLocaleString()} plans available
+              {plans.length.toLocaleString()}{" "}
+              plans available
             </div>
           </div>
 
@@ -301,7 +654,8 @@ export default function ShopPlans() {
                 htmlFor="plan-search"
                 className="mb-2 block text-sm font-bold text-slate-800"
               >
-                Country or region
+                Country or
+                region
               </label>
 
               <div className="relative">
@@ -312,8 +666,18 @@ export default function ShopPlans() {
                 <input
                   id="plan-search"
                   type="search"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  value={
+                    searchTerm
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    setSearchTerm(
+                      event
+                        .target
+                        .value,
+                    )
+                  }
                   placeholder="Search Japan, Europe, Global..."
                   autoComplete="off"
                   className="h-16 w-full rounded-2xl border border-slate-300 bg-white pl-14 pr-14 text-base font-semibold text-slate-950 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-500 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
@@ -322,7 +686,11 @@ export default function ShopPlans() {
                 {searchTerm && (
                   <button
                     type="button"
-                    onClick={() => setSearchTerm("")}
+                    onClick={() =>
+                      setSearchTerm(
+                        "",
+                      )
+                    }
                     aria-label="Clear search"
                     className="absolute inset-y-0 right-0 flex items-center px-5 text-slate-500 transition hover:text-slate-950"
                   >
@@ -340,6 +708,7 @@ export default function ShopPlans() {
                 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800"
               >
                 <SortIcon />
+
                 Sort plans
               </label>
 
@@ -347,17 +716,41 @@ export default function ShopPlans() {
                 <select
                   id="plan-sort"
                   value={sortBy}
-                  onChange={(event) =>
-                    setSortBy(event.target.value as SortOption)
+                  onChange={(
+                    event,
+                  ) =>
+                    setSortBy(
+                      event
+                        .target
+                        .value as SortOption,
+                    )
                   }
                   className="h-16 w-full appearance-none rounded-2xl border border-slate-300 bg-white px-5 pr-12 text-base font-bold text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 >
-                  <option value="recommended">Recommended</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="data-high">Data: Highest First</option>
+                  <option value="recommended">
+                    Recommended
+                  </option>
+
+                  <option value="price-low">
+                    Price: Low
+                    to High
+                  </option>
+
+                  <option value="price-high">
+                    Price: High
+                    to Low
+                  </option>
+
+                  <option value="data-high">
+                    Data:
+                    Highest
+                    First
+                  </option>
+
                   <option value="validity-high">
-                    Validity: Longest First
+                    Validity:
+                    Longest
+                    First
                   </option>
                 </select>
 
@@ -381,31 +774,45 @@ export default function ShopPlans() {
 
           <div className="mt-6">
             <p className="mb-3 text-sm font-bold text-slate-700">
-              Popular destinations
+              Popular
+              destinations
             </p>
 
             <div className="flex flex-wrap gap-2.5">
-              {quickDestinations.map((destination) => {
-                const isActive =
-                  searchTerm.toLowerCase() === destination.toLowerCase();
+              {quickDestinations.map(
+                (
+                  destination,
+                ) => {
+                  const isActive =
+                    searchTerm.toLowerCase() ===
+                    destination.toLowerCase();
 
-                return (
-                  <button
-                    key={destination}
-                    type="button"
-                    onClick={() =>
-                      setSearchTerm(isActive ? "" : destination)
-                    }
-                    className={`rounded-full border px-4 py-2.5 text-sm font-bold transition ${
-                      isActive
-                        ? "border-[#0A2D62] bg-[#0A2D62] text-white shadow-md"
-                        : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-                    }`}
-                  >
-                    {destination}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={
+                        destination
+                      }
+                      type="button"
+                      onClick={() =>
+                        setSearchTerm(
+                          isActive
+                            ? ""
+                            : destination,
+                        )
+                      }
+                      className={`rounded-full border px-4 py-2.5 text-sm font-bold transition ${
+                        isActive
+                          ? "border-[#0A2D62] bg-[#0A2D62] text-white shadow-md"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                      }`}
+                    >
+                      {
+                        destination
+                      }
+                    </button>
+                  );
+                },
+              )}
             </div>
           </div>
         </div>
@@ -414,18 +821,25 @@ export default function ShopPlans() {
       <div className="mb-8 mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-blue-600">
-            Available packages
+            Available
+            packages
           </p>
 
           <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-            Choose your eSIM plan
+            Choose your
+            eSIM plan
           </h2>
 
           {searchTerm && (
             <p className="mt-3 text-slate-600">
-              Results matching{" "}
+              Results
+              matching{" "}
               <span className="font-bold text-slate-900">
-                “{searchTerm}”
+                “
+                {
+                  searchTerm
+                }
+                ”
               </span>
             </p>
           )}
@@ -435,18 +849,26 @@ export default function ShopPlans() {
           <p className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200">
             Showing{" "}
             <span className="font-black text-slate-950">
-              {visiblePlans.length}
+              {
+                visiblePlans.length
+              }
             </span>{" "}
             of{" "}
             <span className="font-black text-slate-950">
-              {sortedPlans.length}
+              {
+                sortedPlans.length
+              }
             </span>
           </p>
 
-          {(searchTerm || sortBy !== "recommended") && (
+          {(searchTerm ||
+            sortBy !==
+              "recommended") && (
             <button
               type="button"
-              onClick={clearFilters}
+              onClick={
+                clearFilters
+              }
               className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
             >
               Clear filters
@@ -455,7 +877,8 @@ export default function ShopPlans() {
         </div>
       </div>
 
-      {visiblePlans.length === 0 ? (
+      {visiblePlans.length ===
+      0 ? (
         <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white px-6 py-20 text-center shadow-sm">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-700">
             <svg
@@ -466,11 +889,21 @@ export default function ShopPlans() {
               className="h-9 w-9"
               aria-hidden="true"
             >
-              <circle cx="11" cy="11" r="7" />
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+              />
 
-              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+              <path
+                d="m20 20-3.5-3.5"
+                strokeLinecap="round"
+              />
 
-              <path d="M8.5 11h5" strokeLinecap="round" />
+              <path
+                d="M8.5 11h5"
+                strokeLinecap="round"
+              />
             </svg>
           </div>
 
@@ -479,13 +912,21 @@ export default function ShopPlans() {
           </h3>
 
           <p className="mx-auto mt-3 max-w-md leading-7 text-slate-600">
-            We could not find a plan matching your search. Try another
-            country, region, or destination name.
+            We could not
+            find a plan
+            matching your
+            search. Try
+            another country,
+            region, or
+            destination
+            name.
           </p>
 
           <button
             type="button"
-            onClick={clearFilters}
+            onClick={
+              clearFilters
+            }
             className="mt-7 rounded-2xl bg-[#0A2D62] px-7 py-3.5 font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-800"
           >
             View All Plans
@@ -494,32 +935,50 @@ export default function ShopPlans() {
       ) : (
         <>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {visiblePlans.map((plan) => (
-              <PlanCard
-                key={plan.packageCode}
-                plan={plan}
-              />
-            ))}
+            {visiblePlans.map(
+              (plan) => (
+                <PlanCard
+                  key={
+                    plan.packageCode
+                  }
+                  plan={
+                    plan
+                  }
+                />
+              ),
+            )}
           </div>
 
           {hasMorePlans && (
             <div className="mt-14 flex flex-col items-center">
               <p className="mb-4 text-sm text-slate-500">
-                You have viewed {visiblePlans.length} of{" "}
-                {sortedPlans.length} plans
+                You have
+                viewed{" "}
+                {
+                  visiblePlans.length
+                }{" "}
+                of{" "}
+                {
+                  sortedPlans.length
+                }{" "}
+                plans
               </p>
 
               <button
                 type="button"
                 onClick={() =>
                   setVisibleCount(
-                    (currentCount) =>
-                      currentCount + PLANS_PER_PAGE,
+                    (
+                      currentCount,
+                    ) =>
+                      currentCount +
+                      PLANS_PER_PAGE,
                   )
                 }
                 className="inline-flex items-center gap-3 rounded-2xl border-2 border-[#0A2D62] bg-white px-8 py-4 font-black text-[#0A2D62] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0A2D62] hover:text-white hover:shadow-lg"
               >
-                Load More Plans
+                Load More
+                Plans
 
                 <svg
                   viewBox="0 0 24 24"

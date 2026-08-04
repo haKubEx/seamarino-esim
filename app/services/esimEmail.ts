@@ -2,7 +2,9 @@ import "server-only";
 
 import { Resend } from "resend";
 
-type SendEsimEmailInput = {
+const MAX_IDEMPOTENCY_KEY_LENGTH = 256;
+
+export type SendEsimEmailInput = {
   customerName: string;
   customerEmail: string;
   referenceNumber: string;
@@ -11,13 +13,134 @@ type SendEsimEmailInput = {
   activationCode: string;
   qrCodeUrl: string;
   apn?: string | null;
+
+  /*
+   * This must remain identical for every retry
+   * of the same delivery email.
+   *
+   * Recommended value:
+   * esim-delivery/<order-id>
+   */
+  idempotencyKey: string;
 };
 
 export type SendEsimEmailResult = {
   emailId: string;
 };
 
-function escapeHtml(value: string) {
+type EmailConfiguration = {
+  apiKey: string;
+  from: string;
+  supportUrl: string;
+};
+
+function normalizeRequiredValue({
+  value,
+  fieldName,
+}: {
+  value: string;
+  fieldName: string;
+}): string {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    throw new Error(
+      `${fieldName} is required for the eSIM delivery email.`,
+    );
+  }
+
+  return normalized;
+}
+
+function normalizeIdempotencyKey(
+  value: string,
+): string {
+  const normalized = value
+    .trim()
+    .replace(/\s+/g, "-");
+
+  if (!normalized) {
+    throw new Error(
+      "The delivery email idempotency key is missing.",
+    );
+  }
+
+  if (
+    normalized.length >
+    MAX_IDEMPOTENCY_KEY_LENGTH
+  ) {
+    throw new Error(
+      "The delivery email idempotency key exceeds 256 characters.",
+    );
+  }
+
+  return normalized;
+}
+
+function validateEmailAddress(
+  value: string,
+): string {
+  const normalized =
+    normalizeRequiredValue({
+      value,
+      fieldName:
+        "Customer email",
+    });
+
+  /*
+   * This is intentionally a basic validation.
+   * Resend performs authoritative validation.
+   */
+  if (
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      normalized,
+    )
+  ) {
+    throw new Error(
+      "The customer email address is invalid.",
+    );
+  }
+
+  return normalized;
+}
+
+function validateQrCodeUrl(
+  value: string,
+): string {
+  const normalized =
+    normalizeRequiredValue({
+      value,
+      fieldName:
+        "QR-code URL",
+    });
+
+  let parsedUrl: URL;
+
+  try {
+    parsedUrl = new URL(
+      normalized,
+    );
+  } catch {
+    throw new Error(
+      "The eSIM QR-code URL is invalid.",
+    );
+  }
+
+  if (
+    parsedUrl.protocol !== "https:" &&
+    parsedUrl.protocol !== "http:"
+  ) {
+    throw new Error(
+      "The eSIM QR-code URL must use HTTP or HTTPS.",
+    );
+  }
+
+  return parsedUrl.toString();
+}
+
+function escapeHtml(
+  value: string,
+): string {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -26,12 +149,23 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
-function getEmailConfig() {
+function getEmailConfiguration():
+  EmailConfiguration {
   const apiKey =
-    process.env.RESEND_API_KEY?.trim();
+    process.env
+      .RESEND_API_KEY
+      ?.trim();
 
   const from =
-    process.env.EMAIL_FROM?.trim();
+    process.env
+      .EMAIL_FROM
+      ?.trim();
+
+  const supportUrl =
+    process.env
+      .NEXT_PUBLIC_SUPPORT_URL
+      ?.trim() ||
+    "https://www.seamarinoesim.com/contact";
 
   if (!apiKey) {
     throw new Error(
@@ -45,428 +179,507 @@ function getEmailConfig() {
     );
   }
 
+  let parsedSupportUrl: URL;
+
+  try {
+    parsedSupportUrl =
+      new URL(supportUrl);
+  } catch {
+    throw new Error(
+      "NEXT_PUBLIC_SUPPORT_URL is not a valid URL.",
+    );
+  }
+
   return {
     apiKey,
     from,
+    supportUrl:
+      parsedSupportUrl.toString(),
   };
 }
 
-function createEmailHtml(
-  input: SendEsimEmailInput,
-) {
-  const customerName =
-    escapeHtml(input.customerName);
+function createEmailText({
+  customerName,
+  referenceNumber,
+  planName,
+  iccid,
+  activationCode,
+  qrCodeUrl,
+  apn,
+  supportUrl,
+}: {
+  customerName: string;
+  referenceNumber: string;
+  planName: string;
+  iccid: string;
+  activationCode: string;
+  qrCodeUrl: string;
+  apn: string | null;
+  supportUrl: string;
+}): string {
+  return [
+    `Hello ${customerName},`,
+    "",
+    "Your payment has been confirmed and your Seamarino eSIM is ready.",
+    "",
+    `Plan: ${planName}`,
+    `Order reference: ${referenceNumber}`,
+    "",
+    "QR code:",
+    qrCodeUrl,
+    "",
+    "Manual installation details:",
+    `Activation code: ${activationCode}`,
+    `ICCID: ${iccid}`,
+    `APN: ${apn || "Automatic"}`,
+    "",
+    "Important reminders:",
+    "1. Install the eSIM while connected to stable Wi-Fi.",
+    "2. Do not delete the eSIM after installation.",
+    "3. Enable data roaming on the eSIM line.",
+    "4. Select the eSIM as your mobile-data line.",
+    "",
+    `Support: ${supportUrl}`,
+    "",
+    "Keep this email private because it contains your personal eSIM installation credentials.",
+  ].join("\n");
+}
 
-  const referenceNumber =
-    escapeHtml(input.referenceNumber);
+function createEmailHtml({
+  customerName,
+  referenceNumber,
+  planName,
+  iccid,
+  activationCode,
+  qrCodeUrl,
+  apn,
+  supportUrl,
+}: {
+  customerName: string;
+  referenceNumber: string;
+  planName: string;
+  iccid: string;
+  activationCode: string;
+  qrCodeUrl: string;
+  apn: string | null;
+  supportUrl: string;
+}): string {
+  const safeCustomerName =
+    escapeHtml(customerName);
 
-  const planName =
-    escapeHtml(input.planName);
+  const safeReferenceNumber =
+    escapeHtml(referenceNumber);
 
-  const iccid =
-    escapeHtml(input.iccid);
+  const safePlanName =
+    escapeHtml(planName);
 
-  const activationCode =
-    escapeHtml(input.activationCode);
+  const safeIccid =
+    escapeHtml(iccid);
 
-  const qrCodeUrl =
-    escapeHtml(input.qrCodeUrl);
+  const safeActivationCode =
+    escapeHtml(activationCode);
 
-  const apn =
-    input.apn?.trim()
-      ? escapeHtml(input.apn.trim())
+  const safeQrCodeUrl =
+    escapeHtml(qrCodeUrl);
+
+  const safeApn =
+    apn
+      ? escapeHtml(apn)
       : "Automatic";
 
-  return `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0"
-        />
-        <title>Your Seamarino eSIM</title>
-      </head>
+  const safeSupportUrl =
+    escapeHtml(supportUrl);
 
-      <body
-        style="
-          margin: 0;
-          padding: 0;
-          background: #f1f5f9;
-          font-family: Arial, Helvetica, sans-serif;
-          color: #0f172a;
-        "
-      >
-        <table
-          role="presentation"
-          width="100%"
-          cellspacing="0"
-          cellpadding="0"
-          border="0"
+  return `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>Your Seamarino eSIM is ready</title>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #f1f5f9;
+      color: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+    >
+      <tr>
+        <td
+          align="center"
+          style="padding: 32px 16px"
         >
-          <tr>
-            <td
-              align="center"
-              style="padding: 32px 16px"
-            >
-              <table
-                role="presentation"
-                width="100%"
-                cellspacing="0"
-                cellpadding="0"
-                border="0"
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            style="
+              max-width: 640px;
+              overflow: hidden;
+              border-radius: 24px;
+              background: #ffffff;
+              box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+            "
+          >
+            <tr>
+              <td
                 style="
-                  max-width: 640px;
-                  overflow: hidden;
-                  border-radius: 24px;
-                  background: #ffffff;
-                  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+                  padding: 36px 30px;
+                  background: #0a2d62;
+                  color: #ffffff;
+                  text-align: center;
                 "
               >
-                <tr>
-                  <td
+                <p
+                  style="
+                    margin: 0;
+                    color: #7dd3fc;
+                    font-size: 13px;
+                    font-weight: 700;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                  "
+                >
+                  Seamarino eSIM
+                </p>
+
+                <h1
+                  style="
+                    margin: 14px 0 0;
+                    font-size: 32px;
+                    line-height: 1.25;
+                  "
+                >
+                  Your eSIM is ready
+                </h1>
+
+                <p
+                  style="
+                    margin: 14px 0 0;
+                    color: #dbeafe;
+                    font-size: 16px;
+                    line-height: 1.7;
+                  "
+                >
+                  Scan the QR code below to install your
+                  mobile-data plan.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 32px">
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 17px;
+                    line-height: 1.7;
+                  "
+                >
+                  Hello
+                  <strong>${safeCustomerName}</strong>,
+                </p>
+
+                <p
+                  style="
+                    margin: 14px 0 0;
+                    color: #475569;
+                    font-size: 15px;
+                    line-height: 1.7;
+                  "
+                >
+                  Your payment was confirmed and your
+                  Seamarino eSIM profile has been issued.
+                </p>
+
+                <div
+                  style="
+                    margin-top: 24px;
+                    border-radius: 16px;
+                    background: #eff6ff;
+                    padding: 20px;
+                  "
+                >
+                  <p
                     style="
-                      padding: 36px 30px;
+                      margin: 0;
+                      color: #1d4ed8;
+                      font-size: 12px;
+                      font-weight: 700;
+                      letter-spacing: 1.4px;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Order details
+                  </p>
+
+                  <p
+                    style="
+                      margin: 12px 0 0;
+                      font-size: 17px;
+                      font-weight: 700;
+                    "
+                  >
+                    ${safePlanName}
+                  </p>
+
+                  <p
+                    style="
+                      margin: 8px 0 0;
+                      color: #475569;
+                      font-size: 14px;
+                    "
+                  >
+                    Reference:
+                    ${safeReferenceNumber}
+                  </p>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 28px;
+                    text-align: center;
+                  "
+                >
+                  <img
+                    src="${safeQrCodeUrl}"
+                    alt="Seamarino eSIM QR code"
+                    width="260"
+                    height="260"
+                    style="
+                      display: block;
+                      width: 260px;
+                      height: 260px;
+                      max-width: 100%;
+                      margin: 0 auto;
+                      border: 12px solid #ffffff;
+                      border-radius: 20px;
+                      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+                    "
+                  />
+
+                  <p
+                    style="
+                      margin: 18px 0 0;
+                      color: #64748b;
+                      font-size: 13px;
+                      line-height: 1.6;
+                    "
+                  >
+                    Open this email on another device while
+                    scanning the QR code with your phone.
+                  </p>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 28px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    padding: 22px;
+                  "
+                >
+                  <h2
+                    style="
+                      margin: 0;
+                      color: #0a2d62;
+                      font-size: 20px;
+                    "
+                  >
+                    Manual installation details
+                  </h2>
+
+                  <p
+                    style="
+                      margin: 18px 0 6px;
+                      color: #64748b;
+                      font-size: 12px;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Activation code
+                  </p>
+
+                  <p
+                    style="
+                      margin: 0;
+                      overflow-wrap: anywhere;
+                      border-radius: 10px;
+                      background: #f8fafc;
+                      padding: 12px;
+                      font-family: monospace;
+                      font-size: 13px;
+                      line-height: 1.6;
+                    "
+                  >
+                    ${safeActivationCode}
+                  </p>
+
+                  <p
+                    style="
+                      margin: 18px 0 6px;
+                      color: #64748b;
+                      font-size: 12px;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                    "
+                  >
+                    ICCID
+                  </p>
+
+                  <p
+                    style="
+                      margin: 0;
+                      overflow-wrap: anywhere;
+                      font-family: monospace;
+                      font-size: 14px;
+                    "
+                  >
+                    ${safeIccid}
+                  </p>
+
+                  <p
+                    style="
+                      margin: 18px 0 6px;
+                      color: #64748b;
+                      font-size: 12px;
+                      font-weight: 700;
+                      text-transform: uppercase;
+                    "
+                  >
+                    APN
+                  </p>
+
+                  <p
+                    style="
+                      margin: 0;
+                      overflow-wrap: anywhere;
+                      font-family: monospace;
+                      font-size: 14px;
+                    "
+                  >
+                    ${safeApn}
+                  </p>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 28px;
+                    border-radius: 16px;
+                    background: #fffbeb;
+                    padding: 20px;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0;
+                      color: #92400e;
+                      font-size: 16px;
+                      font-weight: 700;
+                    "
+                  >
+                    Important reminders
+                  </p>
+
+                  <ol
+                    style="
+                      margin: 14px 0 0;
+                      padding-left: 20px;
+                      color: #78350f;
+                      font-size: 14px;
+                      line-height: 1.8;
+                    "
+                  >
+                    <li>
+                      Install while connected to stable Wi-Fi.
+                    </li>
+
+                    <li>
+                      Do not delete the eSIM after installation.
+                    </li>
+
+                    <li>
+                      Enable data roaming on the eSIM line.
+                    </li>
+
+                    <li>
+                      Select the eSIM as your mobile-data line.
+                    </li>
+                  </ol>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 30px;
+                    text-align: center;
+                  "
+                >
+                  <a
+                    href="${safeSupportUrl}"
+                    style="
+                      display: inline-block;
+                      border-radius: 14px;
                       background: #0a2d62;
+                      padding: 14px 24px;
                       color: #ffffff;
-                      text-align: center;
+                      font-size: 15px;
+                      font-weight: 700;
+                      text-decoration: none;
                     "
                   >
-                    <p
-                      style="
-                        margin: 0;
-                        color: #7dd3fc;
-                        font-size: 13px;
-                        font-weight: 700;
-                        letter-spacing: 2px;
-                        text-transform: uppercase;
-                      "
-                    >
-                      Seamarino eSIM
-                    </p>
+                    Contact Support
+                  </a>
+                </div>
+              </td>
+            </tr>
 
-                    <h1
-                      style="
-                        margin: 14px 0 0;
-                        font-size: 32px;
-                        line-height: 1.25;
-                      "
-                    >
-                      Your eSIM is ready
-                    </h1>
-
-                    <p
-                      style="
-                        margin: 14px 0 0;
-                        color: #dbeafe;
-                        font-size: 16px;
-                        line-height: 1.7;
-                      "
-                    >
-                      Scan the QR code below to install
-                      your mobile data plan.
-                    </p>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td style="padding: 32px">
-                    <p
-                      style="
-                        margin: 0;
-                        font-size: 17px;
-                        line-height: 1.7;
-                      "
-                    >
-                      Hello
-                      <strong>${customerName}</strong>,
-                    </p>
-
-                    <p
-                      style="
-                        margin: 14px 0 0;
-                        color: #475569;
-                        font-size: 15px;
-                        line-height: 1.7;
-                      "
-                    >
-                      Your payment was confirmed and
-                      your Seamarino eSIM profile has
-                      been issued.
-                    </p>
-
-                    <div
-                      style="
-                        margin-top: 24px;
-                        border-radius: 16px;
-                        background: #eff6ff;
-                        padding: 20px;
-                      "
-                    >
-                      <p
-                        style="
-                          margin: 0;
-                          color: #1d4ed8;
-                          font-size: 12px;
-                          font-weight: 700;
-                          text-transform: uppercase;
-                          letter-spacing: 1.4px;
-                        "
-                      >
-                        Order details
-                      </p>
-
-                      <p
-                        style="
-                          margin: 12px 0 0;
-                          font-size: 17px;
-                          font-weight: 700;
-                        "
-                      >
-                        ${planName}
-                      </p>
-
-                      <p
-                        style="
-                          margin: 8px 0 0;
-                          color: #475569;
-                          font-size: 14px;
-                        "
-                      >
-                        Reference:
-                        ${referenceNumber}
-                      </p>
-                    </div>
-
-                    <div
-                      style="
-                        margin-top: 28px;
-                        text-align: center;
-                      "
-                    >
-                      <img
-                        src="${qrCodeUrl}"
-                        alt="Seamarino eSIM QR code"
-                        width="260"
-                        height="260"
-                        style="
-                          display: block;
-                          width: 260px;
-                          height: 260px;
-                          max-width: 100%;
-                          margin: 0 auto;
-                          border: 12px solid #ffffff;
-                          border-radius: 20px;
-                          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
-                        "
-                      />
-
-                      <p
-                        style="
-                          margin: 18px 0 0;
-                          color: #64748b;
-                          font-size: 13px;
-                          line-height: 1.6;
-                        "
-                      >
-                        Open this email on another
-                        device while scanning the QR
-                        code with your phone.
-                      </p>
-                    </div>
-
-                    <div
-                      style="
-                        margin-top: 28px;
-                        border: 1px solid #e2e8f0;
-                        border-radius: 16px;
-                        padding: 22px;
-                      "
-                    >
-                      <h2
-                        style="
-                          margin: 0;
-                          color: #0a2d62;
-                          font-size: 20px;
-                        "
-                      >
-                        Manual installation details
-                      </h2>
-
-                      <p
-                        style="
-                          margin: 18px 0 6px;
-                          color: #64748b;
-                          font-size: 12px;
-                          font-weight: 700;
-                          text-transform: uppercase;
-                        "
-                      >
-                        Activation code
-                      </p>
-
-                      <p
-                        style="
-                          margin: 0;
-                          overflow-wrap: anywhere;
-                          border-radius: 10px;
-                          background: #f8fafc;
-                          padding: 12px;
-                          font-family: monospace;
-                          font-size: 13px;
-                          line-height: 1.6;
-                        "
-                      >
-                        ${activationCode}
-                      </p>
-
-                      <p
-                        style="
-                          margin: 18px 0 6px;
-                          color: #64748b;
-                          font-size: 12px;
-                          font-weight: 700;
-                          text-transform: uppercase;
-                        "
-                      >
-                        ICCID
-                      </p>
-
-                      <p
-                        style="
-                          margin: 0;
-                          font-family: monospace;
-                          font-size: 14px;
-                        "
-                      >
-                        ${iccid}
-                      </p>
-
-                      <p
-                        style="
-                          margin: 18px 0 6px;
-                          color: #64748b;
-                          font-size: 12px;
-                          font-weight: 700;
-                          text-transform: uppercase;
-                        "
-                      >
-                        APN
-                      </p>
-
-                      <p
-                        style="
-                          margin: 0;
-                          font-family: monospace;
-                          font-size: 14px;
-                        "
-                      >
-                        ${apn}
-                      </p>
-                    </div>
-
-                    <div
-                      style="
-                        margin-top: 28px;
-                        border-radius: 16px;
-                        background: #fffbeb;
-                        padding: 20px;
-                      "
-                    >
-                      <p
-                        style="
-                          margin: 0;
-                          color: #92400e;
-                          font-size: 16px;
-                          font-weight: 700;
-                        "
-                      >
-                        Important reminders
-                      </p>
-
-                      <ol
-                        style="
-                          margin: 14px 0 0;
-                          padding-left: 20px;
-                          color: #78350f;
-                          font-size: 14px;
-                          line-height: 1.8;
-                        "
-                      >
-                        <li>
-                          Install while connected to
-                          stable Wi-Fi.
-                        </li>
-                        <li>
-                          Do not delete the eSIM after
-                          installation.
-                        </li>
-                        <li>
-                          Enable data roaming on the
-                          eSIM line.
-                        </li>
-                        <li>
-                          Select the eSIM as your
-                          mobile-data line.
-                        </li>
-                      </ol>
-                    </div>
-
-                    <div
-                      style="
-                        margin-top: 30px;
-                        text-align: center;
-                      "
-                    >
-                      <a
-                        href="https://www.seamarinoesim.com/contact"
-                        style="
-                          display: inline-block;
-                          border-radius: 14px;
-                          background: #0a2d62;
-                          padding: 14px 24px;
-                          color: #ffffff;
-                          font-size: 15px;
-                          font-weight: 700;
-                          text-decoration: none;
-                        "
-                      >
-                        Contact Support
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-
-                <tr>
-                  <td
-                    style="
-                      padding: 24px 30px;
-                      background: #071f45;
-                      text-align: center;
-                    "
-                  >
-                    <p
-                      style="
-                        margin: 0;
-                        color: #bfdbfe;
-                        font-size: 13px;
-                        line-height: 1.7;
-                      "
-                    >
-                      Keep this email private. It
-                      contains your personal eSIM
-                      installation credentials.
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
-  `;
+            <tr>
+              <td
+                style="
+                  padding: 24px 30px;
+                  background: #071f45;
+                  text-align: center;
+                "
+              >
+                <p
+                  style="
+                    margin: 0;
+                    color: #bfdbfe;
+                    font-size: 13px;
+                    line-height: 1.7;
+                  "
+                >
+                  Keep this email private. It contains your
+                  personal eSIM installation credentials.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+  `.trim();
 }
 
 export async function sendEsimDeliveryEmail(
@@ -475,23 +688,146 @@ export async function sendEsimDeliveryEmail(
   const {
     apiKey,
     from,
-  } = getEmailConfig();
+    supportUrl,
+  } = getEmailConfiguration();
 
-  const resend = new Resend(apiKey);
+  const customerName =
+    normalizeRequiredValue({
+      value:
+        input.customerName,
+      fieldName:
+        "Customer name",
+    });
+
+  const customerEmail =
+    validateEmailAddress(
+      input.customerEmail,
+    );
+
+  const referenceNumber =
+    normalizeRequiredValue({
+      value:
+        input.referenceNumber,
+      fieldName:
+        "Order reference number",
+    });
+
+  const planName =
+    normalizeRequiredValue({
+      value:
+        input.planName,
+      fieldName:
+        "Plan name",
+    });
+
+  const iccid =
+    normalizeRequiredValue({
+      value:
+        input.iccid,
+      fieldName:
+        "ICCID",
+    });
+
+  const activationCode =
+    normalizeRequiredValue({
+      value:
+        input.activationCode,
+      fieldName:
+        "Activation code",
+    });
+
+  const qrCodeUrl =
+    validateQrCodeUrl(
+      input.qrCodeUrl,
+    );
+
+  const apn =
+    input.apn?.trim() ||
+    null;
+
+  const idempotencyKey =
+    normalizeIdempotencyKey(
+      input.idempotencyKey,
+    );
+
+  const resend =
+    new Resend(apiKey);
+
+  const subject =
+    `Your Seamarino eSIM is ready — ${referenceNumber}`;
 
   const response =
-    await resend.emails.send({
-      from,
-      to: [input.customerEmail],
-      subject:
-        `Your Seamarino eSIM is ready — ${input.referenceNumber}`,
-      html: createEmailHtml(input),
-    });
+    await resend.emails.send(
+      {
+        from,
+
+        to: [
+          customerEmail,
+        ],
+
+        subject,
+
+        html:
+          createEmailHtml({
+            customerName,
+            referenceNumber,
+            planName,
+            iccid,
+            activationCode,
+            qrCodeUrl,
+            apn,
+            supportUrl,
+          }),
+
+        text:
+          createEmailText({
+            customerName,
+            referenceNumber,
+            planName,
+            iccid,
+            activationCode,
+            qrCodeUrl,
+            apn,
+            supportUrl,
+          }),
+
+        tags: [
+          {
+            name:
+              "email_type",
+
+            value:
+              "esim_delivery",
+          },
+          {
+            name:
+              "order_reference",
+
+            value:
+              referenceNumber
+                .replace(
+                  /[^a-zA-Z0-9_-]/g,
+                  "-",
+                )
+                .slice(0, 256),
+          },
+        ],
+      },
+      {
+        idempotencyKey,
+      },
+    );
 
   if (response.error) {
     console.error(
-      "RESEND EMAIL ERROR:",
-      response.error,
+      "RESEND ESIM EMAIL ERROR:",
+      {
+        referenceNumber,
+        customerEmail,
+        idempotencyKey,
+        error:
+          response.error,
+      },
     );
 
     throw new Error(
@@ -501,22 +837,21 @@ export async function sendEsimDeliveryEmail(
   }
 
   const emailId =
-    response.data?.id;
+    response.data?.id?.trim();
 
   if (!emailId) {
     throw new Error(
-      "Resend accepted the email but did not return an email ID.",
+      "Resend accepted the email request but did not return an email ID.",
     );
   }
 
   console.info(
-    "ESIM DELIVERY EMAIL SENT:",
+    "ESIM DELIVERY EMAIL ACCEPTED:",
     {
       emailId,
-      referenceNumber:
-        input.referenceNumber,
-      customerEmail:
-        input.customerEmail,
+      referenceNumber,
+      customerEmail,
+      idempotencyKey,
     },
   );
 

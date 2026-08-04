@@ -73,6 +73,7 @@ export type OrderMinAggregateOutputType = {
   qrCodeUrl: string | null
   activationCode: string | null
   smdpAddress: string | null
+  matchingId: string | null
   smdpStatus: string | null
   supplierEsimStatus: string | null
   apn: string | null
@@ -81,9 +82,20 @@ export type OrderMinAggregateOutputType = {
   profileIssuedAt: Date | null
   profileLastCheckedAt: Date | null
   profileCheckAttempts: number | null
+  profileSyncClaimedAt: Date | null
+  profileSyncClaimId: string | null
+  profileSyncLeaseUntil: Date | null
+  emailDeliveryStatus: $Enums.EmailDeliveryStatus | null
   emailSent: boolean | null
   emailSentAt: Date | null
   emailAttempts: number | null
+  emailIdempotencyKey: string | null
+  resendEmailId: string | null
+  emailClaimedAt: Date | null
+  emailClaimId: string | null
+  emailLeaseUntil: Date | null
+  emailLastAttemptAt: Date | null
+  emailLastError: string | null
   processingAttempts: number | null
   lastAttemptAt: Date | null
   lastError: string | null
@@ -124,6 +136,7 @@ export type OrderMaxAggregateOutputType = {
   qrCodeUrl: string | null
   activationCode: string | null
   smdpAddress: string | null
+  matchingId: string | null
   smdpStatus: string | null
   supplierEsimStatus: string | null
   apn: string | null
@@ -132,9 +145,20 @@ export type OrderMaxAggregateOutputType = {
   profileIssuedAt: Date | null
   profileLastCheckedAt: Date | null
   profileCheckAttempts: number | null
+  profileSyncClaimedAt: Date | null
+  profileSyncClaimId: string | null
+  profileSyncLeaseUntil: Date | null
+  emailDeliveryStatus: $Enums.EmailDeliveryStatus | null
   emailSent: boolean | null
   emailSentAt: Date | null
   emailAttempts: number | null
+  emailIdempotencyKey: string | null
+  resendEmailId: string | null
+  emailClaimedAt: Date | null
+  emailClaimId: string | null
+  emailLeaseUntil: Date | null
+  emailLastAttemptAt: Date | null
+  emailLastError: string | null
   processingAttempts: number | null
   lastAttemptAt: Date | null
   lastError: string | null
@@ -175,6 +199,7 @@ export type OrderCountAggregateOutputType = {
   qrCodeUrl: number
   activationCode: number
   smdpAddress: number
+  matchingId: number
   smdpStatus: number
   supplierEsimStatus: number
   apn: number
@@ -183,9 +208,20 @@ export type OrderCountAggregateOutputType = {
   profileIssuedAt: number
   profileLastCheckedAt: number
   profileCheckAttempts: number
+  profileSyncClaimedAt: number
+  profileSyncClaimId: number
+  profileSyncLeaseUntil: number
+  emailDeliveryStatus: number
   emailSent: number
   emailSentAt: number
   emailAttempts: number
+  emailIdempotencyKey: number
+  resendEmailId: number
+  emailClaimedAt: number
+  emailClaimId: number
+  emailLeaseUntil: number
+  emailLastAttemptAt: number
+  emailLastError: number
   processingAttempts: number
   lastAttemptAt: number
   lastError: number
@@ -246,6 +282,7 @@ export type OrderMinAggregateInputType = {
   qrCodeUrl?: true
   activationCode?: true
   smdpAddress?: true
+  matchingId?: true
   smdpStatus?: true
   supplierEsimStatus?: true
   apn?: true
@@ -254,9 +291,20 @@ export type OrderMinAggregateInputType = {
   profileIssuedAt?: true
   profileLastCheckedAt?: true
   profileCheckAttempts?: true
+  profileSyncClaimedAt?: true
+  profileSyncClaimId?: true
+  profileSyncLeaseUntil?: true
+  emailDeliveryStatus?: true
   emailSent?: true
   emailSentAt?: true
   emailAttempts?: true
+  emailIdempotencyKey?: true
+  resendEmailId?: true
+  emailClaimedAt?: true
+  emailClaimId?: true
+  emailLeaseUntil?: true
+  emailLastAttemptAt?: true
+  emailLastError?: true
   processingAttempts?: true
   lastAttemptAt?: true
   lastError?: true
@@ -297,6 +345,7 @@ export type OrderMaxAggregateInputType = {
   qrCodeUrl?: true
   activationCode?: true
   smdpAddress?: true
+  matchingId?: true
   smdpStatus?: true
   supplierEsimStatus?: true
   apn?: true
@@ -305,9 +354,20 @@ export type OrderMaxAggregateInputType = {
   profileIssuedAt?: true
   profileLastCheckedAt?: true
   profileCheckAttempts?: true
+  profileSyncClaimedAt?: true
+  profileSyncClaimId?: true
+  profileSyncLeaseUntil?: true
+  emailDeliveryStatus?: true
   emailSent?: true
   emailSentAt?: true
   emailAttempts?: true
+  emailIdempotencyKey?: true
+  resendEmailId?: true
+  emailClaimedAt?: true
+  emailClaimId?: true
+  emailLeaseUntil?: true
+  emailLastAttemptAt?: true
+  emailLastError?: true
   processingAttempts?: true
   lastAttemptAt?: true
   lastError?: true
@@ -348,6 +408,7 @@ export type OrderCountAggregateInputType = {
   qrCodeUrl?: true
   activationCode?: true
   smdpAddress?: true
+  matchingId?: true
   smdpStatus?: true
   supplierEsimStatus?: true
   apn?: true
@@ -356,9 +417,20 @@ export type OrderCountAggregateInputType = {
   profileIssuedAt?: true
   profileLastCheckedAt?: true
   profileCheckAttempts?: true
+  profileSyncClaimedAt?: true
+  profileSyncClaimId?: true
+  profileSyncLeaseUntil?: true
+  emailDeliveryStatus?: true
   emailSent?: true
   emailSentAt?: true
   emailAttempts?: true
+  emailIdempotencyKey?: true
+  resendEmailId?: true
+  emailClaimedAt?: true
+  emailClaimId?: true
+  emailLeaseUntil?: true
+  emailLastAttemptAt?: true
+  emailLastError?: true
   processingAttempts?: true
   lastAttemptAt?: true
   lastError?: true
@@ -486,6 +558,7 @@ export type OrderGroupByOutputType = {
   qrCodeUrl: string | null
   activationCode: string | null
   smdpAddress: string | null
+  matchingId: string | null
   smdpStatus: string | null
   supplierEsimStatus: string | null
   apn: string | null
@@ -494,9 +567,20 @@ export type OrderGroupByOutputType = {
   profileIssuedAt: Date | null
   profileLastCheckedAt: Date | null
   profileCheckAttempts: number
+  profileSyncClaimedAt: Date | null
+  profileSyncClaimId: string | null
+  profileSyncLeaseUntil: Date | null
+  emailDeliveryStatus: $Enums.EmailDeliveryStatus
   emailSent: boolean
   emailSentAt: Date | null
   emailAttempts: number
+  emailIdempotencyKey: string | null
+  resendEmailId: string | null
+  emailClaimedAt: Date | null
+  emailClaimId: string | null
+  emailLeaseUntil: Date | null
+  emailLastAttemptAt: Date | null
+  emailLastError: string | null
   processingAttempts: number
   lastAttemptAt: Date | null
   lastError: string | null
@@ -560,6 +644,7 @@ export type OrderWhereInput = {
   qrCodeUrl?: Prisma.StringNullableFilter<"Order"> | string | null
   activationCode?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpAddress?: Prisma.StringNullableFilter<"Order"> | string | null
+  matchingId?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpStatus?: Prisma.StringNullableFilter<"Order"> | string | null
   supplierEsimStatus?: Prisma.StringNullableFilter<"Order"> | string | null
   apn?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -568,9 +653,20 @@ export type OrderWhereInput = {
   profileIssuedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   profileLastCheckedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   profileCheckAttempts?: Prisma.IntFilter<"Order"> | number
+  profileSyncClaimedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileSyncClaimId?: Prisma.StringNullableFilter<"Order"> | string | null
+  profileSyncLeaseUntil?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFilter<"Order"> | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFilter<"Order"> | boolean
   emailSentAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   emailAttempts?: Prisma.IntFilter<"Order"> | number
+  emailIdempotencyKey?: Prisma.StringNullableFilter<"Order"> | string | null
+  resendEmailId?: Prisma.StringNullableFilter<"Order"> | string | null
+  emailClaimedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailClaimId?: Prisma.StringNullableFilter<"Order"> | string | null
+  emailLeaseUntil?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailLastAttemptAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailLastError?: Prisma.StringNullableFilter<"Order"> | string | null
   processingAttempts?: Prisma.IntFilter<"Order"> | number
   lastAttemptAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   lastError?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -612,6 +708,7 @@ export type OrderOrderByWithRelationInput = {
   qrCodeUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   activationCode?: Prisma.SortOrderInput | Prisma.SortOrder
   smdpAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  matchingId?: Prisma.SortOrderInput | Prisma.SortOrder
   smdpStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   supplierEsimStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   apn?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -620,9 +717,20 @@ export type OrderOrderByWithRelationInput = {
   profileIssuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   profileLastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   profileCheckAttempts?: Prisma.SortOrder
+  profileSyncClaimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileSyncClaimId?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileSyncLeaseUntil?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailDeliveryStatus?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
+  emailIdempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  resendEmailId?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailClaimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailClaimId?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailLeaseUntil?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailLastAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailLastError?: Prisma.SortOrderInput | Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
   lastAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastError?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -642,6 +750,11 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   paymongoPaymentId?: string
   paymongoEventId?: string
   esimOrderId?: string
+  esimTransactionId?: string
+  esimTranNo?: string
+  iccid?: string
+  emailIdempotencyKey?: string
+  resendEmailId?: string
   AND?: Prisma.OrderWhereInput | Prisma.OrderWhereInput[]
   OR?: Prisma.OrderWhereInput[]
   NOT?: Prisma.OrderWhereInput | Prisma.OrderWhereInput[]
@@ -660,13 +773,11 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   esimStatus?: Prisma.EnumEsimStatusFilter<"Order"> | $Enums.EsimStatus
   paymentMethod?: Prisma.StringNullableFilter<"Order"> | string | null
   paidAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
-  esimTransactionId?: Prisma.StringNullableFilter<"Order"> | string | null
-  esimTranNo?: Prisma.StringNullableFilter<"Order"> | string | null
-  iccid?: Prisma.StringNullableFilter<"Order"> | string | null
   qrCode?: Prisma.StringNullableFilter<"Order"> | string | null
   qrCodeUrl?: Prisma.StringNullableFilter<"Order"> | string | null
   activationCode?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpAddress?: Prisma.StringNullableFilter<"Order"> | string | null
+  matchingId?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpStatus?: Prisma.StringNullableFilter<"Order"> | string | null
   supplierEsimStatus?: Prisma.StringNullableFilter<"Order"> | string | null
   apn?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -675,9 +786,18 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   profileIssuedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   profileLastCheckedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   profileCheckAttempts?: Prisma.IntFilter<"Order"> | number
+  profileSyncClaimedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileSyncClaimId?: Prisma.StringNullableFilter<"Order"> | string | null
+  profileSyncLeaseUntil?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFilter<"Order"> | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFilter<"Order"> | boolean
   emailSentAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   emailAttempts?: Prisma.IntFilter<"Order"> | number
+  emailClaimedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailClaimId?: Prisma.StringNullableFilter<"Order"> | string | null
+  emailLeaseUntil?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailLastAttemptAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailLastError?: Prisma.StringNullableFilter<"Order"> | string | null
   processingAttempts?: Prisma.IntFilter<"Order"> | number
   lastAttemptAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   lastError?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -688,7 +808,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-}, "id" | "referenceNumber" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "esimOrderId">
+}, "id" | "referenceNumber" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "esimOrderId" | "esimTransactionId" | "esimTranNo" | "iccid" | "emailIdempotencyKey" | "resendEmailId">
 
 export type OrderOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -719,6 +839,7 @@ export type OrderOrderByWithAggregationInput = {
   qrCodeUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   activationCode?: Prisma.SortOrderInput | Prisma.SortOrder
   smdpAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  matchingId?: Prisma.SortOrderInput | Prisma.SortOrder
   smdpStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   supplierEsimStatus?: Prisma.SortOrderInput | Prisma.SortOrder
   apn?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -727,9 +848,20 @@ export type OrderOrderByWithAggregationInput = {
   profileIssuedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   profileLastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   profileCheckAttempts?: Prisma.SortOrder
+  profileSyncClaimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileSyncClaimId?: Prisma.SortOrderInput | Prisma.SortOrder
+  profileSyncLeaseUntil?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailDeliveryStatus?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrderInput | Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
+  emailIdempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  resendEmailId?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailClaimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailClaimId?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailLeaseUntil?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailLastAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  emailLastError?: Prisma.SortOrderInput | Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
   lastAttemptAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastError?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -778,6 +910,7 @@ export type OrderScalarWhereWithAggregatesInput = {
   qrCodeUrl?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   activationCode?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   smdpAddress?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  matchingId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   smdpStatus?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   supplierEsimStatus?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   apn?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
@@ -786,9 +919,20 @@ export type OrderScalarWhereWithAggregatesInput = {
   profileIssuedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   profileLastCheckedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   profileCheckAttempts?: Prisma.IntWithAggregatesFilter<"Order"> | number
+  profileSyncClaimedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  profileSyncClaimId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  profileSyncLeaseUntil?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusWithAggregatesFilter<"Order"> | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolWithAggregatesFilter<"Order"> | boolean
   emailSentAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   emailAttempts?: Prisma.IntWithAggregatesFilter<"Order"> | number
+  emailIdempotencyKey?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  resendEmailId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  emailClaimedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  emailClaimId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  emailLeaseUntil?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  emailLastAttemptAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  emailLastError?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   processingAttempts?: Prisma.IntWithAggregatesFilter<"Order"> | number
   lastAttemptAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   lastError?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
@@ -828,6 +972,7 @@ export type OrderCreateInput = {
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  matchingId?: string | null
   smdpStatus?: string | null
   supplierEsimStatus?: string | null
   apn?: string | null
@@ -836,9 +981,20 @@ export type OrderCreateInput = {
   profileIssuedAt?: Date | string | null
   profileLastCheckedAt?: Date | string | null
   profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
   processingAttempts?: number
   lastAttemptAt?: Date | string | null
   lastError?: string | null
@@ -880,6 +1036,7 @@ export type OrderUncheckedCreateInput = {
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  matchingId?: string | null
   smdpStatus?: string | null
   supplierEsimStatus?: string | null
   apn?: string | null
@@ -888,9 +1045,20 @@ export type OrderUncheckedCreateInput = {
   profileIssuedAt?: Date | string | null
   profileLastCheckedAt?: Date | string | null
   profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
   processingAttempts?: number
   lastAttemptAt?: Date | string | null
   lastError?: string | null
@@ -930,6 +1098,7 @@ export type OrderUpdateInput = {
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -938,9 +1107,20 @@ export type OrderUpdateInput = {
   profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -982,6 +1162,7 @@ export type OrderUncheckedUpdateInput = {
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -990,9 +1171,20 @@ export type OrderUncheckedUpdateInput = {
   profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1033,6 +1225,7 @@ export type OrderCreateManyInput = {
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  matchingId?: string | null
   smdpStatus?: string | null
   supplierEsimStatus?: string | null
   apn?: string | null
@@ -1041,9 +1234,20 @@ export type OrderCreateManyInput = {
   profileIssuedAt?: Date | string | null
   profileLastCheckedAt?: Date | string | null
   profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
   processingAttempts?: number
   lastAttemptAt?: Date | string | null
   lastError?: string | null
@@ -1083,6 +1287,7 @@ export type OrderUpdateManyMutationInput = {
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1091,9 +1296,20 @@ export type OrderUpdateManyMutationInput = {
   profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1134,6 +1350,7 @@ export type OrderUncheckedUpdateManyInput = {
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1142,9 +1359,20 @@ export type OrderUncheckedUpdateManyInput = {
   profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1195,6 +1423,7 @@ export type OrderCountOrderByAggregateInput = {
   qrCodeUrl?: Prisma.SortOrder
   activationCode?: Prisma.SortOrder
   smdpAddress?: Prisma.SortOrder
+  matchingId?: Prisma.SortOrder
   smdpStatus?: Prisma.SortOrder
   supplierEsimStatus?: Prisma.SortOrder
   apn?: Prisma.SortOrder
@@ -1203,9 +1432,20 @@ export type OrderCountOrderByAggregateInput = {
   profileIssuedAt?: Prisma.SortOrder
   profileLastCheckedAt?: Prisma.SortOrder
   profileCheckAttempts?: Prisma.SortOrder
+  profileSyncClaimedAt?: Prisma.SortOrder
+  profileSyncClaimId?: Prisma.SortOrder
+  profileSyncLeaseUntil?: Prisma.SortOrder
+  emailDeliveryStatus?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
+  emailIdempotencyKey?: Prisma.SortOrder
+  resendEmailId?: Prisma.SortOrder
+  emailClaimedAt?: Prisma.SortOrder
+  emailClaimId?: Prisma.SortOrder
+  emailLeaseUntil?: Prisma.SortOrder
+  emailLastAttemptAt?: Prisma.SortOrder
+  emailLastError?: Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
   lastAttemptAt?: Prisma.SortOrder
   lastError?: Prisma.SortOrder
@@ -1255,6 +1495,7 @@ export type OrderMaxOrderByAggregateInput = {
   qrCodeUrl?: Prisma.SortOrder
   activationCode?: Prisma.SortOrder
   smdpAddress?: Prisma.SortOrder
+  matchingId?: Prisma.SortOrder
   smdpStatus?: Prisma.SortOrder
   supplierEsimStatus?: Prisma.SortOrder
   apn?: Prisma.SortOrder
@@ -1263,9 +1504,20 @@ export type OrderMaxOrderByAggregateInput = {
   profileIssuedAt?: Prisma.SortOrder
   profileLastCheckedAt?: Prisma.SortOrder
   profileCheckAttempts?: Prisma.SortOrder
+  profileSyncClaimedAt?: Prisma.SortOrder
+  profileSyncClaimId?: Prisma.SortOrder
+  profileSyncLeaseUntil?: Prisma.SortOrder
+  emailDeliveryStatus?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
+  emailIdempotencyKey?: Prisma.SortOrder
+  resendEmailId?: Prisma.SortOrder
+  emailClaimedAt?: Prisma.SortOrder
+  emailClaimId?: Prisma.SortOrder
+  emailLeaseUntil?: Prisma.SortOrder
+  emailLastAttemptAt?: Prisma.SortOrder
+  emailLastError?: Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
   lastAttemptAt?: Prisma.SortOrder
   lastError?: Prisma.SortOrder
@@ -1306,6 +1558,7 @@ export type OrderMinOrderByAggregateInput = {
   qrCodeUrl?: Prisma.SortOrder
   activationCode?: Prisma.SortOrder
   smdpAddress?: Prisma.SortOrder
+  matchingId?: Prisma.SortOrder
   smdpStatus?: Prisma.SortOrder
   supplierEsimStatus?: Prisma.SortOrder
   apn?: Prisma.SortOrder
@@ -1314,9 +1567,20 @@ export type OrderMinOrderByAggregateInput = {
   profileIssuedAt?: Prisma.SortOrder
   profileLastCheckedAt?: Prisma.SortOrder
   profileCheckAttempts?: Prisma.SortOrder
+  profileSyncClaimedAt?: Prisma.SortOrder
+  profileSyncClaimId?: Prisma.SortOrder
+  profileSyncLeaseUntil?: Prisma.SortOrder
+  emailDeliveryStatus?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   emailSentAt?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
+  emailIdempotencyKey?: Prisma.SortOrder
+  resendEmailId?: Prisma.SortOrder
+  emailClaimedAt?: Prisma.SortOrder
+  emailClaimId?: Prisma.SortOrder
+  emailLeaseUntil?: Prisma.SortOrder
+  emailLastAttemptAt?: Prisma.SortOrder
+  emailLastError?: Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
   lastAttemptAt?: Prisma.SortOrder
   lastError?: Prisma.SortOrder
@@ -1399,6 +1663,10 @@ export type EnumEsimStatusFieldUpdateOperationsInput = {
   set?: $Enums.EsimStatus
 }
 
+export type EnumEmailDeliveryStatusFieldUpdateOperationsInput = {
+  set?: $Enums.EmailDeliveryStatus
+}
+
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
@@ -1431,6 +1699,7 @@ export type OrderCreateWithoutUserInput = {
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  matchingId?: string | null
   smdpStatus?: string | null
   supplierEsimStatus?: string | null
   apn?: string | null
@@ -1439,9 +1708,20 @@ export type OrderCreateWithoutUserInput = {
   profileIssuedAt?: Date | string | null
   profileLastCheckedAt?: Date | string | null
   profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
   processingAttempts?: number
   lastAttemptAt?: Date | string | null
   lastError?: string | null
@@ -1481,6 +1761,7 @@ export type OrderUncheckedCreateWithoutUserInput = {
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  matchingId?: string | null
   smdpStatus?: string | null
   supplierEsimStatus?: string | null
   apn?: string | null
@@ -1489,9 +1770,20 @@ export type OrderUncheckedCreateWithoutUserInput = {
   profileIssuedAt?: Date | string | null
   profileLastCheckedAt?: Date | string | null
   profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
   processingAttempts?: number
   lastAttemptAt?: Date | string | null
   lastError?: string | null
@@ -1561,6 +1853,7 @@ export type OrderScalarWhereInput = {
   qrCodeUrl?: Prisma.StringNullableFilter<"Order"> | string | null
   activationCode?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpAddress?: Prisma.StringNullableFilter<"Order"> | string | null
+  matchingId?: Prisma.StringNullableFilter<"Order"> | string | null
   smdpStatus?: Prisma.StringNullableFilter<"Order"> | string | null
   supplierEsimStatus?: Prisma.StringNullableFilter<"Order"> | string | null
   apn?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -1569,9 +1862,20 @@ export type OrderScalarWhereInput = {
   profileIssuedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   profileLastCheckedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   profileCheckAttempts?: Prisma.IntFilter<"Order"> | number
+  profileSyncClaimedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  profileSyncClaimId?: Prisma.StringNullableFilter<"Order"> | string | null
+  profileSyncLeaseUntil?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFilter<"Order"> | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFilter<"Order"> | boolean
   emailSentAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   emailAttempts?: Prisma.IntFilter<"Order"> | number
+  emailIdempotencyKey?: Prisma.StringNullableFilter<"Order"> | string | null
+  resendEmailId?: Prisma.StringNullableFilter<"Order"> | string | null
+  emailClaimedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailClaimId?: Prisma.StringNullableFilter<"Order"> | string | null
+  emailLeaseUntil?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailLastAttemptAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  emailLastError?: Prisma.StringNullableFilter<"Order"> | string | null
   processingAttempts?: Prisma.IntFilter<"Order"> | number
   lastAttemptAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   lastError?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -1611,6 +1915,7 @@ export type OrderCreateManyUserInput = {
   qrCodeUrl?: string | null
   activationCode?: string | null
   smdpAddress?: string | null
+  matchingId?: string | null
   smdpStatus?: string | null
   supplierEsimStatus?: string | null
   apn?: string | null
@@ -1619,9 +1924,20 @@ export type OrderCreateManyUserInput = {
   profileIssuedAt?: Date | string | null
   profileLastCheckedAt?: Date | string | null
   profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
   emailSent?: boolean
   emailSentAt?: Date | string | null
   emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
   processingAttempts?: number
   lastAttemptAt?: Date | string | null
   lastError?: string | null
@@ -1661,6 +1977,7 @@ export type OrderUpdateWithoutUserInput = {
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1669,9 +1986,20 @@ export type OrderUpdateWithoutUserInput = {
   profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1711,6 +2039,7 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1719,9 +2048,20 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1761,6 +2101,7 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1769,9 +2110,20 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1814,6 +2166,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  matchingId?: boolean
   smdpStatus?: boolean
   supplierEsimStatus?: boolean
   apn?: boolean
@@ -1822,9 +2175,20 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   profileIssuedAt?: boolean
   profileLastCheckedAt?: boolean
   profileCheckAttempts?: boolean
+  profileSyncClaimedAt?: boolean
+  profileSyncClaimId?: boolean
+  profileSyncLeaseUntil?: boolean
+  emailDeliveryStatus?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
+  emailIdempotencyKey?: boolean
+  resendEmailId?: boolean
+  emailClaimedAt?: boolean
+  emailClaimId?: boolean
+  emailLeaseUntil?: boolean
+  emailLastAttemptAt?: boolean
+  emailLastError?: boolean
   processingAttempts?: boolean
   lastAttemptAt?: boolean
   lastError?: boolean
@@ -1866,6 +2230,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  matchingId?: boolean
   smdpStatus?: boolean
   supplierEsimStatus?: boolean
   apn?: boolean
@@ -1874,9 +2239,20 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   profileIssuedAt?: boolean
   profileLastCheckedAt?: boolean
   profileCheckAttempts?: boolean
+  profileSyncClaimedAt?: boolean
+  profileSyncClaimId?: boolean
+  profileSyncLeaseUntil?: boolean
+  emailDeliveryStatus?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
+  emailIdempotencyKey?: boolean
+  resendEmailId?: boolean
+  emailClaimedAt?: boolean
+  emailClaimId?: boolean
+  emailLeaseUntil?: boolean
+  emailLastAttemptAt?: boolean
+  emailLastError?: boolean
   processingAttempts?: boolean
   lastAttemptAt?: boolean
   lastError?: boolean
@@ -1918,6 +2294,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  matchingId?: boolean
   smdpStatus?: boolean
   supplierEsimStatus?: boolean
   apn?: boolean
@@ -1926,9 +2303,20 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   profileIssuedAt?: boolean
   profileLastCheckedAt?: boolean
   profileCheckAttempts?: boolean
+  profileSyncClaimedAt?: boolean
+  profileSyncClaimId?: boolean
+  profileSyncLeaseUntil?: boolean
+  emailDeliveryStatus?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
+  emailIdempotencyKey?: boolean
+  resendEmailId?: boolean
+  emailClaimedAt?: boolean
+  emailClaimId?: boolean
+  emailLeaseUntil?: boolean
+  emailLastAttemptAt?: boolean
+  emailLastError?: boolean
   processingAttempts?: boolean
   lastAttemptAt?: boolean
   lastError?: boolean
@@ -1970,6 +2358,7 @@ export type OrderSelectScalar = {
   qrCodeUrl?: boolean
   activationCode?: boolean
   smdpAddress?: boolean
+  matchingId?: boolean
   smdpStatus?: boolean
   supplierEsimStatus?: boolean
   apn?: boolean
@@ -1978,9 +2367,20 @@ export type OrderSelectScalar = {
   profileIssuedAt?: boolean
   profileLastCheckedAt?: boolean
   profileCheckAttempts?: boolean
+  profileSyncClaimedAt?: boolean
+  profileSyncClaimId?: boolean
+  profileSyncLeaseUntil?: boolean
+  emailDeliveryStatus?: boolean
   emailSent?: boolean
   emailSentAt?: boolean
   emailAttempts?: boolean
+  emailIdempotencyKey?: boolean
+  resendEmailId?: boolean
+  emailClaimedAt?: boolean
+  emailClaimId?: boolean
+  emailLeaseUntil?: boolean
+  emailLastAttemptAt?: boolean
+  emailLastError?: boolean
   processingAttempts?: boolean
   lastAttemptAt?: boolean
   lastError?: boolean
@@ -1992,7 +2392,7 @@ export type OrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "referenceNumber" | "userId" | "packageCode" | "planName" | "customerName" | "customerEmail" | "customerPhone" | "sellingPriceUsd" | "amountPhpCentavos" | "usdToPhpRate" | "currency" | "status" | "paymentStatus" | "esimStatus" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "paymentMethod" | "paidAt" | "esimOrderId" | "esimTransactionId" | "esimTranNo" | "iccid" | "qrCode" | "qrCodeUrl" | "activationCode" | "smdpAddress" | "smdpStatus" | "supplierEsimStatus" | "apn" | "esimRawResponse" | "esimIssuedAt" | "profileIssuedAt" | "profileLastCheckedAt" | "profileCheckAttempts" | "emailSent" | "emailSentAt" | "emailAttempts" | "processingAttempts" | "lastAttemptAt" | "lastError" | "webhookReceivedAt" | "completedAt" | "cancelledAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "referenceNumber" | "userId" | "packageCode" | "planName" | "customerName" | "customerEmail" | "customerPhone" | "sellingPriceUsd" | "amountPhpCentavos" | "usdToPhpRate" | "currency" | "status" | "paymentStatus" | "esimStatus" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "paymentMethod" | "paidAt" | "esimOrderId" | "esimTransactionId" | "esimTranNo" | "iccid" | "qrCode" | "qrCodeUrl" | "activationCode" | "smdpAddress" | "matchingId" | "smdpStatus" | "supplierEsimStatus" | "apn" | "esimRawResponse" | "esimIssuedAt" | "profileIssuedAt" | "profileLastCheckedAt" | "profileCheckAttempts" | "profileSyncClaimedAt" | "profileSyncClaimId" | "profileSyncLeaseUntil" | "emailDeliveryStatus" | "emailSent" | "emailSentAt" | "emailAttempts" | "emailIdempotencyKey" | "resendEmailId" | "emailClaimedAt" | "emailClaimId" | "emailLeaseUntil" | "emailLastAttemptAt" | "emailLastError" | "processingAttempts" | "lastAttemptAt" | "lastError" | "webhookReceivedAt" | "completedAt" | "cancelledAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.Order$userArgs<ExtArgs>
 }
@@ -2037,6 +2437,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     qrCodeUrl: string | null
     activationCode: string | null
     smdpAddress: string | null
+    matchingId: string | null
     smdpStatus: string | null
     supplierEsimStatus: string | null
     apn: string | null
@@ -2045,9 +2446,20 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     profileIssuedAt: Date | null
     profileLastCheckedAt: Date | null
     profileCheckAttempts: number
+    profileSyncClaimedAt: Date | null
+    profileSyncClaimId: string | null
+    profileSyncLeaseUntil: Date | null
+    emailDeliveryStatus: $Enums.EmailDeliveryStatus
     emailSent: boolean
     emailSentAt: Date | null
     emailAttempts: number
+    emailIdempotencyKey: string | null
+    resendEmailId: string | null
+    emailClaimedAt: Date | null
+    emailClaimId: string | null
+    emailLeaseUntil: Date | null
+    emailLastAttemptAt: Date | null
+    emailLastError: string | null
     processingAttempts: number
     lastAttemptAt: Date | null
     lastError: string | null
@@ -2509,6 +2921,7 @@ export interface OrderFieldRefs {
   readonly qrCodeUrl: Prisma.FieldRef<"Order", 'String'>
   readonly activationCode: Prisma.FieldRef<"Order", 'String'>
   readonly smdpAddress: Prisma.FieldRef<"Order", 'String'>
+  readonly matchingId: Prisma.FieldRef<"Order", 'String'>
   readonly smdpStatus: Prisma.FieldRef<"Order", 'String'>
   readonly supplierEsimStatus: Prisma.FieldRef<"Order", 'String'>
   readonly apn: Prisma.FieldRef<"Order", 'String'>
@@ -2517,9 +2930,20 @@ export interface OrderFieldRefs {
   readonly profileIssuedAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly profileLastCheckedAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly profileCheckAttempts: Prisma.FieldRef<"Order", 'Int'>
+  readonly profileSyncClaimedAt: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly profileSyncClaimId: Prisma.FieldRef<"Order", 'String'>
+  readonly profileSyncLeaseUntil: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly emailDeliveryStatus: Prisma.FieldRef<"Order", 'EmailDeliveryStatus'>
   readonly emailSent: Prisma.FieldRef<"Order", 'Boolean'>
   readonly emailSentAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly emailAttempts: Prisma.FieldRef<"Order", 'Int'>
+  readonly emailIdempotencyKey: Prisma.FieldRef<"Order", 'String'>
+  readonly resendEmailId: Prisma.FieldRef<"Order", 'String'>
+  readonly emailClaimedAt: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly emailClaimId: Prisma.FieldRef<"Order", 'String'>
+  readonly emailLeaseUntil: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly emailLastAttemptAt: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly emailLastError: Prisma.FieldRef<"Order", 'String'>
   readonly processingAttempts: Prisma.FieldRef<"Order", 'Int'>
   readonly lastAttemptAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly lastError: Prisma.FieldRef<"Order", 'String'>
