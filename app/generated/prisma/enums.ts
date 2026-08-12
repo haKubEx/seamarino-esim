@@ -61,3 +61,41 @@ export const EmailDeliveryStatus = {
 } as const
 
 export type EmailDeliveryStatus = (typeof EmailDeliveryStatus)[keyof typeof EmailDeliveryStatus]
+
+
+export const CouponDiscountType = {
+  PERCENTAGE: 'PERCENTAGE',
+  FIXED_PHP: 'FIXED_PHP'
+} as const
+
+export type CouponDiscountType = (typeof CouponDiscountType)[keyof typeof CouponDiscountType]
+
+
+export const CouponRedemptionStatus = {
+  RESERVED: 'RESERVED',
+  REDEEMED: 'REDEEMED',
+  RELEASED: 'RELEASED'
+} as const
+
+export type CouponRedemptionStatus = (typeof CouponRedemptionStatus)[keyof typeof CouponRedemptionStatus]
+
+
+export const ReferralStatus = {
+  PENDING: 'PENDING',
+  QUALIFIED: 'QUALIFIED',
+  REWARDED: 'REWARDED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type ReferralStatus = (typeof ReferralStatus)[keyof typeof ReferralStatus]
+
+
+export const StoreCreditTransactionType = {
+  REFERRAL_REWARD: 'REFERRAL_REWARD',
+  MANUAL_ADJUSTMENT: 'MANUAL_ADJUSTMENT',
+  ORDER_PAYMENT: 'ORDER_PAYMENT',
+  REFUND: 'REFUND',
+  EXPIRATION: 'EXPIRATION'
+} as const
+
+export type StoreCreditTransactionType = (typeof StoreCreditTransactionType)[keyof typeof StoreCreditTransactionType]

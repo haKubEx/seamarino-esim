@@ -11,6 +11,10 @@ import {
   sendEsimDeliveryEmail,
 } from "@/app/services/esimEmail";
 
+import {
+  rewardReferralForCompletedOrder,
+} from "@/app/services/referrals";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -158,7 +162,9 @@ function normalizeRequiredValue(
     | null
     | undefined,
 ): string | null {
-  if (typeof value !== "string") {
+  if (
+    typeof value !== "string"
+  ) {
     return null;
   }
 
@@ -336,7 +342,9 @@ async function claimOrderForEmail({
       },
     });
 
-  return claimResult.count === 1;
+  return (
+    claimResult.count === 1
+  );
 }
 
 async function markDeliveryCompleted({
@@ -431,7 +439,9 @@ async function markDeliveryCompleted({
       },
     });
 
-  return updateResult.count === 1;
+  return (
+    updateResult.count === 1
+  );
 }
 
 async function recordEmailFailure({
@@ -516,6 +526,112 @@ async function recordEmailFailure({
         errorMessage,
     },
   });
+}
+
+async function processReferralReward(
+  order: DeliveryCandidate,
+): Promise<void> {
+  try {
+    const referralResult =
+      await rewardReferralForCompletedOrder(
+        order.id,
+      );
+
+    if (
+      referralResult.rewarded
+    ) {
+      console.info(
+        "REFERRAL REWARD AFTER DELIVERY COMPLETED:",
+        {
+          orderId:
+            order.id,
+
+          referenceNumber:
+            order.referenceNumber,
+
+          referralId:
+            referralResult.referralId,
+
+          referrerId:
+            referralResult.referrerId,
+
+          referredUserId:
+            referralResult.referredUserId,
+
+          referrerRewardPhpCentavos:
+            referralResult
+              .referrerRewardPhpCentavos,
+
+          referredRewardPhpCentavos:
+            referralResult
+              .referredRewardPhpCentavos,
+        },
+      );
+
+      return;
+    }
+
+    if (
+      referralResult.skipped
+    ) {
+      console.info(
+        "REFERRAL REWARD AFTER DELIVERY SKIPPED:",
+        {
+          orderId:
+            order.id,
+
+          referenceNumber:
+            order.referenceNumber,
+
+          message:
+            referralResult.message,
+        },
+      );
+
+      return;
+    }
+
+    if (
+      !referralResult.success
+    ) {
+      console.error(
+        "REFERRAL REWARD AFTER DELIVERY FAILED:",
+        {
+          orderId:
+            order.id,
+
+          referenceNumber:
+            order.referenceNumber,
+
+          message:
+            referralResult.message,
+        },
+      );
+    }
+  } catch (error) {
+    /*
+     * The eSIM has already been sent and the
+     * order has already been completed.
+     *
+     * Referral reward failures must not mark
+     * delivery as failed.
+     */
+    console.error(
+      "REFERRAL REWARD AFTER DELIVERY ERROR:",
+      {
+        orderId:
+          order.id,
+
+        referenceNumber:
+          order.referenceNumber,
+
+        error:
+          getErrorMessage(
+            error,
+          ),
+      },
+    );
+  }
 }
 
 async function deliverOrder(
@@ -729,6 +845,15 @@ async function deliverOrder(
         currentOrder?.status ===
           "COMPLETED"
       ) {
+        /*
+         * Another worker may have completed
+         * the order first. Referral processing
+         * is idempotent, so it is safe to run.
+         */
+        await processReferralReward(
+          order,
+        );
+
         return {
           ...baseResult,
 
@@ -749,6 +874,18 @@ async function deliverOrder(
         "Resend accepted the email, but the order could not be marked as delivered.",
       );
     }
+
+    /*
+     * Only reward the referral after:
+     *
+     * status = COMPLETED
+     * paymentStatus = PAID
+     * esimStatus = DELIVERED
+     * emailDeliveryStatus = SENT
+     */
+    await processReferralReward(
+      order,
+    );
 
     console.info(
       "ESIM DELIVERY COMPLETED:",
@@ -982,7 +1119,9 @@ async function runEmailDelivery() {
   const results:
     DeliveryResult[] = [];
 
-  for (const order of orders) {
+  for (
+    const order of orders
+  ) {
     const result =
       await deliverOrder(order);
 
@@ -1025,7 +1164,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: "Unauthorized.",
+        error:
+          "Unauthorized.",
       },
       {
         status: 401,
@@ -1098,7 +1238,8 @@ export async function GET() {
       status: 405,
 
       headers: {
-        Allow: "POST",
+        Allow:
+          "POST",
 
         "Cache-Control":
           "no-store",

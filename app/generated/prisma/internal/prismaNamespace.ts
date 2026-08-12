@@ -404,7 +404,12 @@ export const ModelName = {
   VerificationToken: 'VerificationToken',
   PasswordResetToken: 'PasswordResetToken',
   Order: 'Order',
-  PlanSetting: 'PlanSetting'
+  PlanSetting: 'PlanSetting',
+  Coupon: 'Coupon',
+  CouponRedemption: 'CouponRedemption',
+  Referral: 'Referral',
+  StoreCreditTransaction: 'StoreCreditTransaction',
+  AdminActivityLog: 'AdminActivityLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -420,7 +425,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "appSetting" | "user" | "account" | "session" | "verificationToken" | "passwordResetToken" | "order" | "planSetting"
+    modelProps: "appSetting" | "user" | "account" | "session" | "verificationToken" | "passwordResetToken" | "order" | "planSetting" | "coupon" | "couponRedemption" | "referral" | "storeCreditTransaction" | "adminActivityLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1016,6 +1021,376 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Coupon: {
+      payload: Prisma.$CouponPayload<ExtArgs>
+      fields: Prisma.CouponFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CouponFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CouponFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>
+        }
+        findFirst: {
+          args: Prisma.CouponFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CouponFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>
+        }
+        findMany: {
+          args: Prisma.CouponFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>[]
+        }
+        create: {
+          args: Prisma.CouponCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>
+        }
+        createMany: {
+          args: Prisma.CouponCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CouponCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>[]
+        }
+        delete: {
+          args: Prisma.CouponDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>
+        }
+        update: {
+          args: Prisma.CouponUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>
+        }
+        deleteMany: {
+          args: Prisma.CouponDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CouponUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CouponUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>[]
+        }
+        upsert: {
+          args: Prisma.CouponUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponPayload>
+        }
+        aggregate: {
+          args: Prisma.CouponAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCoupon>
+        }
+        groupBy: {
+          args: Prisma.CouponGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CouponGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CouponCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CouponCountAggregateOutputType> | number
+        }
+      }
+    }
+    CouponRedemption: {
+      payload: Prisma.$CouponRedemptionPayload<ExtArgs>
+      fields: Prisma.CouponRedemptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CouponRedemptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CouponRedemptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>
+        }
+        findFirst: {
+          args: Prisma.CouponRedemptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CouponRedemptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>
+        }
+        findMany: {
+          args: Prisma.CouponRedemptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>[]
+        }
+        create: {
+          args: Prisma.CouponRedemptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>
+        }
+        createMany: {
+          args: Prisma.CouponRedemptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CouponRedemptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>[]
+        }
+        delete: {
+          args: Prisma.CouponRedemptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>
+        }
+        update: {
+          args: Prisma.CouponRedemptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.CouponRedemptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CouponRedemptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CouponRedemptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.CouponRedemptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CouponRedemptionPayload>
+        }
+        aggregate: {
+          args: Prisma.CouponRedemptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCouponRedemption>
+        }
+        groupBy: {
+          args: Prisma.CouponRedemptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CouponRedemptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CouponRedemptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CouponRedemptionCountAggregateOutputType> | number
+        }
+      }
+    }
+    Referral: {
+      payload: Prisma.$ReferralPayload<ExtArgs>
+      fields: Prisma.ReferralFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ReferralFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ReferralFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>
+        }
+        findFirst: {
+          args: Prisma.ReferralFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ReferralFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>
+        }
+        findMany: {
+          args: Prisma.ReferralFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>[]
+        }
+        create: {
+          args: Prisma.ReferralCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>
+        }
+        createMany: {
+          args: Prisma.ReferralCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ReferralCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>[]
+        }
+        delete: {
+          args: Prisma.ReferralDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>
+        }
+        update: {
+          args: Prisma.ReferralUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>
+        }
+        deleteMany: {
+          args: Prisma.ReferralDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ReferralUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ReferralUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>[]
+        }
+        upsert: {
+          args: Prisma.ReferralUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReferralPayload>
+        }
+        aggregate: {
+          args: Prisma.ReferralAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateReferral>
+        }
+        groupBy: {
+          args: Prisma.ReferralGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ReferralGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ReferralCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ReferralCountAggregateOutputType> | number
+        }
+      }
+    }
+    StoreCreditTransaction: {
+      payload: Prisma.$StoreCreditTransactionPayload<ExtArgs>
+      fields: Prisma.StoreCreditTransactionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StoreCreditTransactionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StoreCreditTransactionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>
+        }
+        findFirst: {
+          args: Prisma.StoreCreditTransactionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StoreCreditTransactionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>
+        }
+        findMany: {
+          args: Prisma.StoreCreditTransactionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>[]
+        }
+        create: {
+          args: Prisma.StoreCreditTransactionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>
+        }
+        createMany: {
+          args: Prisma.StoreCreditTransactionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StoreCreditTransactionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>[]
+        }
+        delete: {
+          args: Prisma.StoreCreditTransactionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>
+        }
+        update: {
+          args: Prisma.StoreCreditTransactionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>
+        }
+        deleteMany: {
+          args: Prisma.StoreCreditTransactionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StoreCreditTransactionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StoreCreditTransactionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>[]
+        }
+        upsert: {
+          args: Prisma.StoreCreditTransactionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StoreCreditTransactionPayload>
+        }
+        aggregate: {
+          args: Prisma.StoreCreditTransactionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStoreCreditTransaction>
+        }
+        groupBy: {
+          args: Prisma.StoreCreditTransactionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreCreditTransactionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StoreCreditTransactionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StoreCreditTransactionCountAggregateOutputType> | number
+        }
+      }
+    }
+    AdminActivityLog: {
+      payload: Prisma.$AdminActivityLogPayload<ExtArgs>
+      fields: Prisma.AdminActivityLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AdminActivityLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AdminActivityLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>
+        }
+        findFirst: {
+          args: Prisma.AdminActivityLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AdminActivityLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>
+        }
+        findMany: {
+          args: Prisma.AdminActivityLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>[]
+        }
+        create: {
+          args: Prisma.AdminActivityLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>
+        }
+        createMany: {
+          args: Prisma.AdminActivityLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AdminActivityLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>[]
+        }
+        delete: {
+          args: Prisma.AdminActivityLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>
+        }
+        update: {
+          args: Prisma.AdminActivityLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.AdminActivityLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AdminActivityLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AdminActivityLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.AdminActivityLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdminActivityLogPayload>
+        }
+        aggregate: {
+          args: Prisma.AdminActivityLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAdminActivityLog>
+        }
+        groupBy: {
+          args: Prisma.AdminActivityLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminActivityLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AdminActivityLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdminActivityLogCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1058,6 +1433,15 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const AppSettingScalarFieldEnum = {
   id: 'id',
   usdToPhpRate: 'usdToPhpRate',
+  defaultMarkupPercent: 'defaultMarkupPercent',
+  referralRewardPhpCentavos: 'referralRewardPhpCentavos',
+  referredRewardPhpCentavos: 'referredRewardPhpCentavos',
+  minimumReferralDataBytes: 'minimumReferralDataBytes',
+  maximumWalletUsagePercent: 'maximumWalletUsagePercent',
+  walletTopupEnabled: 'walletTopupEnabled',
+  maintenanceMode: 'maintenanceMode',
+  supportEmail: 'supportEmail',
+  defaultApn: 'defaultApn',
   updatedAt: 'updatedAt'
 } as const
 
@@ -1073,6 +1457,9 @@ export const UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   image: 'image',
   role: 'role',
+  referralCode: 'referralCode',
+  storeCreditPhpCentavos: 'storeCreditPhpCentavos',
+  referredById: 'referredById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1135,13 +1522,23 @@ export const OrderScalarFieldEnum = {
   userId: 'userId',
   packageCode: 'packageCode',
   planName: 'planName',
+  dataVolumeBytes: 'dataVolumeBytes',
+  selectedDays: 'selectedDays',
   customerName: 'customerName',
   customerEmail: 'customerEmail',
   customerPhone: 'customerPhone',
   sellingPriceUsd: 'sellingPriceUsd',
+  subtotalPhpCentavos: 'subtotalPhpCentavos',
+  discountPhpCentavos: 'discountPhpCentavos',
   amountPhpCentavos: 'amountPhpCentavos',
   usdToPhpRate: 'usdToPhpRate',
   currency: 'currency',
+  storeCreditUsedPhpCentavos: 'storeCreditUsedPhpCentavos',
+  couponId: 'couponId',
+  couponCodeSnapshot: 'couponCodeSnapshot',
+  couponNameSnapshot: 'couponNameSnapshot',
+  couponDiscountTypeSnapshot: 'couponDiscountTypeSnapshot',
+  couponDiscountValueSnapshot: 'couponDiscountValueSnapshot',
   status: 'status',
   paymentStatus: 'paymentStatus',
   esimStatus: 'esimStatus',
@@ -1209,12 +1606,122 @@ export const PlanSettingScalarFieldEnum = {
 export type PlanSettingScalarFieldEnum = (typeof PlanSettingScalarFieldEnum)[keyof typeof PlanSettingScalarFieldEnum]
 
 
+export const CouponScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  description: 'description',
+  discountType: 'discountType',
+  discountValue: 'discountValue',
+  maximumDiscountPhpCentavos: 'maximumDiscountPhpCentavos',
+  minimumPurchasePhpCentavos: 'minimumPurchasePhpCentavos',
+  minimumDataBytes: 'minimumDataBytes',
+  maximumDataBytes: 'maximumDataBytes',
+  enabled: 'enabled',
+  startsAt: 'startsAt',
+  expiresAt: 'expiresAt',
+  usageLimit: 'usageLimit',
+  perCustomerLimit: 'perCustomerLimit',
+  firstOrderOnly: 'firstOrderOnly',
+  applicablePackageCodes: 'applicablePackageCodes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CouponScalarFieldEnum = (typeof CouponScalarFieldEnum)[keyof typeof CouponScalarFieldEnum]
+
+
+export const CouponRedemptionScalarFieldEnum = {
+  id: 'id',
+  couponId: 'couponId',
+  orderId: 'orderId',
+  userId: 'userId',
+  customerEmail: 'customerEmail',
+  status: 'status',
+  subtotalPhpCentavos: 'subtotalPhpCentavos',
+  discountPhpCentavos: 'discountPhpCentavos',
+  finalPhpCentavos: 'finalPhpCentavos',
+  reservedAt: 'reservedAt',
+  reservationEndsAt: 'reservationEndsAt',
+  redeemedAt: 'redeemedAt',
+  releasedAt: 'releasedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CouponRedemptionScalarFieldEnum = (typeof CouponRedemptionScalarFieldEnum)[keyof typeof CouponRedemptionScalarFieldEnum]
+
+
+export const ReferralScalarFieldEnum = {
+  id: 'id',
+  referralCode: 'referralCode',
+  referrerId: 'referrerId',
+  referredUserId: 'referredUserId',
+  qualifyingOrderId: 'qualifyingOrderId',
+  status: 'status',
+  referrerRewardPhpCentavos: 'referrerRewardPhpCentavos',
+  referredRewardPhpCentavos: 'referredRewardPhpCentavos',
+  qualifiedAt: 'qualifiedAt',
+  rewardedAt: 'rewardedAt',
+  cancelledAt: 'cancelledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReferralScalarFieldEnum = (typeof ReferralScalarFieldEnum)[keyof typeof ReferralScalarFieldEnum]
+
+
+export const StoreCreditTransactionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  amountPhpCentavos: 'amountPhpCentavos',
+  balanceBeforePhpCentavos: 'balanceBeforePhpCentavos',
+  balanceAfterPhpCentavos: 'balanceAfterPhpCentavos',
+  referralId: 'referralId',
+  orderId: 'orderId',
+  description: 'description',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type StoreCreditTransactionScalarFieldEnum = (typeof StoreCreditTransactionScalarFieldEnum)[keyof typeof StoreCreditTransactionScalarFieldEnum]
+
+
+export const AdminActivityLogScalarFieldEnum = {
+  id: 'id',
+  adminId: 'adminId',
+  action: 'action',
+  module: 'module',
+  entityId: 'entityId',
+  entityType: 'entityType',
+  description: 'description',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  success: 'success',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminActivityLogScalarFieldEnum = (typeof AdminActivityLogScalarFieldEnum)[keyof typeof AdminActivityLogScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -1231,6 +1738,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -1268,6 +1784,41 @@ export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMode
 
 
 /**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt[]'
+ */
+export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -1296,16 +1847,16 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
- * Reference to a field of type 'Int'
+ * Reference to a field of type 'CouponDiscountType'
  */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+export type EnumCouponDiscountTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CouponDiscountType'>
     
 
 
 /**
- * Reference to a field of type 'Int[]'
+ * Reference to a field of type 'CouponDiscountType[]'
  */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+export type ListEnumCouponDiscountTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CouponDiscountType[]'>
     
 
 
@@ -1366,9 +1917,58 @@ export type ListEnumEmailDeliveryStatusFieldRefInput<$PrismaModel> = FieldRefInp
 
 
 /**
- * Reference to a field of type 'Boolean'
+ * Reference to a field of type 'CouponRedemptionStatus'
  */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+export type EnumCouponRedemptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CouponRedemptionStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'CouponRedemptionStatus[]'
+ */
+export type ListEnumCouponRedemptionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CouponRedemptionStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ReferralStatus'
+ */
+export type EnumReferralStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReferralStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ReferralStatus[]'
+ */
+export type ListEnumReferralStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReferralStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreCreditTransactionType'
+ */
+export type EnumStoreCreditTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreCreditTransactionType'>
+    
+
+
+/**
+ * Reference to a field of type 'StoreCreditTransactionType[]'
+ */
+export type ListEnumStoreCreditTransactionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StoreCreditTransactionType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 /**
@@ -1530,6 +2130,11 @@ export type GlobalOmitConfig = {
   passwordResetToken?: Prisma.PasswordResetTokenOmit
   order?: Prisma.OrderOmit
   planSetting?: Prisma.PlanSettingOmit
+  coupon?: Prisma.CouponOmit
+  couponRedemption?: Prisma.CouponRedemptionOmit
+  referral?: Prisma.ReferralOmit
+  storeCreditTransaction?: Prisma.StoreCreditTransactionOmit
+  adminActivityLog?: Prisma.AdminActivityLogOmit
 }
 
 /* Types for Logging */

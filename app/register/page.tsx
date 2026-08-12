@@ -2,17 +2,38 @@
 
 import {
   FormEvent,
+  Suspense,
+  useEffect,
   useMemo,
   useState,
 } from "react";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 
 type RegisterResponse = {
   success: boolean;
   message?: string;
   error?: string;
+  referralApplied?: boolean;
+
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    referralCode:
+      | string
+      | null;
+    storeCreditPhpCentavos: number;
+    referredById:
+      | string
+      | null;
+    createdAt: string;
+  };
 };
 
 type PasswordStrength = {
@@ -48,7 +69,9 @@ function getPasswordStrength(
   }
 
   if (
-    /[^a-zA-Z0-9]/.test(password)
+    /[^a-zA-Z0-9]/.test(
+      password,
+    )
   ) {
     score += 1;
   }
@@ -57,8 +80,10 @@ function getPasswordStrength(
     return {
       label: "Not entered",
       percentage: 0,
-      barClassName: "bg-slate-200",
-      textClassName: "text-slate-500",
+      barClassName:
+        "bg-slate-200",
+      textClassName:
+        "text-slate-500",
     };
   }
 
@@ -66,8 +91,10 @@ function getPasswordStrength(
     return {
       label: "Weak",
       percentage: 33,
-      barClassName: "bg-red-500",
-      textClassName: "text-red-600",
+      barClassName:
+        "bg-red-500",
+      textClassName:
+        "text-red-600",
     };
   }
 
@@ -75,16 +102,20 @@ function getPasswordStrength(
     return {
       label: "Medium",
       percentage: 66,
-      barClassName: "bg-amber-500",
-      textClassName: "text-amber-600",
+      barClassName:
+        "bg-amber-500",
+      textClassName:
+        "text-amber-600",
     };
   }
 
   return {
     label: "Strong",
     percentage: 100,
-    barClassName: "bg-emerald-500",
-    textClassName: "text-emerald-600",
+    barClassName:
+      "bg-emerald-500",
+    textClassName:
+      "text-emerald-600",
   };
 }
 
@@ -96,22 +127,51 @@ function passwordRequirementClass(
     : "text-slate-500";
 }
 
-export default function RegisterPage() {
-  const router = useRouter();
+function normalizeReferralCode(
+  value: string,
+) {
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "");
+}
 
-  const [name, setName] =
-    useState("");
+function RegisterPageContent() {
+  const router =
+    useRouter();
 
-  const [email, setEmail] =
-    useState("");
+  const searchParams =
+    useSearchParams();
 
-  const [password, setPassword] =
-    useState("");
+  const [
+    name,
+    setName,
+  ] = useState("");
+
+  const [
+    email,
+    setEmail,
+  ] = useState("");
+
+  const [
+    password,
+    setPassword,
+  ] = useState("");
 
   const [
     confirmPassword,
     setConfirmPassword,
   ] = useState("");
+
+  const [
+    referralCode,
+    setReferralCode,
+  ] = useState("");
+
+  const [
+    referralFromLink,
+    setReferralFromLink,
+  ] = useState(false);
 
   const [
     showPassword,
@@ -123,14 +183,41 @@ export default function RegisterPage() {
     setShowConfirmPassword,
   ] = useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [
+    error,
+    setError,
+  ] = useState("");
 
-  const [message, setMessage] =
-    useState("");
+  const [
+    message,
+    setMessage,
+  ] = useState("");
+
+  useEffect(() => {
+    const referralParameter =
+      normalizeReferralCode(
+        searchParams.get(
+          "ref",
+        ) ?? "",
+      );
+
+    if (!referralParameter) {
+      return;
+    }
+
+    setReferralCode(
+      referralParameter,
+    );
+
+    setReferralFromLink(
+      true,
+    );
+  }, [searchParams]);
 
   const passwordStrength =
     useMemo(
@@ -145,24 +232,40 @@ export default function RegisterPage() {
     password.length >= 8;
 
   const hasLowercase =
-    /[a-z]/.test(password);
+    /[a-z]/.test(
+      password,
+    );
 
   const hasUppercase =
-    /[A-Z]/.test(password);
+    /[A-Z]/.test(
+      password,
+    );
 
   const hasNumber =
-    /[0-9]/.test(password);
+    /[0-9]/.test(
+      password,
+    );
 
   const passwordsMatch =
-    confirmPassword.length > 0 &&
-    password === confirmPassword;
+    confirmPassword.length >
+      0 &&
+    password ===
+      confirmPassword;
 
   const passwordsDoNotMatch =
-    confirmPassword.length > 0 &&
-    password !== confirmPassword;
+    confirmPassword.length >
+      0 &&
+    password !==
+      confirmPassword;
+
+  const normalizedReferralCode =
+    normalizeReferralCode(
+      referralCode,
+    );
 
   async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
+    event:
+      FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
@@ -170,7 +273,9 @@ export default function RegisterPage() {
       name.trim();
 
     const normalizedEmail =
-      email.trim().toLowerCase();
+      email
+        .trim()
+        .toLowerCase();
 
     if (!normalizedName) {
       setError(
@@ -212,6 +317,25 @@ export default function RegisterPage() {
       return;
     }
 
+    if (
+      normalizedReferralCode &&
+      (
+        normalizedReferralCode
+          .length < 4 ||
+        normalizedReferralCode
+          .length > 50 ||
+        !/^[A-Z0-9_-]+$/.test(
+          normalizedReferralCode,
+        )
+      )
+    ) {
+      setError(
+        "Enter a valid referral code.",
+      );
+
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -228,22 +352,27 @@ export default function RegisterPage() {
                 "application/json",
             },
 
-            body: JSON.stringify({
-              name:
-                normalizedName,
+            body:
+              JSON.stringify({
+                name:
+                  normalizedName,
 
-              email:
-                normalizedEmail,
+                email:
+                  normalizedEmail,
 
-              password,
+                password,
 
-              confirmPassword,
-            }),
+                confirmPassword,
+
+                referralCode:
+                  normalizedReferralCode,
+              }),
           },
         );
 
       const data =
-        (await response.json()) as RegisterResponse;
+        (await response.json()) as
+          RegisterResponse;
 
       if (
         !response.ok ||
@@ -257,25 +386,76 @@ export default function RegisterPage() {
 
       setMessage(
         data.message ||
-          "Your account was created successfully.",
+          (
+            data.referralApplied
+              ? "Your account was created and your referral code was applied successfully."
+              : "Your account was created successfully."
+          ),
       );
 
-      window.setTimeout(() => {
-        router.push(
-          `/login?registered=1&email=${encodeURIComponent(
-            normalizedEmail,
-          )}`,
-        );
-      }, 900);
-    } catch (submitError) {
+      window.setTimeout(
+        () => {
+          const parameters =
+            new URLSearchParams({
+              registered:
+                "1",
+
+              email:
+                normalizedEmail,
+            });
+
+          if (
+            data.referralApplied
+          ) {
+            parameters.set(
+              "referralApplied",
+              "1",
+            );
+          }
+
+          router.push(
+            `/login?${parameters.toString()}`,
+          );
+        },
+        1000,
+      );
+    } catch (
+      submitError
+    ) {
       setError(
-        submitError instanceof Error
+        submitError instanceof
+          Error
           ? submitError.message
           : "Unable to create your account.",
       );
     } finally {
       setLoading(false);
     }
+  }
+
+  function clearReferralCode() {
+    setReferralCode("");
+    setReferralFromLink(
+      false,
+    );
+
+    const parameters =
+      new URLSearchParams(
+        searchParams.toString(),
+      );
+
+    parameters.delete(
+      "ref",
+    );
+
+    const nextUrl =
+      parameters.toString()
+        ? `/register?${parameters.toString()}`
+        : "/register";
+
+    router.replace(
+      nextUrl,
+    );
   }
 
   return (
@@ -292,9 +472,10 @@ export default function RegisterPage() {
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-8 text-blue-100">
-            Track your purchases, view
-            your eSIM QR codes, and
-            retrieve your installation
+            Track your purchases,
+            view your eSIM QR
+            codes, and retrieve
+            your installation
             details securely.
           </p>
 
@@ -306,21 +487,42 @@ export default function RegisterPage() {
 
               <p className="mt-2 text-sm leading-6 text-blue-100">
                 Only your signed-in
-                account can view your
-                eSIM credentials.
+                account can view
+                your eSIM
+                credentials.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/20 bg-white/10 p-5">
               <p className="font-black">
-                Existing orders included
+                Existing orders
+                included
               </p>
 
               <p className="mt-2 text-sm leading-6 text-blue-100">
-                Previous orders using the
-                same email will be linked
-                to your account
+                Previous orders
+                using the same
+                email will be
+                linked to your
+                account
                 automatically.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/20 bg-white/10 p-5">
+              <p className="font-black">
+                Referral rewards
+              </p>
+
+              <p className="mt-2 text-sm leading-6 text-blue-100">
+                Use a valid
+                referral code when
+                registering. Rewards
+                are issued after
+                your qualifying
+                eSIM order is
+                successfully
+                delivered.
               </p>
             </div>
           </div>
@@ -337,13 +539,16 @@ export default function RegisterPage() {
             </h2>
 
             <p className="mt-3 leading-7 text-slate-600">
-              Use the same email address
-              you use when purchasing
-              eSIM plans.
+              Use the same email
+              address you use when
+              purchasing eSIM
+              plans.
             </p>
 
             <form
-              onSubmit={handleSubmit}
+              onSubmit={
+                handleSubmit
+              }
               className="mt-8 space-y-6"
             >
               <div>
@@ -358,9 +563,12 @@ export default function RegisterPage() {
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(event) =>
+                  onChange={(
+                    event,
+                  ) =>
                     setName(
-                      event.target.value,
+                      event.target
+                        .value,
                     )
                   }
                   autoComplete="name"
@@ -383,9 +591,12 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(event) =>
+                  onChange={(
+                    event,
+                  ) =>
                     setEmail(
-                      event.target.value,
+                      event.target
+                        .value,
                     )
                   }
                   autoComplete="email"
@@ -394,6 +605,83 @@ export default function RegisterPage() {
                   placeholder="you@example.com"
                   className="h-14 w-full rounded-2xl border-2 border-slate-300 bg-white px-5 text-base font-semibold text-slate-950 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-500 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-4">
+                  <label
+                    htmlFor="referralCode"
+                    className="block text-sm font-black text-slate-900"
+                  >
+                    Referral code
+                    <span className="ml-2 font-semibold text-slate-500">
+                      Optional
+                    </span>
+                  </label>
+
+                  {normalizedReferralCode && (
+                    <button
+                      type="button"
+                      onClick={
+                        clearReferralCode
+                      }
+                      className="text-xs font-black text-red-600 transition hover:text-red-700 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  id="referralCode"
+                  type="text"
+                  value={
+                    referralCode
+                  }
+                  onChange={(
+                    event,
+                  ) => {
+                    setReferralCode(
+                      normalizeReferralCode(
+                        event.target
+                          .value,
+                      ),
+                    );
+
+                    setReferralFromLink(
+                      false,
+                    );
+                  }}
+                  autoComplete="off"
+                  maxLength={50}
+                  placeholder="Example: PUT YOUR REFERRAL CODE HERE"
+                  spellCheck={false}
+                  className="mt-2 h-14 w-full rounded-2xl border-2 border-slate-300 bg-white px-5 font-black uppercase tracking-[0.08em] text-slate-950 shadow-sm outline-none transition placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-slate-500 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                />
+
+                {normalizedReferralCode && (
+                  <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                    <p className="font-black text-emerald-800">
+                      ✓ Referral code
+                      entered
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-emerald-700">
+                      {referralFromLink
+                        ? "This code was added automatically from your referral link."
+                        : "This code will be verified when you create your account."}
+                    </p>
+                  </div>
+                )}
+
+                {!normalizedReferralCode && (
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Leave this empty
+                    when you were not
+                    referred by another
+                    customer.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -412,8 +700,12 @@ export default function RegisterPage() {
                         ? "text"
                         : "password"
                     }
-                    value={password}
-                    onChange={(event) =>
+                    value={
+                      password
+                    }
+                    onChange={(
+                      event,
+                    ) =>
                       setPassword(
                         event.target
                           .value,
@@ -421,6 +713,7 @@ export default function RegisterPage() {
                     }
                     autoComplete="new-password"
                     minLength={8}
+                    maxLength={128}
                     required
                     placeholder="Enter your password"
                     className="h-16 w-full rounded-2xl border-2 border-slate-400 bg-white px-5 pr-24 text-lg font-bold tracking-wide text-slate-950 shadow-sm outline-none transition placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-500 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
@@ -430,7 +723,9 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() =>
                       setShowPassword(
-                        (current) =>
+                        (
+                          current,
+                        ) =>
                           !current,
                       )
                     }
@@ -450,7 +745,8 @@ export default function RegisterPage() {
                 <div className="mt-4">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-xs font-bold text-slate-600">
-                      Password strength
+                      Password
+                      strength
                     </p>
 
                     <p
@@ -481,7 +777,8 @@ export default function RegisterPage() {
                     {hasMinimumLength
                       ? "✓"
                       : "○"}{" "}
-                    At least 8 characters
+                    At least 8
+                    characters
                   </p>
 
                   <p
@@ -492,7 +789,8 @@ export default function RegisterPage() {
                     {hasUppercase
                       ? "✓"
                       : "○"}{" "}
-                    One uppercase letter
+                    One uppercase
+                    letter
                   </p>
 
                   <p
@@ -503,7 +801,8 @@ export default function RegisterPage() {
                     {hasLowercase
                       ? "✓"
                       : "○"}{" "}
-                    One lowercase letter
+                    One lowercase
+                    letter
                   </p>
 
                   <p
@@ -535,8 +834,12 @@ export default function RegisterPage() {
                         ? "text"
                         : "password"
                     }
-                    value={confirmPassword}
-                    onChange={(event) =>
+                    value={
+                      confirmPassword
+                    }
+                    onChange={(
+                      event,
+                    ) =>
                       setConfirmPassword(
                         event.target
                           .value,
@@ -544,6 +847,7 @@ export default function RegisterPage() {
                     }
                     autoComplete="new-password"
                     minLength={8}
+                    maxLength={128}
                     required
                     placeholder="Enter your password again"
                     className={`h-16 w-full rounded-2xl border-2 bg-white px-5 pr-24 text-lg font-bold tracking-wide text-slate-950 shadow-sm outline-none transition placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-500 focus:ring-4 ${
@@ -559,7 +863,9 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() =>
                       setShowConfirmPassword(
-                        (current) =>
+                        (
+                          current,
+                        ) =>
                           !current,
                       )
                     }
@@ -578,7 +884,8 @@ export default function RegisterPage() {
 
                 {passwordsMatch && (
                   <p className="mt-2 text-sm font-bold text-emerald-700">
-                    ✓ Passwords match.
+                    ✓ Passwords
+                    match.
                   </p>
                 )}
 
@@ -628,12 +935,47 @@ export default function RegisterPage() {
                 href="/"
                 className="font-bold text-slate-500 hover:text-blue-700"
               >
-                Return to storefront
+                Return to
+                storefront
               </Link>
             </p>
           </div>
         </section>
       </div>
     </main>
+  );
+}
+
+function RegisterPageFallback() {
+  return (
+    <main className="min-h-screen bg-slate-100 px-4 py-12 sm:px-6">
+      <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+        <div className="flex min-h-[520px] items-center justify-center p-8">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-700" />
+
+            <p className="mt-4 font-black text-slate-900">
+              Loading registration...
+            </p>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Preparing your account form.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <RegisterPageFallback />
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }

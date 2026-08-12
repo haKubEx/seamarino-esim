@@ -18,7 +18,11 @@ type OrderDetailsClientProps = {
     paymentStatus: string;
     esimStatus: string;
 
+    subtotalPhpCentavos: number;
+    discountPhpCentavos: number;
+    storeCreditUsedPhpCentavos: number;
     amountPhpCentavos: number;
+    couponCodeSnapshot: string | null;
     createdAt: string;
     paidAt: string | null;
     completedAt: string | null;
@@ -181,6 +185,20 @@ export default function OrderDetailsClient({
     setRefreshing,
   ] = useState(false);
 
+  const [
+    cancelling,
+    setCancelling,
+  ] = useState(false);
+
+  const [
+    paymentActionError,
+    setPaymentActionError,
+  ] = useState("");
+
+  const pendingPayment =
+    order.status === "PENDING" &&
+    order.paymentStatus === "PENDING";
+
   const profileReady =
     order.esimStatus === "ISSUED" ||
     order.esimStatus === "DELIVERED";
@@ -246,6 +264,60 @@ export default function OrderDetailsClient({
     window.setTimeout(() => {
       setRefreshing(false);
     }, 700);
+  }
+
+  async function cancelPendingOrder() {
+    const confirmed = window.confirm(
+      order.storeCreditUsedPhpCentavos > 0
+        ? "Cancel this unpaid order and restore the reserved store credit?"
+        : "Cancel this unpaid order?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setCancelling(true);
+    setPaymentActionError("");
+
+    try {
+      const response = await fetch(
+        "/api/checkout/cancel",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            referenceNumber:
+              order.referenceNumber,
+          }),
+        },
+      );
+
+      const result = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error ||
+            "Unable to cancel the order.",
+        );
+      }
+
+      router.refresh();
+    } catch (error) {
+      setPaymentActionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to cancel the order.",
+      );
+    } finally {
+      setCancelling(false);
+    }
   }
 
   return (
@@ -391,6 +463,151 @@ export default function OrderDetailsClient({
             </div>
           </div>
         </section>
+
+        <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">
+            Price Breakdown
+          </p>
+
+          <h2 className="mt-3 text-2xl font-black text-slate-950">
+            Order total
+          </h2>
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200">
+            <div className="flex items-center justify-between gap-4 px-5 py-4">
+              <span className="font-semibold text-slate-600">
+                Original price
+              </span>
+
+              <strong className="text-slate-950">
+                {formatMoney(
+                  order.subtotalPhpCentavos,
+                )}
+              </strong>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 border-t border-slate-100 px-5 py-4">
+              <div>
+                <span className="font-semibold text-slate-600">
+                  Coupon discount
+                </span>
+
+                {order.couponCodeSnapshot && (
+                  <p className="mt-1 text-xs font-bold text-blue-600">
+                    {order.couponCodeSnapshot}
+                  </p>
+                )}
+              </div>
+
+              <strong className={
+                order.discountPhpCentavos > 0
+                  ? "text-red-600"
+                  : "text-slate-500"
+              }>
+                -
+                {formatMoney(
+                  order.discountPhpCentavos,
+                )}
+              </strong>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 border-t border-slate-100 px-5 py-4">
+              <span className="font-semibold text-slate-600">
+                Referral / store credit
+              </span>
+
+              <strong className={
+                order.storeCreditUsedPhpCentavos > 0
+                  ? "text-emerald-700"
+                  : "text-slate-500"
+              }>
+                -
+                {formatMoney(
+                  order.storeCreditUsedPhpCentavos,
+                )}
+              </strong>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 px-5 py-5">
+              <span className="text-lg font-black text-slate-950">
+                Amount to pay
+              </span>
+
+              <strong className="text-2xl font-black text-[#0A2D62]">
+                {formatMoney(
+                  order.amountPhpCentavos,
+                )}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        {pendingPayment && (
+          <section className="mt-8 rounded-[2rem] border border-amber-200 bg-amber-50 p-6 shadow-sm sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.16em] text-amber-700">
+                  Waiting for payment
+                </p>
+
+                <h2 className="mt-3 text-2xl font-black text-amber-950">
+                  Your payment is not complete
+                </h2>
+
+                <p className="mt-3 max-w-2xl leading-7 text-amber-800">
+                  Continue with the same order to open a new PayMongo QR Ph payment page. Your store credit and coupon will not be applied a second time.
+                </p>
+
+                {order.storeCreditUsedPhpCentavos > 0 && (
+                  <p className="mt-3 font-black text-emerald-700">
+                    Reserved store credit: {formatMoney(
+                      order.storeCreditUsedPhpCentavos,
+                    )}
+                  </p>
+                )}
+
+                {paymentActionError && (
+                  <p className="mt-4 rounded-xl border border-red-200 bg-white px-4 py-3 font-semibold text-red-700">
+                    {paymentActionError}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
+                <form
+                  action="/api/checkout/retry"
+                  method="POST"
+                >
+                  <input
+                    type="hidden"
+                    name="referenceNumber"
+                    value={order.referenceNumber}
+                  />
+
+                  <button
+                    type="submit"
+                    className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-700 px-6 py-3.5 font-black text-white transition hover:bg-emerald-800"
+                  >
+                    Continue Payment
+                  </button>
+                </form>
+
+                <button
+                  type="button"
+                  onClick={cancelPendingOrder}
+                  disabled={cancelling}
+                  className="inline-flex items-center justify-center rounded-2xl border-2 border-red-300 bg-white px-6 py-3.5 font-black text-red-700 transition hover:border-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {cancelling
+                    ? "Cancelling..."
+                    : order.storeCreditUsedPhpCentavos > 0
+                      ? "Cancel & Restore Credit"
+                      : "Cancel Order"}
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {stillProcessing && (
           <section className="mt-8 rounded-[2rem] border border-blue-200 bg-blue-50 p-6 shadow-sm sm:p-8">

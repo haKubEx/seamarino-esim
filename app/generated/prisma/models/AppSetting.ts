@@ -28,27 +28,64 @@ export type AggregateAppSetting = {
 
 export type AppSettingAvgAggregateOutputType = {
   usdToPhpRate: number | null
+  defaultMarkupPercent: number | null
+  referralRewardPhpCentavos: number | null
+  referredRewardPhpCentavos: number | null
+  minimumReferralDataBytes: number | null
+  maximumWalletUsagePercent: number | null
 }
 
 export type AppSettingSumAggregateOutputType = {
   usdToPhpRate: number | null
+  defaultMarkupPercent: number | null
+  referralRewardPhpCentavos: number | null
+  referredRewardPhpCentavos: number | null
+  minimumReferralDataBytes: bigint | null
+  maximumWalletUsagePercent: number | null
 }
 
 export type AppSettingMinAggregateOutputType = {
   id: string | null
   usdToPhpRate: number | null
+  defaultMarkupPercent: number | null
+  referralRewardPhpCentavos: number | null
+  referredRewardPhpCentavos: number | null
+  minimumReferralDataBytes: bigint | null
+  maximumWalletUsagePercent: number | null
+  walletTopupEnabled: boolean | null
+  maintenanceMode: boolean | null
+  supportEmail: string | null
+  defaultApn: string | null
   updatedAt: Date | null
 }
 
 export type AppSettingMaxAggregateOutputType = {
   id: string | null
   usdToPhpRate: number | null
+  defaultMarkupPercent: number | null
+  referralRewardPhpCentavos: number | null
+  referredRewardPhpCentavos: number | null
+  minimumReferralDataBytes: bigint | null
+  maximumWalletUsagePercent: number | null
+  walletTopupEnabled: boolean | null
+  maintenanceMode: boolean | null
+  supportEmail: string | null
+  defaultApn: string | null
   updatedAt: Date | null
 }
 
 export type AppSettingCountAggregateOutputType = {
   id: number
   usdToPhpRate: number
+  defaultMarkupPercent: number
+  referralRewardPhpCentavos: number
+  referredRewardPhpCentavos: number
+  minimumReferralDataBytes: number
+  maximumWalletUsagePercent: number
+  walletTopupEnabled: number
+  maintenanceMode: number
+  supportEmail: number
+  defaultApn: number
   updatedAt: number
   _all: number
 }
@@ -56,27 +93,64 @@ export type AppSettingCountAggregateOutputType = {
 
 export type AppSettingAvgAggregateInputType = {
   usdToPhpRate?: true
+  defaultMarkupPercent?: true
+  referralRewardPhpCentavos?: true
+  referredRewardPhpCentavos?: true
+  minimumReferralDataBytes?: true
+  maximumWalletUsagePercent?: true
 }
 
 export type AppSettingSumAggregateInputType = {
   usdToPhpRate?: true
+  defaultMarkupPercent?: true
+  referralRewardPhpCentavos?: true
+  referredRewardPhpCentavos?: true
+  minimumReferralDataBytes?: true
+  maximumWalletUsagePercent?: true
 }
 
 export type AppSettingMinAggregateInputType = {
   id?: true
   usdToPhpRate?: true
+  defaultMarkupPercent?: true
+  referralRewardPhpCentavos?: true
+  referredRewardPhpCentavos?: true
+  minimumReferralDataBytes?: true
+  maximumWalletUsagePercent?: true
+  walletTopupEnabled?: true
+  maintenanceMode?: true
+  supportEmail?: true
+  defaultApn?: true
   updatedAt?: true
 }
 
 export type AppSettingMaxAggregateInputType = {
   id?: true
   usdToPhpRate?: true
+  defaultMarkupPercent?: true
+  referralRewardPhpCentavos?: true
+  referredRewardPhpCentavos?: true
+  minimumReferralDataBytes?: true
+  maximumWalletUsagePercent?: true
+  walletTopupEnabled?: true
+  maintenanceMode?: true
+  supportEmail?: true
+  defaultApn?: true
   updatedAt?: true
 }
 
 export type AppSettingCountAggregateInputType = {
   id?: true
   usdToPhpRate?: true
+  defaultMarkupPercent?: true
+  referralRewardPhpCentavos?: true
+  referredRewardPhpCentavos?: true
+  minimumReferralDataBytes?: true
+  maximumWalletUsagePercent?: true
+  walletTopupEnabled?: true
+  maintenanceMode?: true
+  supportEmail?: true
+  defaultApn?: true
   updatedAt?: true
   _all?: true
 }
@@ -170,6 +244,15 @@ export type AppSettingGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inter
 export type AppSettingGroupByOutputType = {
   id: string
   usdToPhpRate: number
+  defaultMarkupPercent: number
+  referralRewardPhpCentavos: number
+  referredRewardPhpCentavos: number
+  minimumReferralDataBytes: bigint
+  maximumWalletUsagePercent: number
+  walletTopupEnabled: boolean
+  maintenanceMode: boolean
+  supportEmail: string
+  defaultApn: string
   updatedAt: Date
   _count: AppSettingCountAggregateOutputType | null
   _avg: AppSettingAvgAggregateOutputType | null
@@ -199,12 +282,30 @@ export type AppSettingWhereInput = {
   NOT?: Prisma.AppSettingWhereInput | Prisma.AppSettingWhereInput[]
   id?: Prisma.StringFilter<"AppSetting"> | string
   usdToPhpRate?: Prisma.FloatFilter<"AppSetting"> | number
+  defaultMarkupPercent?: Prisma.FloatFilter<"AppSetting"> | number
+  referralRewardPhpCentavos?: Prisma.IntFilter<"AppSetting"> | number
+  referredRewardPhpCentavos?: Prisma.IntFilter<"AppSetting"> | number
+  minimumReferralDataBytes?: Prisma.BigIntFilter<"AppSetting"> | bigint | number
+  maximumWalletUsagePercent?: Prisma.IntFilter<"AppSetting"> | number
+  walletTopupEnabled?: Prisma.BoolFilter<"AppSetting"> | boolean
+  maintenanceMode?: Prisma.BoolFilter<"AppSetting"> | boolean
+  supportEmail?: Prisma.StringFilter<"AppSetting"> | string
+  defaultApn?: Prisma.StringFilter<"AppSetting"> | string
   updatedAt?: Prisma.DateTimeFilter<"AppSetting"> | Date | string
 }
 
 export type AppSettingOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  defaultMarkupPercent?: Prisma.SortOrder
+  referralRewardPhpCentavos?: Prisma.SortOrder
+  referredRewardPhpCentavos?: Prisma.SortOrder
+  minimumReferralDataBytes?: Prisma.SortOrder
+  maximumWalletUsagePercent?: Prisma.SortOrder
+  walletTopupEnabled?: Prisma.SortOrder
+  maintenanceMode?: Prisma.SortOrder
+  supportEmail?: Prisma.SortOrder
+  defaultApn?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -214,12 +315,30 @@ export type AppSettingWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.AppSettingWhereInput[]
   NOT?: Prisma.AppSettingWhereInput | Prisma.AppSettingWhereInput[]
   usdToPhpRate?: Prisma.FloatFilter<"AppSetting"> | number
+  defaultMarkupPercent?: Prisma.FloatFilter<"AppSetting"> | number
+  referralRewardPhpCentavos?: Prisma.IntFilter<"AppSetting"> | number
+  referredRewardPhpCentavos?: Prisma.IntFilter<"AppSetting"> | number
+  minimumReferralDataBytes?: Prisma.BigIntFilter<"AppSetting"> | bigint | number
+  maximumWalletUsagePercent?: Prisma.IntFilter<"AppSetting"> | number
+  walletTopupEnabled?: Prisma.BoolFilter<"AppSetting"> | boolean
+  maintenanceMode?: Prisma.BoolFilter<"AppSetting"> | boolean
+  supportEmail?: Prisma.StringFilter<"AppSetting"> | string
+  defaultApn?: Prisma.StringFilter<"AppSetting"> | string
   updatedAt?: Prisma.DateTimeFilter<"AppSetting"> | Date | string
 }, "id">
 
 export type AppSettingOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  defaultMarkupPercent?: Prisma.SortOrder
+  referralRewardPhpCentavos?: Prisma.SortOrder
+  referredRewardPhpCentavos?: Prisma.SortOrder
+  minimumReferralDataBytes?: Prisma.SortOrder
+  maximumWalletUsagePercent?: Prisma.SortOrder
+  walletTopupEnabled?: Prisma.SortOrder
+  maintenanceMode?: Prisma.SortOrder
+  supportEmail?: Prisma.SortOrder
+  defaultApn?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.AppSettingCountOrderByAggregateInput
   _avg?: Prisma.AppSettingAvgOrderByAggregateInput
@@ -234,75 +353,184 @@ export type AppSettingScalarWhereWithAggregatesInput = {
   NOT?: Prisma.AppSettingScalarWhereWithAggregatesInput | Prisma.AppSettingScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"AppSetting"> | string
   usdToPhpRate?: Prisma.FloatWithAggregatesFilter<"AppSetting"> | number
+  defaultMarkupPercent?: Prisma.FloatWithAggregatesFilter<"AppSetting"> | number
+  referralRewardPhpCentavos?: Prisma.IntWithAggregatesFilter<"AppSetting"> | number
+  referredRewardPhpCentavos?: Prisma.IntWithAggregatesFilter<"AppSetting"> | number
+  minimumReferralDataBytes?: Prisma.BigIntWithAggregatesFilter<"AppSetting"> | bigint | number
+  maximumWalletUsagePercent?: Prisma.IntWithAggregatesFilter<"AppSetting"> | number
+  walletTopupEnabled?: Prisma.BoolWithAggregatesFilter<"AppSetting"> | boolean
+  maintenanceMode?: Prisma.BoolWithAggregatesFilter<"AppSetting"> | boolean
+  supportEmail?: Prisma.StringWithAggregatesFilter<"AppSetting"> | string
+  defaultApn?: Prisma.StringWithAggregatesFilter<"AppSetting"> | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"AppSetting"> | Date | string
 }
 
 export type AppSettingCreateInput = {
   id?: string
   usdToPhpRate?: number
+  defaultMarkupPercent?: number
+  referralRewardPhpCentavos?: number
+  referredRewardPhpCentavos?: number
+  minimumReferralDataBytes?: bigint | number
+  maximumWalletUsagePercent?: number
+  walletTopupEnabled?: boolean
+  maintenanceMode?: boolean
+  supportEmail?: string
+  defaultApn?: string
   updatedAt?: Date | string
 }
 
 export type AppSettingUncheckedCreateInput = {
   id?: string
   usdToPhpRate?: number
+  defaultMarkupPercent?: number
+  referralRewardPhpCentavos?: number
+  referredRewardPhpCentavos?: number
+  minimumReferralDataBytes?: bigint | number
+  maximumWalletUsagePercent?: number
+  walletTopupEnabled?: boolean
+  maintenanceMode?: boolean
+  supportEmail?: string
+  defaultApn?: string
   updatedAt?: Date | string
 }
 
 export type AppSettingUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  defaultMarkupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
+  referralRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  referredRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  minimumReferralDataBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  maximumWalletUsagePercent?: Prisma.IntFieldUpdateOperationsInput | number
+  walletTopupEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maintenanceMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  supportEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultApn?: Prisma.StringFieldUpdateOperationsInput | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type AppSettingUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  defaultMarkupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
+  referralRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  referredRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  minimumReferralDataBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  maximumWalletUsagePercent?: Prisma.IntFieldUpdateOperationsInput | number
+  walletTopupEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maintenanceMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  supportEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultApn?: Prisma.StringFieldUpdateOperationsInput | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type AppSettingCreateManyInput = {
   id?: string
   usdToPhpRate?: number
+  defaultMarkupPercent?: number
+  referralRewardPhpCentavos?: number
+  referredRewardPhpCentavos?: number
+  minimumReferralDataBytes?: bigint | number
+  maximumWalletUsagePercent?: number
+  walletTopupEnabled?: boolean
+  maintenanceMode?: boolean
+  supportEmail?: string
+  defaultApn?: string
   updatedAt?: Date | string
 }
 
 export type AppSettingUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  defaultMarkupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
+  referralRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  referredRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  minimumReferralDataBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  maximumWalletUsagePercent?: Prisma.IntFieldUpdateOperationsInput | number
+  walletTopupEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maintenanceMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  supportEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultApn?: Prisma.StringFieldUpdateOperationsInput | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type AppSettingUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  defaultMarkupPercent?: Prisma.FloatFieldUpdateOperationsInput | number
+  referralRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  referredRewardPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  minimumReferralDataBytes?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  maximumWalletUsagePercent?: Prisma.IntFieldUpdateOperationsInput | number
+  walletTopupEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maintenanceMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  supportEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultApn?: Prisma.StringFieldUpdateOperationsInput | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type AppSettingCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  defaultMarkupPercent?: Prisma.SortOrder
+  referralRewardPhpCentavos?: Prisma.SortOrder
+  referredRewardPhpCentavos?: Prisma.SortOrder
+  minimumReferralDataBytes?: Prisma.SortOrder
+  maximumWalletUsagePercent?: Prisma.SortOrder
+  walletTopupEnabled?: Prisma.SortOrder
+  maintenanceMode?: Prisma.SortOrder
+  supportEmail?: Prisma.SortOrder
+  defaultApn?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type AppSettingAvgOrderByAggregateInput = {
   usdToPhpRate?: Prisma.SortOrder
+  defaultMarkupPercent?: Prisma.SortOrder
+  referralRewardPhpCentavos?: Prisma.SortOrder
+  referredRewardPhpCentavos?: Prisma.SortOrder
+  minimumReferralDataBytes?: Prisma.SortOrder
+  maximumWalletUsagePercent?: Prisma.SortOrder
 }
 
 export type AppSettingMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  defaultMarkupPercent?: Prisma.SortOrder
+  referralRewardPhpCentavos?: Prisma.SortOrder
+  referredRewardPhpCentavos?: Prisma.SortOrder
+  minimumReferralDataBytes?: Prisma.SortOrder
+  maximumWalletUsagePercent?: Prisma.SortOrder
+  walletTopupEnabled?: Prisma.SortOrder
+  maintenanceMode?: Prisma.SortOrder
+  supportEmail?: Prisma.SortOrder
+  defaultApn?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type AppSettingMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  defaultMarkupPercent?: Prisma.SortOrder
+  referralRewardPhpCentavos?: Prisma.SortOrder
+  referredRewardPhpCentavos?: Prisma.SortOrder
+  minimumReferralDataBytes?: Prisma.SortOrder
+  maximumWalletUsagePercent?: Prisma.SortOrder
+  walletTopupEnabled?: Prisma.SortOrder
+  maintenanceMode?: Prisma.SortOrder
+  supportEmail?: Prisma.SortOrder
+  defaultApn?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type AppSettingSumOrderByAggregateInput = {
   usdToPhpRate?: Prisma.SortOrder
+  defaultMarkupPercent?: Prisma.SortOrder
+  referralRewardPhpCentavos?: Prisma.SortOrder
+  referredRewardPhpCentavos?: Prisma.SortOrder
+  minimumReferralDataBytes?: Prisma.SortOrder
+  maximumWalletUsagePercent?: Prisma.SortOrder
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -317,6 +545,26 @@ export type FloatFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type BigIntFieldUpdateOperationsInput = {
+  set?: bigint | number
+  increment?: bigint | number
+  decrement?: bigint | number
+  multiply?: bigint | number
+  divide?: bigint | number
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
@@ -326,28 +574,64 @@ export type DateTimeFieldUpdateOperationsInput = {
 export type AppSettingSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   usdToPhpRate?: boolean
+  defaultMarkupPercent?: boolean
+  referralRewardPhpCentavos?: boolean
+  referredRewardPhpCentavos?: boolean
+  minimumReferralDataBytes?: boolean
+  maximumWalletUsagePercent?: boolean
+  walletTopupEnabled?: boolean
+  maintenanceMode?: boolean
+  supportEmail?: boolean
+  defaultApn?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["appSetting"]>
 
 export type AppSettingSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   usdToPhpRate?: boolean
+  defaultMarkupPercent?: boolean
+  referralRewardPhpCentavos?: boolean
+  referredRewardPhpCentavos?: boolean
+  minimumReferralDataBytes?: boolean
+  maximumWalletUsagePercent?: boolean
+  walletTopupEnabled?: boolean
+  maintenanceMode?: boolean
+  supportEmail?: boolean
+  defaultApn?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["appSetting"]>
 
 export type AppSettingSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   usdToPhpRate?: boolean
+  defaultMarkupPercent?: boolean
+  referralRewardPhpCentavos?: boolean
+  referredRewardPhpCentavos?: boolean
+  minimumReferralDataBytes?: boolean
+  maximumWalletUsagePercent?: boolean
+  walletTopupEnabled?: boolean
+  maintenanceMode?: boolean
+  supportEmail?: boolean
+  defaultApn?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["appSetting"]>
 
 export type AppSettingSelectScalar = {
   id?: boolean
   usdToPhpRate?: boolean
+  defaultMarkupPercent?: boolean
+  referralRewardPhpCentavos?: boolean
+  referredRewardPhpCentavos?: boolean
+  minimumReferralDataBytes?: boolean
+  maximumWalletUsagePercent?: boolean
+  walletTopupEnabled?: boolean
+  maintenanceMode?: boolean
+  supportEmail?: boolean
+  defaultApn?: boolean
   updatedAt?: boolean
 }
 
-export type AppSettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "usdToPhpRate" | "updatedAt", ExtArgs["result"]["appSetting"]>
+export type AppSettingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "usdToPhpRate" | "defaultMarkupPercent" | "referralRewardPhpCentavos" | "referredRewardPhpCentavos" | "minimumReferralDataBytes" | "maximumWalletUsagePercent" | "walletTopupEnabled" | "maintenanceMode" | "supportEmail" | "defaultApn" | "updatedAt", ExtArgs["result"]["appSetting"]>
 
 export type $AppSettingPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "AppSetting"
@@ -355,6 +639,15 @@ export type $AppSettingPayload<ExtArgs extends runtime.Types.Extensions.Internal
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     usdToPhpRate: number
+    defaultMarkupPercent: number
+    referralRewardPhpCentavos: number
+    referredRewardPhpCentavos: number
+    minimumReferralDataBytes: bigint
+    maximumWalletUsagePercent: number
+    walletTopupEnabled: boolean
+    maintenanceMode: boolean
+    supportEmail: string
+    defaultApn: string
     updatedAt: Date
   }, ExtArgs["result"]["appSetting"]>
   composites: {}
@@ -781,6 +1074,15 @@ export interface Prisma__AppSettingClient<T, Null = never, ExtArgs extends runti
 export interface AppSettingFieldRefs {
   readonly id: Prisma.FieldRef<"AppSetting", 'String'>
   readonly usdToPhpRate: Prisma.FieldRef<"AppSetting", 'Float'>
+  readonly defaultMarkupPercent: Prisma.FieldRef<"AppSetting", 'Float'>
+  readonly referralRewardPhpCentavos: Prisma.FieldRef<"AppSetting", 'Int'>
+  readonly referredRewardPhpCentavos: Prisma.FieldRef<"AppSetting", 'Int'>
+  readonly minimumReferralDataBytes: Prisma.FieldRef<"AppSetting", 'BigInt'>
+  readonly maximumWalletUsagePercent: Prisma.FieldRef<"AppSetting", 'Int'>
+  readonly walletTopupEnabled: Prisma.FieldRef<"AppSetting", 'Boolean'>
+  readonly maintenanceMode: Prisma.FieldRef<"AppSetting", 'Boolean'>
+  readonly supportEmail: Prisma.FieldRef<"AppSetting", 'String'>
+  readonly defaultApn: Prisma.FieldRef<"AppSetting", 'String'>
   readonly updatedAt: Prisma.FieldRef<"AppSetting", 'DateTime'>
 }
     

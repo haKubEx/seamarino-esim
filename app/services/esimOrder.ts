@@ -9,6 +9,8 @@ const ORDER_REQUEST_TIMEOUT_MS = 30_000;
 const MAX_RESPONSE_TEXT_LENGTH = 100_000;
 const MAX_TRANSACTION_ID_LENGTH = 50;
 const MAX_PACKAGE_CODE_LENGTH = 200;
+const MIN_PERIOD_NUM = 1;
+const MAX_PERIOD_NUM = 365;
 
 type EsimAccessOrderObject = {
   orderNo?: string | null;
@@ -45,6 +47,15 @@ type CreateSignatureInput = {
 type PurchaseEsimProfileInput = {
   packageCode: string;
   transactionId: string;
+
+  /**
+   * Number of validity days for eSIM Access
+   * daily-limit/day-pass packages.
+   *
+   * Leave undefined for normal fixed-duration
+   * packages.
+   */
+  periodNum?: number;
 };
 
 function getEsimAccessConfig(): EsimAccessConfig {
@@ -160,6 +171,26 @@ function normalizePackageCode(
   }
 
   return normalized;
+}
+
+function normalizePeriodNum(
+  value: number | undefined,
+): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (
+    !Number.isInteger(value) ||
+    value < MIN_PERIOD_NUM ||
+    value > MAX_PERIOD_NUM
+  ) {
+    throw new Error(
+      `The eSIM daily-plan period must be a whole number between ${MIN_PERIOD_NUM} and ${MAX_PERIOD_NUM} days.`,
+    );
+  }
+
+  return value;
 }
 
 function responseWasSuccessful(
@@ -306,9 +337,13 @@ function parseOrderResponse({
 export async function purchaseEsimProfile({
   packageCode,
   transactionId,
+  periodNum,
 }: PurchaseEsimProfileInput): Promise<EsimPurchaseResult> {
   const normalizedPackageCode =
     normalizePackageCode(packageCode);
+
+  const normalizedPeriodNum =
+    normalizePeriodNum(periodNum);
 
   /*
    * This value must remain stable for every retry
@@ -335,6 +370,11 @@ export async function purchaseEsimProfile({
    *
    * packageCode + count lets the supplier
    * use the current wholesale package price.
+   *
+   * Daily-limit/day-pass packages may also
+   * include periodNum. count must remain 1
+   * because it represents the package/profile
+   * quantity, not the selected number of days.
    */
   const requestBody = JSON.stringify({
     transactionId: safeTransactionId,
@@ -345,6 +385,14 @@ export async function purchaseEsimProfile({
           normalizedPackageCode,
 
         count: 1,
+
+        ...(normalizedPeriodNum !==
+        undefined
+          ? {
+              periodNum:
+                normalizedPeriodNum,
+            }
+          : {}),
       },
     ],
   });
@@ -375,6 +423,9 @@ export async function purchaseEsimProfile({
 
       packageCode:
         normalizedPackageCode,
+
+      periodNum:
+        normalizedPeriodNum ?? null,
 
       requestId,
     },
@@ -425,6 +476,9 @@ export async function purchaseEsimProfile({
         packageCode:
           normalizedPackageCode,
 
+        periodNum:
+          normalizedPeriodNum ?? null,
+
         requestId,
 
         error: message,
@@ -461,6 +515,9 @@ export async function purchaseEsimProfile({
         packageCode:
           normalizedPackageCode,
 
+        periodNum:
+          normalizedPeriodNum ?? null,
+
         requestId,
 
         errorCode:
@@ -494,6 +551,9 @@ export async function purchaseEsimProfile({
         packageCode:
           normalizedPackageCode,
 
+        periodNum:
+          normalizedPeriodNum ?? null,
+
         requestId,
 
         errorCode:
@@ -520,6 +580,9 @@ export async function purchaseEsimProfile({
 
         packageCode:
           normalizedPackageCode,
+
+        periodNum:
+          normalizedPeriodNum ?? null,
 
         requestId,
 

@@ -27,18 +27,30 @@ export type AggregateOrder = {
 }
 
 export type OrderAvgAggregateOutputType = {
+  dataVolumeBytes: number | null
+  selectedDays: number | null
   sellingPriceUsd: number | null
+  subtotalPhpCentavos: number | null
+  discountPhpCentavos: number | null
   amountPhpCentavos: number | null
   usdToPhpRate: number | null
+  storeCreditUsedPhpCentavos: number | null
+  couponDiscountValueSnapshot: number | null
   profileCheckAttempts: number | null
   emailAttempts: number | null
   processingAttempts: number | null
 }
 
 export type OrderSumAggregateOutputType = {
+  dataVolumeBytes: bigint | null
+  selectedDays: number | null
   sellingPriceUsd: number | null
+  subtotalPhpCentavos: number | null
+  discountPhpCentavos: number | null
   amountPhpCentavos: number | null
   usdToPhpRate: number | null
+  storeCreditUsedPhpCentavos: number | null
+  couponDiscountValueSnapshot: number | null
   profileCheckAttempts: number | null
   emailAttempts: number | null
   processingAttempts: number | null
@@ -50,13 +62,23 @@ export type OrderMinAggregateOutputType = {
   userId: string | null
   packageCode: string | null
   planName: string | null
+  dataVolumeBytes: bigint | null
+  selectedDays: number | null
   customerName: string | null
   customerEmail: string | null
   customerPhone: string | null
   sellingPriceUsd: number | null
+  subtotalPhpCentavos: number | null
+  discountPhpCentavos: number | null
   amountPhpCentavos: number | null
   usdToPhpRate: number | null
   currency: string | null
+  storeCreditUsedPhpCentavos: number | null
+  couponId: string | null
+  couponCodeSnapshot: string | null
+  couponNameSnapshot: string | null
+  couponDiscountTypeSnapshot: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot: number | null
   status: $Enums.OrderStatus | null
   paymentStatus: $Enums.PaymentStatus | null
   esimStatus: $Enums.EsimStatus | null
@@ -113,13 +135,23 @@ export type OrderMaxAggregateOutputType = {
   userId: string | null
   packageCode: string | null
   planName: string | null
+  dataVolumeBytes: bigint | null
+  selectedDays: number | null
   customerName: string | null
   customerEmail: string | null
   customerPhone: string | null
   sellingPriceUsd: number | null
+  subtotalPhpCentavos: number | null
+  discountPhpCentavos: number | null
   amountPhpCentavos: number | null
   usdToPhpRate: number | null
   currency: string | null
+  storeCreditUsedPhpCentavos: number | null
+  couponId: string | null
+  couponCodeSnapshot: string | null
+  couponNameSnapshot: string | null
+  couponDiscountTypeSnapshot: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot: number | null
   status: $Enums.OrderStatus | null
   paymentStatus: $Enums.PaymentStatus | null
   esimStatus: $Enums.EsimStatus | null
@@ -176,13 +208,23 @@ export type OrderCountAggregateOutputType = {
   userId: number
   packageCode: number
   planName: number
+  dataVolumeBytes: number
+  selectedDays: number
   customerName: number
   customerEmail: number
   customerPhone: number
   sellingPriceUsd: number
+  subtotalPhpCentavos: number
+  discountPhpCentavos: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency: number
+  storeCreditUsedPhpCentavos: number
+  couponId: number
+  couponCodeSnapshot: number
+  couponNameSnapshot: number
+  couponDiscountTypeSnapshot: number
+  couponDiscountValueSnapshot: number
   status: number
   paymentStatus: number
   esimStatus: number
@@ -236,18 +278,30 @@ export type OrderCountAggregateOutputType = {
 
 
 export type OrderAvgAggregateInputType = {
+  dataVolumeBytes?: true
+  selectedDays?: true
   sellingPriceUsd?: true
+  subtotalPhpCentavos?: true
+  discountPhpCentavos?: true
   amountPhpCentavos?: true
   usdToPhpRate?: true
+  storeCreditUsedPhpCentavos?: true
+  couponDiscountValueSnapshot?: true
   profileCheckAttempts?: true
   emailAttempts?: true
   processingAttempts?: true
 }
 
 export type OrderSumAggregateInputType = {
+  dataVolumeBytes?: true
+  selectedDays?: true
   sellingPriceUsd?: true
+  subtotalPhpCentavos?: true
+  discountPhpCentavos?: true
   amountPhpCentavos?: true
   usdToPhpRate?: true
+  storeCreditUsedPhpCentavos?: true
+  couponDiscountValueSnapshot?: true
   profileCheckAttempts?: true
   emailAttempts?: true
   processingAttempts?: true
@@ -259,13 +313,23 @@ export type OrderMinAggregateInputType = {
   userId?: true
   packageCode?: true
   planName?: true
+  dataVolumeBytes?: true
+  selectedDays?: true
   customerName?: true
   customerEmail?: true
   customerPhone?: true
   sellingPriceUsd?: true
+  subtotalPhpCentavos?: true
+  discountPhpCentavos?: true
   amountPhpCentavos?: true
   usdToPhpRate?: true
   currency?: true
+  storeCreditUsedPhpCentavos?: true
+  couponId?: true
+  couponCodeSnapshot?: true
+  couponNameSnapshot?: true
+  couponDiscountTypeSnapshot?: true
+  couponDiscountValueSnapshot?: true
   status?: true
   paymentStatus?: true
   esimStatus?: true
@@ -322,13 +386,23 @@ export type OrderMaxAggregateInputType = {
   userId?: true
   packageCode?: true
   planName?: true
+  dataVolumeBytes?: true
+  selectedDays?: true
   customerName?: true
   customerEmail?: true
   customerPhone?: true
   sellingPriceUsd?: true
+  subtotalPhpCentavos?: true
+  discountPhpCentavos?: true
   amountPhpCentavos?: true
   usdToPhpRate?: true
   currency?: true
+  storeCreditUsedPhpCentavos?: true
+  couponId?: true
+  couponCodeSnapshot?: true
+  couponNameSnapshot?: true
+  couponDiscountTypeSnapshot?: true
+  couponDiscountValueSnapshot?: true
   status?: true
   paymentStatus?: true
   esimStatus?: true
@@ -385,13 +459,23 @@ export type OrderCountAggregateInputType = {
   userId?: true
   packageCode?: true
   planName?: true
+  dataVolumeBytes?: true
+  selectedDays?: true
   customerName?: true
   customerEmail?: true
   customerPhone?: true
   sellingPriceUsd?: true
+  subtotalPhpCentavos?: true
+  discountPhpCentavos?: true
   amountPhpCentavos?: true
   usdToPhpRate?: true
   currency?: true
+  storeCreditUsedPhpCentavos?: true
+  couponId?: true
+  couponCodeSnapshot?: true
+  couponNameSnapshot?: true
+  couponDiscountTypeSnapshot?: true
+  couponDiscountValueSnapshot?: true
   status?: true
   paymentStatus?: true
   esimStatus?: true
@@ -535,13 +619,23 @@ export type OrderGroupByOutputType = {
   userId: string | null
   packageCode: string
   planName: string
+  dataVolumeBytes: bigint | null
+  selectedDays: number | null
   customerName: string
   customerEmail: string
   customerPhone: string
   sellingPriceUsd: number
+  subtotalPhpCentavos: number | null
+  discountPhpCentavos: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency: string
+  storeCreditUsedPhpCentavos: number
+  couponId: string | null
+  couponCodeSnapshot: string | null
+  couponNameSnapshot: string | null
+  couponDiscountTypeSnapshot: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot: number | null
   status: $Enums.OrderStatus
   paymentStatus: $Enums.PaymentStatus
   esimStatus: $Enums.EsimStatus
@@ -621,13 +715,23 @@ export type OrderWhereInput = {
   userId?: Prisma.StringNullableFilter<"Order"> | string | null
   packageCode?: Prisma.StringFilter<"Order"> | string
   planName?: Prisma.StringFilter<"Order"> | string
+  dataVolumeBytes?: Prisma.BigIntNullableFilter<"Order"> | bigint | number | null
+  selectedDays?: Prisma.IntNullableFilter<"Order"> | number | null
   customerName?: Prisma.StringFilter<"Order"> | string
   customerEmail?: Prisma.StringFilter<"Order"> | string
   customerPhone?: Prisma.StringFilter<"Order"> | string
   sellingPriceUsd?: Prisma.FloatFilter<"Order"> | number
+  subtotalPhpCentavos?: Prisma.IntNullableFilter<"Order"> | number | null
+  discountPhpCentavos?: Prisma.IntFilter<"Order"> | number
   amountPhpCentavos?: Prisma.IntFilter<"Order"> | number
   usdToPhpRate?: Prisma.FloatFilter<"Order"> | number
   currency?: Prisma.StringFilter<"Order"> | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFilter<"Order"> | number
+  couponId?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponCodeSnapshot?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponNameSnapshot?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponDiscountTypeSnapshot?: Prisma.EnumCouponDiscountTypeNullableFilter<"Order"> | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.FloatNullableFilter<"Order"> | number | null
   status?: Prisma.EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFilter<"Order"> | $Enums.EsimStatus
@@ -677,6 +781,10 @@ export type OrderWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  coupon?: Prisma.XOR<Prisma.CouponNullableScalarRelationFilter, Prisma.CouponWhereInput> | null
+  couponRedemption?: Prisma.XOR<Prisma.CouponRedemptionNullableScalarRelationFilter, Prisma.CouponRedemptionWhereInput> | null
+  qualifyingReferral?: Prisma.XOR<Prisma.ReferralNullableScalarRelationFilter, Prisma.ReferralWhereInput> | null
+  storeCreditTransactions?: Prisma.StoreCreditTransactionListRelationFilter
 }
 
 export type OrderOrderByWithRelationInput = {
@@ -685,13 +793,23 @@ export type OrderOrderByWithRelationInput = {
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   packageCode?: Prisma.SortOrder
   planName?: Prisma.SortOrder
+  dataVolumeBytes?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedDays?: Prisma.SortOrderInput | Prisma.SortOrder
   customerName?: Prisma.SortOrder
   customerEmail?: Prisma.SortOrder
   customerPhone?: Prisma.SortOrder
   sellingPriceUsd?: Prisma.SortOrder
+  subtotalPhpCentavos?: Prisma.SortOrderInput | Prisma.SortOrder
+  discountPhpCentavos?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
   currency?: Prisma.SortOrder
+  storeCreditUsedPhpCentavos?: Prisma.SortOrder
+  couponId?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponCodeSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponNameSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponDiscountTypeSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponDiscountValueSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   esimStatus?: Prisma.SortOrder
@@ -741,6 +859,10 @@ export type OrderOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
+  coupon?: Prisma.CouponOrderByWithRelationInput
+  couponRedemption?: Prisma.CouponRedemptionOrderByWithRelationInput
+  qualifyingReferral?: Prisma.ReferralOrderByWithRelationInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionOrderByRelationAggregateInput
 }
 
 export type OrderWhereUniqueInput = Prisma.AtLeast<{
@@ -761,13 +883,23 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   userId?: Prisma.StringNullableFilter<"Order"> | string | null
   packageCode?: Prisma.StringFilter<"Order"> | string
   planName?: Prisma.StringFilter<"Order"> | string
+  dataVolumeBytes?: Prisma.BigIntNullableFilter<"Order"> | bigint | number | null
+  selectedDays?: Prisma.IntNullableFilter<"Order"> | number | null
   customerName?: Prisma.StringFilter<"Order"> | string
   customerEmail?: Prisma.StringFilter<"Order"> | string
   customerPhone?: Prisma.StringFilter<"Order"> | string
   sellingPriceUsd?: Prisma.FloatFilter<"Order"> | number
+  subtotalPhpCentavos?: Prisma.IntNullableFilter<"Order"> | number | null
+  discountPhpCentavos?: Prisma.IntFilter<"Order"> | number
   amountPhpCentavos?: Prisma.IntFilter<"Order"> | number
   usdToPhpRate?: Prisma.FloatFilter<"Order"> | number
   currency?: Prisma.StringFilter<"Order"> | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFilter<"Order"> | number
+  couponId?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponCodeSnapshot?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponNameSnapshot?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponDiscountTypeSnapshot?: Prisma.EnumCouponDiscountTypeNullableFilter<"Order"> | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.FloatNullableFilter<"Order"> | number | null
   status?: Prisma.EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFilter<"Order"> | $Enums.EsimStatus
@@ -808,6 +940,10 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  coupon?: Prisma.XOR<Prisma.CouponNullableScalarRelationFilter, Prisma.CouponWhereInput> | null
+  couponRedemption?: Prisma.XOR<Prisma.CouponRedemptionNullableScalarRelationFilter, Prisma.CouponRedemptionWhereInput> | null
+  qualifyingReferral?: Prisma.XOR<Prisma.ReferralNullableScalarRelationFilter, Prisma.ReferralWhereInput> | null
+  storeCreditTransactions?: Prisma.StoreCreditTransactionListRelationFilter
 }, "id" | "referenceNumber" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "esimOrderId" | "esimTransactionId" | "esimTranNo" | "iccid" | "emailIdempotencyKey" | "resendEmailId">
 
 export type OrderOrderByWithAggregationInput = {
@@ -816,13 +952,23 @@ export type OrderOrderByWithAggregationInput = {
   userId?: Prisma.SortOrderInput | Prisma.SortOrder
   packageCode?: Prisma.SortOrder
   planName?: Prisma.SortOrder
+  dataVolumeBytes?: Prisma.SortOrderInput | Prisma.SortOrder
+  selectedDays?: Prisma.SortOrderInput | Prisma.SortOrder
   customerName?: Prisma.SortOrder
   customerEmail?: Prisma.SortOrder
   customerPhone?: Prisma.SortOrder
   sellingPriceUsd?: Prisma.SortOrder
+  subtotalPhpCentavos?: Prisma.SortOrderInput | Prisma.SortOrder
+  discountPhpCentavos?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
   currency?: Prisma.SortOrder
+  storeCreditUsedPhpCentavos?: Prisma.SortOrder
+  couponId?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponCodeSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponNameSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponDiscountTypeSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
+  couponDiscountValueSnapshot?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   esimStatus?: Prisma.SortOrder
@@ -887,13 +1033,23 @@ export type OrderScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   packageCode?: Prisma.StringWithAggregatesFilter<"Order"> | string
   planName?: Prisma.StringWithAggregatesFilter<"Order"> | string
+  dataVolumeBytes?: Prisma.BigIntNullableWithAggregatesFilter<"Order"> | bigint | number | null
+  selectedDays?: Prisma.IntNullableWithAggregatesFilter<"Order"> | number | null
   customerName?: Prisma.StringWithAggregatesFilter<"Order"> | string
   customerEmail?: Prisma.StringWithAggregatesFilter<"Order"> | string
   customerPhone?: Prisma.StringWithAggregatesFilter<"Order"> | string
   sellingPriceUsd?: Prisma.FloatWithAggregatesFilter<"Order"> | number
+  subtotalPhpCentavos?: Prisma.IntNullableWithAggregatesFilter<"Order"> | number | null
+  discountPhpCentavos?: Prisma.IntWithAggregatesFilter<"Order"> | number
   amountPhpCentavos?: Prisma.IntWithAggregatesFilter<"Order"> | number
   usdToPhpRate?: Prisma.FloatWithAggregatesFilter<"Order"> | number
   currency?: Prisma.StringWithAggregatesFilter<"Order"> | string
+  storeCreditUsedPhpCentavos?: Prisma.IntWithAggregatesFilter<"Order"> | number
+  couponId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  couponCodeSnapshot?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  couponNameSnapshot?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  couponDiscountTypeSnapshot?: Prisma.EnumCouponDiscountTypeNullableWithAggregatesFilter<"Order"> | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.FloatNullableWithAggregatesFilter<"Order"> | number | null
   status?: Prisma.EnumOrderStatusWithAggregatesFilter<"Order"> | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusWithAggregatesFilter<"Order"> | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusWithAggregatesFilter<"Order"> | $Enums.EsimStatus
@@ -949,13 +1105,22 @@ export type OrderCreateInput = {
   referenceNumber: string
   packageCode: string
   planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
   customerName: string
   customerEmail: string
   customerPhone: string
   sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
   status?: $Enums.OrderStatus
   paymentStatus?: $Enums.PaymentStatus
   esimStatus?: $Enums.EsimStatus
@@ -1005,6 +1170,10 @@ export type OrderCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   user?: Prisma.UserCreateNestedOneWithoutOrdersInput
+  coupon?: Prisma.CouponCreateNestedOneWithoutOrdersInput
+  couponRedemption?: Prisma.CouponRedemptionCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateInput = {
@@ -1013,13 +1182,23 @@ export type OrderUncheckedCreateInput = {
   userId?: string | null
   packageCode: string
   planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
   customerName: string
   customerEmail: string
   customerPhone: string
   sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponId?: string | null
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
   status?: $Enums.OrderStatus
   paymentStatus?: $Enums.PaymentStatus
   esimStatus?: $Enums.EsimStatus
@@ -1068,6 +1247,9 @@ export type OrderUncheckedCreateInput = {
   refundedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralUncheckedCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUpdateInput = {
@@ -1075,13 +1257,22 @@ export type OrderUpdateInput = {
   referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
   packageCode?: Prisma.StringFieldUpdateOperationsInput | string
   planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   customerName?: Prisma.StringFieldUpdateOperationsInput | string
   customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
   customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
   sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
@@ -1131,6 +1322,10 @@ export type OrderUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
+  coupon?: Prisma.CouponUpdateOneWithoutOrdersNestedInput
+  couponRedemption?: Prisma.CouponRedemptionUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateInput = {
@@ -1139,13 +1334,23 @@ export type OrderUncheckedUpdateInput = {
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageCode?: Prisma.StringFieldUpdateOperationsInput | string
   planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   customerName?: Prisma.StringFieldUpdateOperationsInput | string
   customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
   customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
   sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
@@ -1194,6 +1399,9 @@ export type OrderUncheckedUpdateInput = {
   refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUncheckedUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderCreateManyInput = {
@@ -1202,13 +1410,23 @@ export type OrderCreateManyInput = {
   userId?: string | null
   packageCode: string
   planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
   customerName: string
   customerEmail: string
   customerPhone: string
   sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponId?: string | null
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
   status?: $Enums.OrderStatus
   paymentStatus?: $Enums.PaymentStatus
   esimStatus?: $Enums.EsimStatus
@@ -1264,13 +1482,22 @@ export type OrderUpdateManyMutationInput = {
   referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
   packageCode?: Prisma.StringFieldUpdateOperationsInput | string
   planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   customerName?: Prisma.StringFieldUpdateOperationsInput | string
   customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
   customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
   sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
@@ -1327,13 +1554,23 @@ export type OrderUncheckedUpdateManyInput = {
   userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageCode?: Prisma.StringFieldUpdateOperationsInput | string
   planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   customerName?: Prisma.StringFieldUpdateOperationsInput | string
   customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
   customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
   sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
@@ -1400,13 +1637,23 @@ export type OrderCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   packageCode?: Prisma.SortOrder
   planName?: Prisma.SortOrder
+  dataVolumeBytes?: Prisma.SortOrder
+  selectedDays?: Prisma.SortOrder
   customerName?: Prisma.SortOrder
   customerEmail?: Prisma.SortOrder
   customerPhone?: Prisma.SortOrder
   sellingPriceUsd?: Prisma.SortOrder
+  subtotalPhpCentavos?: Prisma.SortOrder
+  discountPhpCentavos?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
   currency?: Prisma.SortOrder
+  storeCreditUsedPhpCentavos?: Prisma.SortOrder
+  couponId?: Prisma.SortOrder
+  couponCodeSnapshot?: Prisma.SortOrder
+  couponNameSnapshot?: Prisma.SortOrder
+  couponDiscountTypeSnapshot?: Prisma.SortOrder
+  couponDiscountValueSnapshot?: Prisma.SortOrder
   status?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   esimStatus?: Prisma.SortOrder
@@ -1458,9 +1705,15 @@ export type OrderCountOrderByAggregateInput = {
 }
 
 export type OrderAvgOrderByAggregateInput = {
+  dataVolumeBytes?: Prisma.SortOrder
+  selectedDays?: Prisma.SortOrder
   sellingPriceUsd?: Prisma.SortOrder
+  subtotalPhpCentavos?: Prisma.SortOrder
+  discountPhpCentavos?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  storeCreditUsedPhpCentavos?: Prisma.SortOrder
+  couponDiscountValueSnapshot?: Prisma.SortOrder
   profileCheckAttempts?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
@@ -1472,13 +1725,23 @@ export type OrderMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   packageCode?: Prisma.SortOrder
   planName?: Prisma.SortOrder
+  dataVolumeBytes?: Prisma.SortOrder
+  selectedDays?: Prisma.SortOrder
   customerName?: Prisma.SortOrder
   customerEmail?: Prisma.SortOrder
   customerPhone?: Prisma.SortOrder
   sellingPriceUsd?: Prisma.SortOrder
+  subtotalPhpCentavos?: Prisma.SortOrder
+  discountPhpCentavos?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
   currency?: Prisma.SortOrder
+  storeCreditUsedPhpCentavos?: Prisma.SortOrder
+  couponId?: Prisma.SortOrder
+  couponCodeSnapshot?: Prisma.SortOrder
+  couponNameSnapshot?: Prisma.SortOrder
+  couponDiscountTypeSnapshot?: Prisma.SortOrder
+  couponDiscountValueSnapshot?: Prisma.SortOrder
   status?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   esimStatus?: Prisma.SortOrder
@@ -1535,13 +1798,23 @@ export type OrderMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   packageCode?: Prisma.SortOrder
   planName?: Prisma.SortOrder
+  dataVolumeBytes?: Prisma.SortOrder
+  selectedDays?: Prisma.SortOrder
   customerName?: Prisma.SortOrder
   customerEmail?: Prisma.SortOrder
   customerPhone?: Prisma.SortOrder
   sellingPriceUsd?: Prisma.SortOrder
+  subtotalPhpCentavos?: Prisma.SortOrder
+  discountPhpCentavos?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
   currency?: Prisma.SortOrder
+  storeCreditUsedPhpCentavos?: Prisma.SortOrder
+  couponId?: Prisma.SortOrder
+  couponCodeSnapshot?: Prisma.SortOrder
+  couponNameSnapshot?: Prisma.SortOrder
+  couponDiscountTypeSnapshot?: Prisma.SortOrder
+  couponDiscountValueSnapshot?: Prisma.SortOrder
   status?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   esimStatus?: Prisma.SortOrder
@@ -1593,12 +1866,28 @@ export type OrderMinOrderByAggregateInput = {
 }
 
 export type OrderSumOrderByAggregateInput = {
+  dataVolumeBytes?: Prisma.SortOrder
+  selectedDays?: Prisma.SortOrder
   sellingPriceUsd?: Prisma.SortOrder
+  subtotalPhpCentavos?: Prisma.SortOrder
+  discountPhpCentavos?: Prisma.SortOrder
   amountPhpCentavos?: Prisma.SortOrder
   usdToPhpRate?: Prisma.SortOrder
+  storeCreditUsedPhpCentavos?: Prisma.SortOrder
+  couponDiscountValueSnapshot?: Prisma.SortOrder
   profileCheckAttempts?: Prisma.SortOrder
   emailAttempts?: Prisma.SortOrder
   processingAttempts?: Prisma.SortOrder
+}
+
+export type OrderScalarRelationFilter = {
+  is?: Prisma.OrderWhereInput
+  isNot?: Prisma.OrderWhereInput
+}
+
+export type OrderNullableScalarRelationFilter = {
+  is?: Prisma.OrderWhereInput | null
+  isNot?: Prisma.OrderWhereInput | null
 }
 
 export type OrderCreateNestedManyWithoutUserInput = {
@@ -1643,8 +1932,20 @@ export type OrderUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.OrderScalarWhereInput | Prisma.OrderScalarWhereInput[]
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
+export type NullableBigIntFieldUpdateOperationsInput = {
+  set?: bigint | number | null
+  increment?: bigint | number
+  decrement?: bigint | number
+  multiply?: bigint | number
+  divide?: bigint | number
+}
+
+export type NullableEnumCouponDiscountTypeFieldUpdateOperationsInput = {
+  set?: $Enums.CouponDiscountType | null
+}
+
+export type NullableFloatFieldUpdateOperationsInput = {
+  set?: number | null
   increment?: number
   decrement?: number
   multiply?: number
@@ -1667,8 +1968,92 @@ export type EnumEmailDeliveryStatusFieldUpdateOperationsInput = {
   set?: $Enums.EmailDeliveryStatus
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
+export type OrderCreateNestedManyWithoutCouponInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutCouponInput, Prisma.OrderUncheckedCreateWithoutCouponInput> | Prisma.OrderCreateWithoutCouponInput[] | Prisma.OrderUncheckedCreateWithoutCouponInput[]
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutCouponInput | Prisma.OrderCreateOrConnectWithoutCouponInput[]
+  createMany?: Prisma.OrderCreateManyCouponInputEnvelope
+  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+}
+
+export type OrderUncheckedCreateNestedManyWithoutCouponInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutCouponInput, Prisma.OrderUncheckedCreateWithoutCouponInput> | Prisma.OrderCreateWithoutCouponInput[] | Prisma.OrderUncheckedCreateWithoutCouponInput[]
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutCouponInput | Prisma.OrderCreateOrConnectWithoutCouponInput[]
+  createMany?: Prisma.OrderCreateManyCouponInputEnvelope
+  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+}
+
+export type OrderUpdateManyWithoutCouponNestedInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutCouponInput, Prisma.OrderUncheckedCreateWithoutCouponInput> | Prisma.OrderCreateWithoutCouponInput[] | Prisma.OrderUncheckedCreateWithoutCouponInput[]
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutCouponInput | Prisma.OrderCreateOrConnectWithoutCouponInput[]
+  upsert?: Prisma.OrderUpsertWithWhereUniqueWithoutCouponInput | Prisma.OrderUpsertWithWhereUniqueWithoutCouponInput[]
+  createMany?: Prisma.OrderCreateManyCouponInputEnvelope
+  set?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  disconnect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  delete?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  update?: Prisma.OrderUpdateWithWhereUniqueWithoutCouponInput | Prisma.OrderUpdateWithWhereUniqueWithoutCouponInput[]
+  updateMany?: Prisma.OrderUpdateManyWithWhereWithoutCouponInput | Prisma.OrderUpdateManyWithWhereWithoutCouponInput[]
+  deleteMany?: Prisma.OrderScalarWhereInput | Prisma.OrderScalarWhereInput[]
+}
+
+export type OrderUncheckedUpdateManyWithoutCouponNestedInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutCouponInput, Prisma.OrderUncheckedCreateWithoutCouponInput> | Prisma.OrderCreateWithoutCouponInput[] | Prisma.OrderUncheckedCreateWithoutCouponInput[]
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutCouponInput | Prisma.OrderCreateOrConnectWithoutCouponInput[]
+  upsert?: Prisma.OrderUpsertWithWhereUniqueWithoutCouponInput | Prisma.OrderUpsertWithWhereUniqueWithoutCouponInput[]
+  createMany?: Prisma.OrderCreateManyCouponInputEnvelope
+  set?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  disconnect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  delete?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
+  update?: Prisma.OrderUpdateWithWhereUniqueWithoutCouponInput | Prisma.OrderUpdateWithWhereUniqueWithoutCouponInput[]
+  updateMany?: Prisma.OrderUpdateManyWithWhereWithoutCouponInput | Prisma.OrderUpdateManyWithWhereWithoutCouponInput[]
+  deleteMany?: Prisma.OrderScalarWhereInput | Prisma.OrderScalarWhereInput[]
+}
+
+export type OrderCreateNestedOneWithoutCouponRedemptionInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutCouponRedemptionInput, Prisma.OrderUncheckedCreateWithoutCouponRedemptionInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutCouponRedemptionInput
+  connect?: Prisma.OrderWhereUniqueInput
+}
+
+export type OrderUpdateOneRequiredWithoutCouponRedemptionNestedInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutCouponRedemptionInput, Prisma.OrderUncheckedCreateWithoutCouponRedemptionInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutCouponRedemptionInput
+  upsert?: Prisma.OrderUpsertWithoutCouponRedemptionInput
+  connect?: Prisma.OrderWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrderUpdateToOneWithWhereWithoutCouponRedemptionInput, Prisma.OrderUpdateWithoutCouponRedemptionInput>, Prisma.OrderUncheckedUpdateWithoutCouponRedemptionInput>
+}
+
+export type OrderCreateNestedOneWithoutQualifyingReferralInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutQualifyingReferralInput, Prisma.OrderUncheckedCreateWithoutQualifyingReferralInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutQualifyingReferralInput
+  connect?: Prisma.OrderWhereUniqueInput
+}
+
+export type OrderUpdateOneWithoutQualifyingReferralNestedInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutQualifyingReferralInput, Prisma.OrderUncheckedCreateWithoutQualifyingReferralInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutQualifyingReferralInput
+  upsert?: Prisma.OrderUpsertWithoutQualifyingReferralInput
+  disconnect?: Prisma.OrderWhereInput | boolean
+  delete?: Prisma.OrderWhereInput | boolean
+  connect?: Prisma.OrderWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrderUpdateToOneWithWhereWithoutQualifyingReferralInput, Prisma.OrderUpdateWithoutQualifyingReferralInput>, Prisma.OrderUncheckedUpdateWithoutQualifyingReferralInput>
+}
+
+export type OrderCreateNestedOneWithoutStoreCreditTransactionsInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutStoreCreditTransactionsInput, Prisma.OrderUncheckedCreateWithoutStoreCreditTransactionsInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutStoreCreditTransactionsInput
+  connect?: Prisma.OrderWhereUniqueInput
+}
+
+export type OrderUpdateOneWithoutStoreCreditTransactionsNestedInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutStoreCreditTransactionsInput, Prisma.OrderUncheckedCreateWithoutStoreCreditTransactionsInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutStoreCreditTransactionsInput
+  upsert?: Prisma.OrderUpsertWithoutStoreCreditTransactionsInput
+  disconnect?: Prisma.OrderWhereInput | boolean
+  delete?: Prisma.OrderWhereInput | boolean
+  connect?: Prisma.OrderWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrderUpdateToOneWithWhereWithoutStoreCreditTransactionsInput, Prisma.OrderUpdateWithoutStoreCreditTransactionsInput>, Prisma.OrderUncheckedUpdateWithoutStoreCreditTransactionsInput>
 }
 
 export type OrderCreateWithoutUserInput = {
@@ -1676,13 +2061,22 @@ export type OrderCreateWithoutUserInput = {
   referenceNumber: string
   packageCode: string
   planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
   customerName: string
   customerEmail: string
   customerPhone: string
   sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
   status?: $Enums.OrderStatus
   paymentStatus?: $Enums.PaymentStatus
   esimStatus?: $Enums.EsimStatus
@@ -1731,6 +2125,10 @@ export type OrderCreateWithoutUserInput = {
   refundedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  coupon?: Prisma.CouponCreateNestedOneWithoutOrdersInput
+  couponRedemption?: Prisma.CouponRedemptionCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutUserInput = {
@@ -1738,13 +2136,23 @@ export type OrderUncheckedCreateWithoutUserInput = {
   referenceNumber: string
   packageCode: string
   planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
   customerName: string
   customerEmail: string
   customerPhone: string
   sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponId?: string | null
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
   status?: $Enums.OrderStatus
   paymentStatus?: $Enums.PaymentStatus
   esimStatus?: $Enums.EsimStatus
@@ -1793,6 +2201,9 @@ export type OrderUncheckedCreateWithoutUserInput = {
   refundedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralUncheckedCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutUserInput = {
@@ -1830,13 +2241,23 @@ export type OrderScalarWhereInput = {
   userId?: Prisma.StringNullableFilter<"Order"> | string | null
   packageCode?: Prisma.StringFilter<"Order"> | string
   planName?: Prisma.StringFilter<"Order"> | string
+  dataVolumeBytes?: Prisma.BigIntNullableFilter<"Order"> | bigint | number | null
+  selectedDays?: Prisma.IntNullableFilter<"Order"> | number | null
   customerName?: Prisma.StringFilter<"Order"> | string
   customerEmail?: Prisma.StringFilter<"Order"> | string
   customerPhone?: Prisma.StringFilter<"Order"> | string
   sellingPriceUsd?: Prisma.FloatFilter<"Order"> | number
+  subtotalPhpCentavos?: Prisma.IntNullableFilter<"Order"> | number | null
+  discountPhpCentavos?: Prisma.IntFilter<"Order"> | number
   amountPhpCentavos?: Prisma.IntFilter<"Order"> | number
   usdToPhpRate?: Prisma.FloatFilter<"Order"> | number
   currency?: Prisma.StringFilter<"Order"> | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFilter<"Order"> | number
+  couponId?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponCodeSnapshot?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponNameSnapshot?: Prisma.StringNullableFilter<"Order"> | string | null
+  couponDiscountTypeSnapshot?: Prisma.EnumCouponDiscountTypeNullableFilter<"Order"> | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.FloatNullableFilter<"Order"> | number | null
   status?: Prisma.EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFilter<"Order"> | $Enums.EsimStatus
@@ -1887,18 +2308,1152 @@ export type OrderScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
 }
 
+export type OrderCreateWithoutCouponInput = {
+  id?: string
+  referenceNumber: string
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
+  couponRedemption?: Prisma.CouponRedemptionCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionCreateNestedManyWithoutOrderInput
+}
+
+export type OrderUncheckedCreateWithoutCouponInput = {
+  id?: string
+  referenceNumber: string
+  userId?: string | null
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralUncheckedCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedCreateNestedManyWithoutOrderInput
+}
+
+export type OrderCreateOrConnectWithoutCouponInput = {
+  where: Prisma.OrderWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrderCreateWithoutCouponInput, Prisma.OrderUncheckedCreateWithoutCouponInput>
+}
+
+export type OrderCreateManyCouponInputEnvelope = {
+  data: Prisma.OrderCreateManyCouponInput | Prisma.OrderCreateManyCouponInput[]
+  skipDuplicates?: boolean
+}
+
+export type OrderUpsertWithWhereUniqueWithoutCouponInput = {
+  where: Prisma.OrderWhereUniqueInput
+  update: Prisma.XOR<Prisma.OrderUpdateWithoutCouponInput, Prisma.OrderUncheckedUpdateWithoutCouponInput>
+  create: Prisma.XOR<Prisma.OrderCreateWithoutCouponInput, Prisma.OrderUncheckedCreateWithoutCouponInput>
+}
+
+export type OrderUpdateWithWhereUniqueWithoutCouponInput = {
+  where: Prisma.OrderWhereUniqueInput
+  data: Prisma.XOR<Prisma.OrderUpdateWithoutCouponInput, Prisma.OrderUncheckedUpdateWithoutCouponInput>
+}
+
+export type OrderUpdateManyWithWhereWithoutCouponInput = {
+  where: Prisma.OrderScalarWhereInput
+  data: Prisma.XOR<Prisma.OrderUpdateManyMutationInput, Prisma.OrderUncheckedUpdateManyWithoutCouponInput>
+}
+
+export type OrderCreateWithoutCouponRedemptionInput = {
+  id?: string
+  referenceNumber: string
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
+  coupon?: Prisma.CouponCreateNestedOneWithoutOrdersInput
+  qualifyingReferral?: Prisma.ReferralCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionCreateNestedManyWithoutOrderInput
+}
+
+export type OrderUncheckedCreateWithoutCouponRedemptionInput = {
+  id?: string
+  referenceNumber: string
+  userId?: string | null
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponId?: string | null
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  qualifyingReferral?: Prisma.ReferralUncheckedCreateNestedOneWithoutQualifyingOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedCreateNestedManyWithoutOrderInput
+}
+
+export type OrderCreateOrConnectWithoutCouponRedemptionInput = {
+  where: Prisma.OrderWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrderCreateWithoutCouponRedemptionInput, Prisma.OrderUncheckedCreateWithoutCouponRedemptionInput>
+}
+
+export type OrderUpsertWithoutCouponRedemptionInput = {
+  update: Prisma.XOR<Prisma.OrderUpdateWithoutCouponRedemptionInput, Prisma.OrderUncheckedUpdateWithoutCouponRedemptionInput>
+  create: Prisma.XOR<Prisma.OrderCreateWithoutCouponRedemptionInput, Prisma.OrderUncheckedCreateWithoutCouponRedemptionInput>
+  where?: Prisma.OrderWhereInput
+}
+
+export type OrderUpdateToOneWithWhereWithoutCouponRedemptionInput = {
+  where?: Prisma.OrderWhereInput
+  data: Prisma.XOR<Prisma.OrderUpdateWithoutCouponRedemptionInput, Prisma.OrderUncheckedUpdateWithoutCouponRedemptionInput>
+}
+
+export type OrderUpdateWithoutCouponRedemptionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
+  coupon?: Prisma.CouponUpdateOneWithoutOrdersNestedInput
+  qualifyingReferral?: Prisma.ReferralUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderUncheckedUpdateWithoutCouponRedemptionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  qualifyingReferral?: Prisma.ReferralUncheckedUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderCreateWithoutQualifyingReferralInput = {
+  id?: string
+  referenceNumber: string
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
+  coupon?: Prisma.CouponCreateNestedOneWithoutOrdersInput
+  couponRedemption?: Prisma.CouponRedemptionCreateNestedOneWithoutOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionCreateNestedManyWithoutOrderInput
+}
+
+export type OrderUncheckedCreateWithoutQualifyingReferralInput = {
+  id?: string
+  referenceNumber: string
+  userId?: string | null
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponId?: string | null
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedCreateNestedOneWithoutOrderInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedCreateNestedManyWithoutOrderInput
+}
+
+export type OrderCreateOrConnectWithoutQualifyingReferralInput = {
+  where: Prisma.OrderWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrderCreateWithoutQualifyingReferralInput, Prisma.OrderUncheckedCreateWithoutQualifyingReferralInput>
+}
+
+export type OrderUpsertWithoutQualifyingReferralInput = {
+  update: Prisma.XOR<Prisma.OrderUpdateWithoutQualifyingReferralInput, Prisma.OrderUncheckedUpdateWithoutQualifyingReferralInput>
+  create: Prisma.XOR<Prisma.OrderCreateWithoutQualifyingReferralInput, Prisma.OrderUncheckedCreateWithoutQualifyingReferralInput>
+  where?: Prisma.OrderWhereInput
+}
+
+export type OrderUpdateToOneWithWhereWithoutQualifyingReferralInput = {
+  where?: Prisma.OrderWhereInput
+  data: Prisma.XOR<Prisma.OrderUpdateWithoutQualifyingReferralInput, Prisma.OrderUncheckedUpdateWithoutQualifyingReferralInput>
+}
+
+export type OrderUpdateWithoutQualifyingReferralInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
+  coupon?: Prisma.CouponUpdateOneWithoutOrdersNestedInput
+  couponRedemption?: Prisma.CouponRedemptionUpdateOneWithoutOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderUncheckedUpdateWithoutQualifyingReferralInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedUpdateOneWithoutOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderCreateWithoutStoreCreditTransactionsInput = {
+  id?: string
+  referenceNumber: string
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
+  coupon?: Prisma.CouponCreateNestedOneWithoutOrdersInput
+  couponRedemption?: Prisma.CouponRedemptionCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralCreateNestedOneWithoutQualifyingOrderInput
+}
+
+export type OrderUncheckedCreateWithoutStoreCreditTransactionsInput = {
+  id?: string
+  referenceNumber: string
+  userId?: string | null
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponId?: string | null
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedCreateNestedOneWithoutOrderInput
+  qualifyingReferral?: Prisma.ReferralUncheckedCreateNestedOneWithoutQualifyingOrderInput
+}
+
+export type OrderCreateOrConnectWithoutStoreCreditTransactionsInput = {
+  where: Prisma.OrderWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrderCreateWithoutStoreCreditTransactionsInput, Prisma.OrderUncheckedCreateWithoutStoreCreditTransactionsInput>
+}
+
+export type OrderUpsertWithoutStoreCreditTransactionsInput = {
+  update: Prisma.XOR<Prisma.OrderUpdateWithoutStoreCreditTransactionsInput, Prisma.OrderUncheckedUpdateWithoutStoreCreditTransactionsInput>
+  create: Prisma.XOR<Prisma.OrderCreateWithoutStoreCreditTransactionsInput, Prisma.OrderUncheckedCreateWithoutStoreCreditTransactionsInput>
+  where?: Prisma.OrderWhereInput
+}
+
+export type OrderUpdateToOneWithWhereWithoutStoreCreditTransactionsInput = {
+  where?: Prisma.OrderWhereInput
+  data: Prisma.XOR<Prisma.OrderUpdateWithoutStoreCreditTransactionsInput, Prisma.OrderUncheckedUpdateWithoutStoreCreditTransactionsInput>
+}
+
+export type OrderUpdateWithoutStoreCreditTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
+  coupon?: Prisma.CouponUpdateOneWithoutOrdersNestedInput
+  couponRedemption?: Prisma.CouponRedemptionUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUpdateOneWithoutQualifyingOrderNestedInput
+}
+
+export type OrderUncheckedUpdateWithoutStoreCreditTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUncheckedUpdateOneWithoutQualifyingOrderNestedInput
+}
+
 export type OrderCreateManyUserInput = {
   id?: string
   referenceNumber: string
   packageCode: string
   planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
   customerName: string
   customerEmail: string
   customerPhone: string
   sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
   amountPhpCentavos: number
   usdToPhpRate: number
   currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponId?: string | null
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
   status?: $Enums.OrderStatus
   paymentStatus?: $Enums.PaymentStatus
   esimStatus?: $Enums.EsimStatus
@@ -1954,13 +3509,22 @@ export type OrderUpdateWithoutUserInput = {
   referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
   packageCode?: Prisma.StringFieldUpdateOperationsInput | string
   planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   customerName?: Prisma.StringFieldUpdateOperationsInput | string
   customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
   customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
   sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
@@ -2009,6 +3573,10 @@ export type OrderUpdateWithoutUserInput = {
   refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  coupon?: Prisma.CouponUpdateOneWithoutOrdersNestedInput
+  couponRedemption?: Prisma.CouponRedemptionUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutUserInput = {
@@ -2016,13 +3584,23 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
   packageCode?: Prisma.StringFieldUpdateOperationsInput | string
   planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   customerName?: Prisma.StringFieldUpdateOperationsInput | string
   customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
   customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
   sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
@@ -2071,6 +3649,9 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUncheckedUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateManyWithoutUserInput = {
@@ -2078,13 +3659,23 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
   packageCode?: Prisma.StringFieldUpdateOperationsInput | string
   planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   customerName?: Prisma.StringFieldUpdateOperationsInput | string
   customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
   customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
   sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
   usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
   esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
@@ -2135,6 +3726,329 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type OrderCreateManyCouponInput = {
+  id?: string
+  referenceNumber: string
+  userId?: string | null
+  packageCode: string
+  planName: string
+  dataVolumeBytes?: bigint | number | null
+  selectedDays?: number | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  sellingPriceUsd: number
+  subtotalPhpCentavos?: number | null
+  discountPhpCentavos?: number
+  amountPhpCentavos: number
+  usdToPhpRate: number
+  currency?: string
+  storeCreditUsedPhpCentavos?: number
+  couponCodeSnapshot?: string | null
+  couponNameSnapshot?: string | null
+  couponDiscountTypeSnapshot?: $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: number | null
+  status?: $Enums.OrderStatus
+  paymentStatus?: $Enums.PaymentStatus
+  esimStatus?: $Enums.EsimStatus
+  paymongoSessionId?: string | null
+  paymongoPaymentId?: string | null
+  paymongoEventId?: string | null
+  paymentMethod?: string | null
+  paidAt?: Date | string | null
+  esimOrderId?: string | null
+  esimTransactionId?: string | null
+  esimTranNo?: string | null
+  iccid?: string | null
+  qrCode?: string | null
+  qrCodeUrl?: string | null
+  activationCode?: string | null
+  smdpAddress?: string | null
+  matchingId?: string | null
+  smdpStatus?: string | null
+  supplierEsimStatus?: string | null
+  apn?: string | null
+  esimRawResponse?: string | null
+  esimIssuedAt?: Date | string | null
+  profileIssuedAt?: Date | string | null
+  profileLastCheckedAt?: Date | string | null
+  profileCheckAttempts?: number
+  profileSyncClaimedAt?: Date | string | null
+  profileSyncClaimId?: string | null
+  profileSyncLeaseUntil?: Date | string | null
+  emailDeliveryStatus?: $Enums.EmailDeliveryStatus
+  emailSent?: boolean
+  emailSentAt?: Date | string | null
+  emailAttempts?: number
+  emailIdempotencyKey?: string | null
+  resendEmailId?: string | null
+  emailClaimedAt?: Date | string | null
+  emailClaimId?: string | null
+  emailLeaseUntil?: Date | string | null
+  emailLastAttemptAt?: Date | string | null
+  emailLastError?: string | null
+  processingAttempts?: number
+  lastAttemptAt?: Date | string | null
+  lastError?: string | null
+  webhookReceivedAt?: Date | string | null
+  completedAt?: Date | string | null
+  cancelledAt?: Date | string | null
+  refundedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type OrderUpdateWithoutCouponInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
+  couponRedemption?: Prisma.CouponRedemptionUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderUncheckedUpdateWithoutCouponInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  couponRedemption?: Prisma.CouponRedemptionUncheckedUpdateOneWithoutOrderNestedInput
+  qualifyingReferral?: Prisma.ReferralUncheckedUpdateOneWithoutQualifyingOrderNestedInput
+  storeCreditTransactions?: Prisma.StoreCreditTransactionUncheckedUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderUncheckedUpdateManyWithoutCouponInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  referenceNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageCode?: Prisma.StringFieldUpdateOperationsInput | string
+  planName?: Prisma.StringFieldUpdateOperationsInput | string
+  dataVolumeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  selectedDays?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  customerName?: Prisma.StringFieldUpdateOperationsInput | string
+  customerEmail?: Prisma.StringFieldUpdateOperationsInput | string
+  customerPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  sellingPriceUsd?: Prisma.FloatFieldUpdateOperationsInput | number
+  subtotalPhpCentavos?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  discountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  amountPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  usdToPhpRate?: Prisma.FloatFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  storeCreditUsedPhpCentavos?: Prisma.IntFieldUpdateOperationsInput | number
+  couponCodeSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponNameSnapshot?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  couponDiscountTypeSnapshot?: Prisma.NullableEnumCouponDiscountTypeFieldUpdateOperationsInput | $Enums.CouponDiscountType | null
+  couponDiscountValueSnapshot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  esimStatus?: Prisma.EnumEsimStatusFieldUpdateOperationsInput | $Enums.EsimStatus
+  paymongoSessionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoPaymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymongoEventId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paidAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  esimOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTransactionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimTranNo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  iccid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  qrCodeUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  activationCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  matchingId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  smdpStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  supplierEsimStatus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  apn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimRawResponse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  esimIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileIssuedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileLastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileCheckAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  profileSyncClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profileSyncClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profileSyncLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailDeliveryStatus?: Prisma.EnumEmailDeliveryStatusFieldUpdateOperationsInput | $Enums.EmailDeliveryStatus
+  emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  emailSentAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  emailIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resendEmailId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailClaimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailClaimId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailLeaseUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailLastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  processingAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lastAttemptAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  webhookReceivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refundedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type OrderCountOutputType
+ */
+
+export type OrderCountOutputType = {
+  storeCreditTransactions: number
+}
+
+export type OrderCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  storeCreditTransactions?: boolean | OrderCountOutputTypeCountStoreCreditTransactionsArgs
+}
+
+/**
+ * OrderCountOutputType without action
+ */
+export type OrderCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OrderCountOutputType
+   */
+  select?: Prisma.OrderCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * OrderCountOutputType without action
+ */
+export type OrderCountOutputTypeCountStoreCreditTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StoreCreditTransactionWhereInput
+}
 
 
 export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2143,13 +4057,23 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   userId?: boolean
   packageCode?: boolean
   planName?: boolean
+  dataVolumeBytes?: boolean
+  selectedDays?: boolean
   customerName?: boolean
   customerEmail?: boolean
   customerPhone?: boolean
   sellingPriceUsd?: boolean
+  subtotalPhpCentavos?: boolean
+  discountPhpCentavos?: boolean
   amountPhpCentavos?: boolean
   usdToPhpRate?: boolean
   currency?: boolean
+  storeCreditUsedPhpCentavos?: boolean
+  couponId?: boolean
+  couponCodeSnapshot?: boolean
+  couponNameSnapshot?: boolean
+  couponDiscountTypeSnapshot?: boolean
+  couponDiscountValueSnapshot?: boolean
   status?: boolean
   paymentStatus?: boolean
   esimStatus?: boolean
@@ -2199,6 +4123,11 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.Order$userArgs<ExtArgs>
+  coupon?: boolean | Prisma.Order$couponArgs<ExtArgs>
+  couponRedemption?: boolean | Prisma.Order$couponRedemptionArgs<ExtArgs>
+  qualifyingReferral?: boolean | Prisma.Order$qualifyingReferralArgs<ExtArgs>
+  storeCreditTransactions?: boolean | Prisma.Order$storeCreditTransactionsArgs<ExtArgs>
+  _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2207,13 +4136,23 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   userId?: boolean
   packageCode?: boolean
   planName?: boolean
+  dataVolumeBytes?: boolean
+  selectedDays?: boolean
   customerName?: boolean
   customerEmail?: boolean
   customerPhone?: boolean
   sellingPriceUsd?: boolean
+  subtotalPhpCentavos?: boolean
+  discountPhpCentavos?: boolean
   amountPhpCentavos?: boolean
   usdToPhpRate?: boolean
   currency?: boolean
+  storeCreditUsedPhpCentavos?: boolean
+  couponId?: boolean
+  couponCodeSnapshot?: boolean
+  couponNameSnapshot?: boolean
+  couponDiscountTypeSnapshot?: boolean
+  couponDiscountValueSnapshot?: boolean
   status?: boolean
   paymentStatus?: boolean
   esimStatus?: boolean
@@ -2263,6 +4202,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.Order$userArgs<ExtArgs>
+  coupon?: boolean | Prisma.Order$couponArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2271,13 +4211,23 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   userId?: boolean
   packageCode?: boolean
   planName?: boolean
+  dataVolumeBytes?: boolean
+  selectedDays?: boolean
   customerName?: boolean
   customerEmail?: boolean
   customerPhone?: boolean
   sellingPriceUsd?: boolean
+  subtotalPhpCentavos?: boolean
+  discountPhpCentavos?: boolean
   amountPhpCentavos?: boolean
   usdToPhpRate?: boolean
   currency?: boolean
+  storeCreditUsedPhpCentavos?: boolean
+  couponId?: boolean
+  couponCodeSnapshot?: boolean
+  couponNameSnapshot?: boolean
+  couponDiscountTypeSnapshot?: boolean
+  couponDiscountValueSnapshot?: boolean
   status?: boolean
   paymentStatus?: boolean
   esimStatus?: boolean
@@ -2327,6 +4277,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.Order$userArgs<ExtArgs>
+  coupon?: boolean | Prisma.Order$couponArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectScalar = {
@@ -2335,13 +4286,23 @@ export type OrderSelectScalar = {
   userId?: boolean
   packageCode?: boolean
   planName?: boolean
+  dataVolumeBytes?: boolean
+  selectedDays?: boolean
   customerName?: boolean
   customerEmail?: boolean
   customerPhone?: boolean
   sellingPriceUsd?: boolean
+  subtotalPhpCentavos?: boolean
+  discountPhpCentavos?: boolean
   amountPhpCentavos?: boolean
   usdToPhpRate?: boolean
   currency?: boolean
+  storeCreditUsedPhpCentavos?: boolean
+  couponId?: boolean
+  couponCodeSnapshot?: boolean
+  couponNameSnapshot?: boolean
+  couponDiscountTypeSnapshot?: boolean
+  couponDiscountValueSnapshot?: boolean
   status?: boolean
   paymentStatus?: boolean
   esimStatus?: boolean
@@ -2392,21 +4353,41 @@ export type OrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "referenceNumber" | "userId" | "packageCode" | "planName" | "customerName" | "customerEmail" | "customerPhone" | "sellingPriceUsd" | "amountPhpCentavos" | "usdToPhpRate" | "currency" | "status" | "paymentStatus" | "esimStatus" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "paymentMethod" | "paidAt" | "esimOrderId" | "esimTransactionId" | "esimTranNo" | "iccid" | "qrCode" | "qrCodeUrl" | "activationCode" | "smdpAddress" | "matchingId" | "smdpStatus" | "supplierEsimStatus" | "apn" | "esimRawResponse" | "esimIssuedAt" | "profileIssuedAt" | "profileLastCheckedAt" | "profileCheckAttempts" | "profileSyncClaimedAt" | "profileSyncClaimId" | "profileSyncLeaseUntil" | "emailDeliveryStatus" | "emailSent" | "emailSentAt" | "emailAttempts" | "emailIdempotencyKey" | "resendEmailId" | "emailClaimedAt" | "emailClaimId" | "emailLeaseUntil" | "emailLastAttemptAt" | "emailLastError" | "processingAttempts" | "lastAttemptAt" | "lastError" | "webhookReceivedAt" | "completedAt" | "cancelledAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "referenceNumber" | "userId" | "packageCode" | "planName" | "dataVolumeBytes" | "selectedDays" | "customerName" | "customerEmail" | "customerPhone" | "sellingPriceUsd" | "subtotalPhpCentavos" | "discountPhpCentavos" | "amountPhpCentavos" | "usdToPhpRate" | "currency" | "storeCreditUsedPhpCentavos" | "couponId" | "couponCodeSnapshot" | "couponNameSnapshot" | "couponDiscountTypeSnapshot" | "couponDiscountValueSnapshot" | "status" | "paymentStatus" | "esimStatus" | "paymongoSessionId" | "paymongoPaymentId" | "paymongoEventId" | "paymentMethod" | "paidAt" | "esimOrderId" | "esimTransactionId" | "esimTranNo" | "iccid" | "qrCode" | "qrCodeUrl" | "activationCode" | "smdpAddress" | "matchingId" | "smdpStatus" | "supplierEsimStatus" | "apn" | "esimRawResponse" | "esimIssuedAt" | "profileIssuedAt" | "profileLastCheckedAt" | "profileCheckAttempts" | "profileSyncClaimedAt" | "profileSyncClaimId" | "profileSyncLeaseUntil" | "emailDeliveryStatus" | "emailSent" | "emailSentAt" | "emailAttempts" | "emailIdempotencyKey" | "resendEmailId" | "emailClaimedAt" | "emailClaimId" | "emailLeaseUntil" | "emailLastAttemptAt" | "emailLastError" | "processingAttempts" | "lastAttemptAt" | "lastError" | "webhookReceivedAt" | "completedAt" | "cancelledAt" | "refundedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.Order$userArgs<ExtArgs>
+  coupon?: boolean | Prisma.Order$couponArgs<ExtArgs>
+  couponRedemption?: boolean | Prisma.Order$couponRedemptionArgs<ExtArgs>
+  qualifyingReferral?: boolean | Prisma.Order$qualifyingReferralArgs<ExtArgs>
+  storeCreditTransactions?: boolean | Prisma.Order$storeCreditTransactionsArgs<ExtArgs>
+  _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrderIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.Order$userArgs<ExtArgs>
+  coupon?: boolean | Prisma.Order$couponArgs<ExtArgs>
 }
 export type OrderIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.Order$userArgs<ExtArgs>
+  coupon?: boolean | Prisma.Order$couponArgs<ExtArgs>
 }
 
 export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Order"
   objects: {
     user: Prisma.$UserPayload<ExtArgs> | null
+    coupon: Prisma.$CouponPayload<ExtArgs> | null
+    couponRedemption: Prisma.$CouponRedemptionPayload<ExtArgs> | null
+    /**
+     * *
+     *    * Referral qualified by this completed order.
+     */
+    qualifyingReferral: Prisma.$ReferralPayload<ExtArgs> | null
+    /**
+     * *
+     *    * Store-credit ledger entries associated
+     *    * with this order.
+     */
+    storeCreditTransactions: Prisma.$StoreCreditTransactionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2414,13 +4395,59 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     userId: string | null
     packageCode: string
     planName: string
+    /**
+     * *
+     *    * Purchased plan data allowance in bytes.
+     *    * This is stored as an immutable order snapshot.
+     *    * Examples:
+     *    * 10GB = 10737418240
+     *    * 20GB = 21474836480
+     *    * 50GB = 53687091200
+     *    * Referral rewards require at least 10GB.
+     */
+    dataVolumeBytes: bigint | null
+    /**
+     * *
+     *    * Selected validity for daily plans.
+     *    *
+     *    * null = normal fixed-duration plan
+     *    * 1-30 = customer-selected daily-plan validity
+     */
+    selectedDays: number | null
     customerName: string
     customerEmail: string
     customerPhone: string
+    /**
+     * *
+     *    * Pricing snapshot.
+     *    * subtotalPhpCentavos:
+     *    * Original total before discounts and store credit.
+     *    * discountPhpCentavos:
+     *    * Coupon discount applied.
+     *    * amountPhpCentavos:
+     *    * Final amount charged through PayMongo.
+     */
     sellingPriceUsd: number
+    subtotalPhpCentavos: number | null
+    discountPhpCentavos: number
     amountPhpCentavos: number
     usdToPhpRate: number
     currency: string
+    /**
+     * *
+     *    * Store credit used on this order.
+     *    * Stored in Philippine centavos.
+     */
+    storeCreditUsedPhpCentavos: number
+    /**
+     * *
+     *    * Coupon relationship and historical snapshot.
+     */
+    couponId: string | null
+    couponCodeSnapshot: string | null
+    couponNameSnapshot: string | null
+    couponDiscountTypeSnapshot: $Enums.CouponDiscountType | null
+    couponDiscountValueSnapshot: number | null
     status: $Enums.OrderStatus
     paymentStatus: $Enums.PaymentStatus
     esimStatus: $Enums.EsimStatus
@@ -2864,6 +4891,10 @@ readonly fields: OrderFieldRefs;
 export interface Prisma__OrderClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.Order$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  coupon<T extends Prisma.Order$couponArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$couponArgs<ExtArgs>>): Prisma.Prisma__CouponClient<runtime.Types.Result.GetResult<Prisma.$CouponPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  couponRedemption<T extends Prisma.Order$couponRedemptionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$couponRedemptionArgs<ExtArgs>>): Prisma.Prisma__CouponRedemptionClient<runtime.Types.Result.GetResult<Prisma.$CouponRedemptionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  qualifyingReferral<T extends Prisma.Order$qualifyingReferralArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$qualifyingReferralArgs<ExtArgs>>): Prisma.Prisma__ReferralClient<runtime.Types.Result.GetResult<Prisma.$ReferralPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  storeCreditTransactions<T extends Prisma.Order$storeCreditTransactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$storeCreditTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StoreCreditTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2898,13 +4929,23 @@ export interface OrderFieldRefs {
   readonly userId: Prisma.FieldRef<"Order", 'String'>
   readonly packageCode: Prisma.FieldRef<"Order", 'String'>
   readonly planName: Prisma.FieldRef<"Order", 'String'>
+  readonly dataVolumeBytes: Prisma.FieldRef<"Order", 'BigInt'>
+  readonly selectedDays: Prisma.FieldRef<"Order", 'Int'>
   readonly customerName: Prisma.FieldRef<"Order", 'String'>
   readonly customerEmail: Prisma.FieldRef<"Order", 'String'>
   readonly customerPhone: Prisma.FieldRef<"Order", 'String'>
   readonly sellingPriceUsd: Prisma.FieldRef<"Order", 'Float'>
+  readonly subtotalPhpCentavos: Prisma.FieldRef<"Order", 'Int'>
+  readonly discountPhpCentavos: Prisma.FieldRef<"Order", 'Int'>
   readonly amountPhpCentavos: Prisma.FieldRef<"Order", 'Int'>
   readonly usdToPhpRate: Prisma.FieldRef<"Order", 'Float'>
   readonly currency: Prisma.FieldRef<"Order", 'String'>
+  readonly storeCreditUsedPhpCentavos: Prisma.FieldRef<"Order", 'Int'>
+  readonly couponId: Prisma.FieldRef<"Order", 'String'>
+  readonly couponCodeSnapshot: Prisma.FieldRef<"Order", 'String'>
+  readonly couponNameSnapshot: Prisma.FieldRef<"Order", 'String'>
+  readonly couponDiscountTypeSnapshot: Prisma.FieldRef<"Order", 'CouponDiscountType'>
+  readonly couponDiscountValueSnapshot: Prisma.FieldRef<"Order", 'Float'>
   readonly status: Prisma.FieldRef<"Order", 'OrderStatus'>
   readonly paymentStatus: Prisma.FieldRef<"Order", 'PaymentStatus'>
   readonly esimStatus: Prisma.FieldRef<"Order", 'EsimStatus'>
@@ -3370,6 +5411,87 @@ export type Order$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs
    */
   include?: Prisma.UserInclude<ExtArgs> | null
   where?: Prisma.UserWhereInput
+}
+
+/**
+ * Order.coupon
+ */
+export type Order$couponArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Coupon
+   */
+  select?: Prisma.CouponSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Coupon
+   */
+  omit?: Prisma.CouponOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CouponInclude<ExtArgs> | null
+  where?: Prisma.CouponWhereInput
+}
+
+/**
+ * Order.couponRedemption
+ */
+export type Order$couponRedemptionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CouponRedemption
+   */
+  select?: Prisma.CouponRedemptionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CouponRedemption
+   */
+  omit?: Prisma.CouponRedemptionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CouponRedemptionInclude<ExtArgs> | null
+  where?: Prisma.CouponRedemptionWhereInput
+}
+
+/**
+ * Order.qualifyingReferral
+ */
+export type Order$qualifyingReferralArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Referral
+   */
+  select?: Prisma.ReferralSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Referral
+   */
+  omit?: Prisma.ReferralOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ReferralInclude<ExtArgs> | null
+  where?: Prisma.ReferralWhereInput
+}
+
+/**
+ * Order.storeCreditTransactions
+ */
+export type Order$storeCreditTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StoreCreditTransaction
+   */
+  select?: Prisma.StoreCreditTransactionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StoreCreditTransaction
+   */
+  omit?: Prisma.StoreCreditTransactionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StoreCreditTransactionInclude<ExtArgs> | null
+  where?: Prisma.StoreCreditTransactionWhereInput
+  orderBy?: Prisma.StoreCreditTransactionOrderByWithRelationInput | Prisma.StoreCreditTransactionOrderByWithRelationInput[]
+  cursor?: Prisma.StoreCreditTransactionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StoreCreditTransactionScalarFieldEnum | Prisma.StoreCreditTransactionScalarFieldEnum[]
 }
 
 /**

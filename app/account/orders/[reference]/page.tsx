@@ -17,7 +17,8 @@ type OrderDetailsPageProps = {
 export default async function OrderDetailsPage({
   params,
 }: OrderDetailsPageProps) {
-  const session = await auth();
+  const session =
+    await auth();
 
   if (!session?.user?.id) {
     redirect(
@@ -49,29 +50,77 @@ export default async function OrderDetailsPage({
       },
 
       select: {
-        referenceNumber: true,
-        planName: true,
-        packageCode: true,
+        referenceNumber:
+          true,
 
-        status: true,
-        paymentStatus: true,
-        esimStatus: true,
+        planName:
+          true,
 
-        amountPhpCentavos: true,
-        createdAt: true,
-        paidAt: true,
-        completedAt: true,
+        packageCode:
+          true,
 
-        iccid: true,
-        qrCode: true,
-        qrCodeUrl: true,
-        activationCode: true,
-        smdpAddress: true,
-        smdpStatus: true,
-        supplierEsimStatus: true,
-        apn: true,
+        status:
+          true,
 
-        lastError: true,
+        paymentStatus:
+          true,
+
+        esimStatus:
+          true,
+
+        /*
+         * Full pricing breakdown.
+         */
+        subtotalPhpCentavos:
+          true,
+
+        discountPhpCentavos:
+          true,
+
+        storeCreditUsedPhpCentavos:
+          true,
+
+        amountPhpCentavos:
+          true,
+
+        couponCodeSnapshot:
+          true,
+
+        createdAt:
+          true,
+
+        paidAt:
+          true,
+
+        completedAt:
+          true,
+
+        iccid:
+          true,
+
+        qrCode:
+          true,
+
+        qrCodeUrl:
+          true,
+
+        activationCode:
+          true,
+
+        smdpAddress:
+          true,
+
+        smdpStatus:
+          true,
+
+        supplierEsimStatus:
+          true,
+
+        apn:
+          true,
+
+        lastError:
+          true,
       },
     });
 
@@ -79,10 +128,48 @@ export default async function OrderDetailsPage({
     notFound();
   }
 
+  const subtotalPhpCentavos =
+    order.subtotalPhpCentavos ??
+    (
+      order.amountPhpCentavos +
+      order.discountPhpCentavos +
+      order.storeCreditUsedPhpCentavos
+    );
+
   return (
     <OrderDetailsClient
       order={{
-        ...order,
+        referenceNumber:
+          order.referenceNumber,
+
+        planName:
+          order.planName,
+
+        packageCode:
+          order.packageCode,
+
+        status:
+          order.status,
+
+        paymentStatus:
+          order.paymentStatus,
+
+        esimStatus:
+          order.esimStatus,
+
+        subtotalPhpCentavos,
+
+        discountPhpCentavos:
+          order.discountPhpCentavos,
+
+        storeCreditUsedPhpCentavos:
+          order.storeCreditUsedPhpCentavos,
+
+        amountPhpCentavos:
+          order.amountPhpCentavos,
+
+        couponCodeSnapshot:
+          order.couponCodeSnapshot,
 
         createdAt:
           order.createdAt.toISOString(),
@@ -94,6 +181,33 @@ export default async function OrderDetailsPage({
         completedAt:
           order.completedAt?.toISOString() ??
           null,
+
+        iccid:
+          order.iccid,
+
+        qrCode:
+          order.qrCode,
+
+        qrCodeUrl:
+          order.qrCodeUrl,
+
+        activationCode:
+          order.activationCode,
+
+        smdpAddress:
+          order.smdpAddress,
+
+        smdpStatus:
+          order.smdpStatus,
+
+        supplierEsimStatus:
+          order.supplierEsimStatus,
+
+        apn:
+          order.apn,
+
+        lastError:
+          order.lastError,
       }}
     />
   );

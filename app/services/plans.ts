@@ -1,19 +1,48 @@
 import "server-only";
 
 import { prisma } from "@/app/lib/prisma";
-import { fetchEsimAccessPlans } from "@/app/services/esimAccess";
+import {
+  calculatePlanPrice,
+} from "@/app/lib/pricing";
+import {
+  fetchEsimAccessPlans,
+} from "@/app/services/esimAccess";
 
-import type { EsimPackage } from "@/app/types/esim";
+import type {
+  EsimPackage,
+} from "@/app/types/esim";
 
-const PLAN_CACHE_TTL_MS =
+const DEFAULT_PLAN_CACHE_TTL_MS =
+  300_000;
+
+const DEFAULT_USD_TO_PHP_RATE =
+  58;
+
+const DEFAULT_MARKUP_PERCENT =
+  20;
+
+const configuredCacheTtl =
   Number(
-    process.env.ESIM_PLAN_CACHE_TTL_MS ??
-      "300000",
+    process.env
+      .ESIM_PLAN_CACHE_TTL_MS ??
+      DEFAULT_PLAN_CACHE_TTL_MS,
   );
 
+const PLAN_CACHE_TTL_MS =
+  Number.isFinite(
+    configuredCacheTtl,
+  ) &&
+  configuredCacheTtl > 0
+    ? configuredCacheTtl
+    : DEFAULT_PLAN_CACHE_TTL_MS;
+
 type PlanCache = {
-  supplierPlans: EsimPackage[] | null;
+  supplierPlans:
+    | EsimPackage[]
+    | null;
+
   expiresAt: number;
+
   pendingRequest:
     | Promise<EsimPackage[]>
     | null;
@@ -27,7 +56,8 @@ declare global {
 }
 
 const planCache: PlanCache =
-  globalThis.seamarinoPlanCache ?? {
+  globalThis
+    .seamarinoPlanCache ?? {
     supplierPlans: null,
     expiresAt: 0,
     pendingRequest: null,
@@ -44,7 +74,8 @@ if (
 function normalizeText(
   value: unknown,
 ): string {
-  return typeof value === "string"
+  return typeof value ===
+    "string"
     ? value.trim()
     : "";
 }
@@ -63,12 +94,107 @@ function normalizeNumber(
     : fallback;
 }
 
+function normalizeBoolean(
+  value: unknown,
+  fallback = false,
+): boolean {
+  if (
+    typeof value ===
+    "boolean"
+  ) {
+    return value;
+  }
+
+  if (
+    typeof value ===
+    "number"
+  ) {
+    return value !== 0;
+  }
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+    const normalized =
+      value
+        .trim()
+        .toLowerCase();
+
+    if (
+      [
+        "1",
+        "true",
+        "yes",
+      ].includes(
+        normalized,
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      [
+        "0",
+        "false",
+        "no",
+      ].includes(
+        normalized,
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return fallback;
+}
+
+function normalizeDescriptionList(
+  value: unknown,
+): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const descriptions =
+    value
+      .map((item) =>
+        normalizeText(item),
+      )
+      .filter(Boolean);
+
+  return descriptions.length > 0
+    ? descriptions
+    : undefined;
+}
+
+function getLocationCodes(
+  plan: EsimPackage,
+): string[] {
+  const location =
+    normalizeText(
+      plan.location,
+    );
+
+  if (!location) {
+    return [];
+  }
+
+  return location
+    .split(",")
+    .map((code) =>
+      code.trim(),
+    )
+    .filter(Boolean);
+}
+
 function normalizeSupplierPlan(
   supplierPlan: EsimPackage,
 ): EsimPackage | null {
   const packageCode =
     normalizeText(
-      supplierPlan.packageCode,
+      supplierPlan
+        .packageCode,
     );
 
   if (!packageCode) {
@@ -90,7 +216,8 @@ function normalizeSupplierPlan(
       supplierPlan.duration,
     );
 
-  return {
+  const normalizedPlan:
+    EsimPackage = {
     ...supplierPlan,
 
     packageCode,
@@ -98,14 +225,17 @@ function normalizeSupplierPlan(
     name:
       normalizeText(
         supplierPlan.name,
-      ) || packageCode,
+      ) ||
+      packageCode,
 
     price,
 
     currencyCode:
       normalizeText(
-        supplierPlan.currencyCode,
-      ) || "USD",
+        supplierPlan
+          .currencyCode,
+      ) ||
+      "USD",
 
     location:
       normalizeText(
@@ -114,55 +244,94 @@ function normalizeSupplierPlan(
 
     locationCode:
       normalizeText(
-        supplierPlan.locationCode,
-      ) || undefined,
+        supplierPlan
+          .locationCode,
+      ) ||
+      undefined,
 
     speed:
       normalizeText(
         supplierPlan.speed,
-      ) || "Unknown",
+      ) ||
+      "Unknown",
 
     duration,
 
     durationUnit:
       normalizeText(
-        supplierPlan.durationUnit,
-      ) || "DAY",
+        supplierPlan
+          .durationUnit,
+      ) ||
+      "DAY",
 
     volume,
 
     supportTopUpType:
       normalizeText(
-        supplierPlan.supportTopUpType,
+        supplierPlan
+          .supportTopUpType,
       ),
 
     description:
       normalizeText(
-        supplierPlan.description,
-      ) || undefined,
+        supplierPlan
+          .description,
+      ) ||
+      undefined,
+
+    descriptionList:
+      normalizeDescriptionList(
+        supplierPlan
+          .descriptionList,
+      ),
 
     saleNote:
       normalizeText(
-        supplierPlan.saleNote,
-      ) || undefined,
+        supplierPlan
+          .saleNote,
+      ) ||
+      undefined,
+
+    featured:
+      normalizeBoolean(
+        supplierPlan.featured,
+      ),
+
+    favorite:
+      normalizeBoolean(
+        supplierPlan.favorite,
+      ),
+  };
+
+  const locations =
+    getLocationCodes(
+      normalizedPlan,
+    );
+
+  return {
+    ...normalizedPlan,
+
+    isLocalPlan:
+      locations.length <= 1,
   };
 }
 
 /**
- * Loads the large supplier response into process memory.
+ * Loads the supplier list into process memory.
  *
- * This avoids Next.js Data Cache's per-item size limit.
- * Simultaneous requests share one pending supplier request.
+ * This avoids large Next.js Data Cache entries,
+ * and simultaneous requests share one pending
+ * supplier request.
  */
-async function getSupplierPlans(): Promise<
-  EsimPackage[]
-> {
+async function getSupplierPlans():
+  Promise<EsimPackage[]> {
   const now =
     Date.now();
 
   if (
     planCache.supplierPlans &&
-    planCache.expiresAt > now
+    planCache.expiresAt >
+      now
   ) {
     console.info(
       "ESIM PLANS: Using memory cache",
@@ -173,12 +342,14 @@ async function getSupplierPlans(): Promise<
             .length,
 
         expiresInMs:
-          planCache.expiresAt -
+          planCache
+            .expiresAt -
           now,
       },
     );
 
-    return planCache.supplierPlans;
+    return planCache
+      .supplierPlans;
   }
 
   if (
@@ -188,7 +359,8 @@ async function getSupplierPlans(): Promise<
       "ESIM PLANS: Waiting for existing supplier request",
     );
 
-    return planCache.pendingRequest;
+    return planCache
+      .pendingRequest;
   }
 
   planCache.pendingRequest =
@@ -218,7 +390,8 @@ async function getSupplierPlans(): Promise<
             "ESIM PLANS: Memory cache updated",
             {
               packageCount:
-                supplierPlans.length,
+                supplierPlans
+                  .length,
 
               ttlMs:
                 PLAN_CACHE_TTL_MS,
@@ -228,51 +401,53 @@ async function getSupplierPlans(): Promise<
           return supplierPlans;
         },
       )
-      .catch((error) => {
-        /*
-         * If a refresh fails but an older list exists,
-         * continue serving that list instead of taking
-         * the store offline.
-         */
-        if (
-          planCache.supplierPlans
-        ) {
-          console.warn(
-            "ESIM PLANS: Supplier refresh failed; using stale memory cache",
-            {
-              error:
-                error instanceof
-                Error
-                  ? error.message
-                  : String(
-                      error,
-                    ),
-            },
-          );
+      .catch(
+        (
+          error: unknown,
+        ) => {
+          if (
+            planCache
+              .supplierPlans
+          ) {
+            console.warn(
+              "ESIM PLANS: Supplier refresh failed; using stale memory cache",
+              {
+                error:
+                  error instanceof
+                  Error
+                    ? error.message
+                    : String(
+                        error,
+                      ),
+              },
+            );
 
-          planCache.expiresAt =
-            Date.now() +
-            60_000;
+            planCache.expiresAt =
+              Date.now() +
+              60_000;
 
-          return planCache.supplierPlans;
-        }
+            return planCache
+              .supplierPlans;
+          }
 
-        throw error;
-      })
+          throw error;
+        },
+      )
       .finally(() => {
         planCache.pendingRequest =
           null;
       });
 
-  return planCache.pendingRequest;
+  return planCache
+    .pendingRequest;
 }
 
-export async function getPlans(): Promise<
-  EsimPackage[]
-> {
+export async function getPlans():
+  Promise<EsimPackage[]> {
   const [
     supplierPlans,
     savedSettings,
+    appSetting,
   ] = await Promise.all([
     getSupplierPlans(),
 
@@ -285,7 +460,27 @@ export async function getPlans(): Promise<
         customName: true,
       },
     }),
+
+    prisma.appSetting.findUnique({
+      where: {
+        id: "main",
+      },
+
+      select: {
+        usdToPhpRate: true,
+      },
+    }),
   ]);
+
+  const usdToPhpRate =
+    Math.max(
+      0,
+      normalizeNumber(
+        appSetting
+          ?.usdToPhpRate,
+        DEFAULT_USD_TO_PHP_RATE,
+      ),
+    );
 
   const settingsByPackageCode =
     new Map(
@@ -312,10 +507,11 @@ export async function getPlans(): Promise<
     )
     .filter((plan) => {
       const setting =
-        settingsByPackageCode.get(
-          plan.packageCode
-            .toUpperCase(),
-        );
+        settingsByPackageCode
+          .get(
+            plan.packageCode
+              .toUpperCase(),
+          );
 
       return (
         setting?.enabled ??
@@ -324,10 +520,11 @@ export async function getPlans(): Promise<
     })
     .map((plan) => {
       const setting =
-        settingsByPackageCode.get(
-          plan.packageCode
-            .toUpperCase(),
-        );
+        settingsByPackageCode
+          .get(
+            plan.packageCode
+              .toUpperCase(),
+          );
 
       const customName =
         normalizeText(
@@ -335,9 +532,32 @@ export async function getPlans(): Promise<
         );
 
       const configuredMarkup =
-        normalizeNumber(
-          setting?.markupPercent,
-          20,
+        Math.max(
+          0,
+          normalizeNumber(
+            setting
+              ?.markupPercent,
+            DEFAULT_MARKUP_PERCENT,
+          ),
+        );
+
+      const pricing =
+        calculatePlanPrice({
+          supplierPrice:
+            plan.price,
+
+          volume:
+            plan.volume,
+
+          usdToPhpRate,
+
+          markupPercent:
+            configuredMarkup,
+        });
+
+      const locations =
+        getLocationCodes(
+          plan,
         );
 
       return {
@@ -347,14 +567,54 @@ export async function getPlans(): Promise<
           customName ||
           plan.name,
 
+        displayName:
+          customName ||
+          plan.name,
+
+        enabled:
+          setting?.enabled ??
+          true,
+
         featured:
           setting?.featured ??
+          plan.featured ??
+          false,
+
+        favorite:
+          plan.favorite ??
           false,
 
         markupPercent:
-          configuredMarkup >= 0
-            ? configuredMarkup
-            : 20,
+          configuredMarkup,
+
+        isLocalPlan:
+          locations.length <= 1,
+
+        supplierCostUsd:
+          pricing
+            .supplierCostUsd,
+
+        markupAmountUsd:
+          pricing
+            .markupAmountUsd,
+
+        sellingPriceUsd:
+          pricing
+            .sellingPriceUsd,
+
+        sellingPricePhp:
+          pricing
+            .sellingPricePhp,
+
+        amountPhpCentavos:
+          pricing
+            .amountPhpCentavos,
+
+        volumeGb:
+          pricing.volumeGb,
+
+        volumeMb:
+          pricing.volumeMb,
       };
     })
     .sort(
@@ -381,17 +641,20 @@ export async function getPlans(): Promise<
             : 1;
         }
 
-        return firstPlan.name.localeCompare(
-          secondPlan.name,
-        );
+        return firstPlan
+          .name
+          .localeCompare(
+            secondPlan.name,
+          );
       },
     );
 }
 
 /**
- * Optional helper for admin tools or debugging.
+ * Optional helper for admin tools and debugging.
  */
-export function clearPlanMemoryCache() {
+export function clearPlanMemoryCache():
+  void {
   planCache.supplierPlans =
     null;
 

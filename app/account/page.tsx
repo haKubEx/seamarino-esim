@@ -12,6 +12,8 @@ function formatMoney(
     {
       style: "currency",
       currency: "PHP",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     },
   ).format(
     amountCentavos / 100,
@@ -33,7 +35,11 @@ function formatDate(
 function getStatusClass(
   status: string,
 ) {
-  switch (status) {
+  switch (
+    status
+      .trim()
+      .toUpperCase()
+  ) {
     case "COMPLETED":
     case "DELIVERED":
     case "PAID":
@@ -53,8 +59,12 @@ function getStatusClass(
   }
 }
 
+export const dynamic =
+  "force-dynamic";
+
 export default async function AccountPage() {
-  const session = await auth();
+  const session =
+    await auth();
 
   if (!session?.user?.id) {
     redirect(
@@ -62,14 +72,35 @@ export default async function AccountPage() {
     );
   }
 
-  const orders =
-    await prisma.order.findMany({
+  const [
+    user,
+    orders,
+  ] = await Promise.all([
+    prisma.user.findUnique({
       where: {
-        userId: session.user.id,
+        id:
+          session.user.id,
+      },
+
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        referralCode: true,
+        storeCreditPhpCentavos:
+          true,
+      },
+    }),
+
+    prisma.order.findMany({
+      where: {
+        userId:
+          session.user.id,
       },
 
       orderBy: {
-        createdAt: "desc",
+        createdAt:
+          "desc",
       },
 
       select: {
@@ -86,7 +117,14 @@ export default async function AccountPage() {
         iccid: true,
         qrCodeUrl: true,
       },
-    });
+    }),
+  ]);
+
+  if (!user) {
+    redirect(
+      "/login?callbackUrl=/account",
+    );
+  }
 
   const totalOrders =
     orders.length;
@@ -124,12 +162,18 @@ export default async function AccountPage() {
 
   const totalSpentCentavos =
     orders.reduce(
-      (sum, order) =>
-        sum +
-        (order.paymentStatus ===
-        "PAID"
-          ? order.amountPhpCentavos
-          : 0),
+      (
+        total,
+        order,
+      ) =>
+        total +
+        (
+          order.paymentStatus ===
+          "PAID"
+            ? order
+                .amountPhpCentavos
+            : 0
+        ),
       0,
     );
 
@@ -138,7 +182,7 @@ export default async function AccountPage() {
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-10 sm:px-6">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1500px]">
         <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#071f45] via-[#0A2D62] to-blue-700 p-8 text-white shadow-xl sm:p-10">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -148,24 +192,40 @@ export default async function AccountPage() {
 
               <h1 className="mt-4 text-4xl font-black sm:text-5xl">
                 Welcome,{" "}
-                {session.user.name ||
+                {user.name ||
                   "Customer"}
               </h1>
 
               <p className="mt-4 max-w-2xl text-lg leading-8 text-blue-100">
                 View your purchases,
                 monitor processing
-                orders, and access your
-                eSIM installation details.
+                orders, access your
+                eSIM installation
+                details, and manage
+                referral rewards.
               </p>
 
               <p className="mt-3 text-sm font-semibold text-blue-200">
                 Signed in as{" "}
-                {session.user.email}
+                {user.email}
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link
+                href="/account/referrals"
+                className="inline-flex items-center justify-center rounded-2xl border border-white/30 bg-white/10 px-6 py-3.5 font-black text-white transition hover:bg-white/20"
+              >
+                Referral Rewards
+              </Link>
+
+              <Link
+                href="/account/wallet"
+                className="inline-flex items-center justify-center rounded-2xl border border-white/30 bg-white/10 px-6 py-3.5 font-black text-white transition hover:bg-white/20"
+              >
+                My Wallet
+              </Link>
+
               <Link
                 href="/shop"
                 className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3.5 font-black text-[#0A2D62] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
@@ -176,8 +236,8 @@ export default async function AccountPage() {
           </div>
         </section>
 
-        <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex min-h-[170px] min-w-0 flex-col justify-between rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
               Total Orders
             </p>
@@ -187,7 +247,7 @@ export default async function AccountPage() {
             </p>
           </div>
 
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex min-h-[170px] min-w-0 flex-col justify-between rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
               Completed
             </p>
@@ -197,7 +257,7 @@ export default async function AccountPage() {
             </p>
           </div>
 
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex min-h-[170px] min-w-0 flex-col justify-between rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
               Processing
             </p>
@@ -207,7 +267,7 @@ export default async function AccountPage() {
             </p>
           </div>
 
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex min-h-[170px] min-w-0 flex-col justify-between rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
               Active eSIMs
             </p>
@@ -217,12 +277,29 @@ export default async function AccountPage() {
             </p>
           </div>
 
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm sm:col-span-2 xl:col-span-1">
+          <Link
+            href="/account/wallet"
+            className="flex min-h-[170px] min-w-0 flex-col justify-between rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-md"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
+              Store Credit
+            </p>
+
+            <p className="mt-3 break-words text-[clamp(1.35rem,2.2vw,2rem)] font-black leading-tight tracking-tight text-emerald-700">
+              {formatMoney(
+                user
+                  .storeCreditPhpCentavos,
+              )}
+            </p>
+
+          </Link>
+
+          <div className="flex min-h-[170px] min-w-0 flex-col justify-between rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
               Total Purchases
             </p>
 
-            <p className="mt-3 text-2xl font-black text-slate-950">
+            <p className="mt-3 break-words text-[clamp(1.25rem,2vw,1.9rem)] font-black leading-tight tracking-tight text-slate-950">
               {formatMoney(
                 totalSpentCentavos,
               )}
@@ -251,7 +328,8 @@ export default async function AccountPage() {
               </Link>
             </div>
 
-            {recentOrders.length === 0 ? (
+            {recentOrders.length ===
+            0 ? (
               <div className="px-6 py-16 text-center sm:px-8">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-3xl">
                   📦
@@ -262,9 +340,9 @@ export default async function AccountPage() {
                 </h3>
 
                 <p className="mx-auto mt-3 max-w-md leading-7 text-slate-600">
-                  Your eSIM purchases will
-                  appear here after
-                  checkout.
+                  Your eSIM purchases
+                  will appear here
+                  after checkout.
                 </p>
 
                 <Link
@@ -279,7 +357,9 @@ export default async function AccountPage() {
                 {recentOrders.map(
                   (order) => (
                     <article
-                      key={order.id}
+                      key={
+                        order.id
+                      }
                       className="grid gap-5 p-6 transition hover:bg-slate-50 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-8"
                     >
                       <div>
@@ -298,7 +378,9 @@ export default async function AccountPage() {
                         </div>
 
                         <h3 className="mt-4 text-xl font-black text-slate-950">
-                          {order.planName}
+                          {
+                            order.planName
+                          }
                         </h3>
 
                         <p className="mt-2 text-sm text-slate-500">
@@ -335,7 +417,8 @@ export default async function AccountPage() {
                       <div className="flex flex-col gap-3 sm:items-end">
                         <p className="text-xl font-black text-slate-950">
                           {formatMoney(
-                            order.amountPhpCentavos,
+                            order
+                              .amountPhpCentavos,
                           )}
                         </p>
 
@@ -359,74 +442,144 @@ export default async function AccountPage() {
           </div>
 
           <aside className="space-y-6">
-  <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-    <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">
-      Quick Actions
-    </p>
+            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">
+                Quick Actions
+              </p>
 
-    <div className="mt-5 grid gap-3">
-      <Link
-        href="/account/orders"
-        className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-      >
-        View My Orders
-      </Link>
+              <div className="mt-5 grid gap-3">
+                <Link
+                  href="/account/orders"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  View My Orders
+                </Link>
 
-      <Link
-        href="/account/change-password"
-        className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-      >
-        Change Password
-      </Link>
+                <Link
+                  href="/account/referrals"
+                  className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 font-black text-emerald-800 transition hover:border-emerald-400 hover:bg-emerald-100"
+                >
+                  Referral Rewards
+                </Link>
 
-      <Link
-        href="/shop"
-        className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-      >
-        Browse eSIM Plans
-      </Link>
+                <Link
+                  href="/account/wallet"
+                  className="rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4 font-black text-violet-800 transition hover:border-violet-400 hover:bg-violet-100"
+                >
+                  My Wallet
+                </Link>
 
-      <Link
-        href="/faq"
-        className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-      >
-        Installation Help
-      </Link>
+                <Link
+                  href="/account/change-password"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Change Password
+                </Link>
 
-      <Link
-        href="/contact"
-        className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
-      >
-        Contact Support
-      </Link>
-    </div>
-  </section>
+                <Link
+                  href="/shop"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Browse eSIM Plans
+                </Link>
 
-  {processingOrders > 0 && (
-    <section className="rounded-[2rem] border border-blue-200 bg-blue-50 p-6 shadow-sm">
-      <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-700">
-        Processing
-      </p>
+                <Link
+                  href="/faq"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Installation Help
+                </Link>
 
-      <h2 className="mt-3 text-xl font-black text-blue-950">
-        Your eSIM is being prepared
-      </h2>
+                <Link
+                  href="/contact"
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 font-black text-slate-900 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Contact Support
+                </Link>
+              </div>
+            </section>
 
-      <p className="mt-3 text-sm leading-7 text-blue-800">
-        You currently have {processingOrders} order
-        {processingOrders === 1 ? "" : "s"} still being processed.
-        Open My Orders to check the latest status.
-      </p>
+            <section className="rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-emerald-700">
+                Referral Rewards
+              </p>
 
-      <Link
-        href="/account/orders"
-        className="mt-5 inline-flex rounded-2xl bg-blue-700 px-5 py-3 font-black text-white"
-      >
-        Check Status
-      </Link>
-    </section>
-  )}
-</aside>
+              <h2 className="mt-3 text-xl font-black text-emerald-950">
+                Invite friends and
+                earn credit
+              </h2>
+
+              <p className="mt-3 text-sm leading-7 text-emerald-800">
+                Your current store
+                credit is{" "}
+                <strong>
+                  {formatMoney(
+                    user
+                      .storeCreditPhpCentavos,
+                  )}
+                </strong>
+                . Share your referral
+                code and earn rewards
+                after qualifying eSIM
+                deliveries.
+              </p>
+
+              {user.referralCode && (
+                <div className="mt-4 rounded-2xl border border-emerald-200 bg-white p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-600">
+                    Your Code
+                  </p>
+
+                  <p className="mt-2 break-all font-mono text-xl font-black tracking-wider text-emerald-950">
+                    {
+                      user.referralCode
+                    }
+                  </p>
+                </div>
+              )}
+
+              <Link
+                href="/account/referrals"
+                className="mt-5 inline-flex rounded-2xl bg-emerald-700 px-5 py-3 font-black text-white transition hover:bg-emerald-800"
+              >
+                Open Referral Rewards
+              </Link>
+            </section>
+
+            {processingOrders > 0 && (
+              <section className="rounded-[2rem] border border-blue-200 bg-blue-50 p-6 shadow-sm">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-700">
+                  Processing
+                </p>
+
+                <h2 className="mt-3 text-xl font-black text-blue-950">
+                  Your eSIM is being
+                  prepared
+                </h2>
+
+                <p className="mt-3 text-sm leading-7 text-blue-800">
+                  You currently have{" "}
+                  {processingOrders}{" "}
+                  order
+                  {processingOrders ===
+                  1
+                    ? ""
+                    : "s"}{" "}
+                  still being
+                  processed. Open My
+                  Orders to check the
+                  latest status.
+                </p>
+
+                <Link
+                  href="/account/orders"
+                  className="mt-5 inline-flex rounded-2xl bg-blue-700 px-5 py-3 font-black text-white"
+                >
+                  Check Status
+                </Link>
+              </section>
+            )}
+          </aside>
         </section>
       </div>
     </main>

@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import DailyPlanPurchase from "./DailyPlanPurchase";
+
 import { getCountryName } from "@/app/lib/countries";
-import { getSellingPrice } from "@/app/lib/pricing";
 import { getPlans } from "@/app/services/plans";
+import {
+  calculatePlanPrice,
+} from "@/app/services/pricing";
 import type { EsimPackage } from "@/app/types/esim";
 
 interface PlanDetailsPageProps {
@@ -357,17 +361,33 @@ export default async function PlanDetailsPage({
           countryCode,
         );
 
-  const sellingPrice =
-    getSellingPrice(
-      plan.price,
-      plan.volume,
+  const pricing =
+    await calculatePlanPrice(
+      plan,
+      {
+        selectedDays: 1,
+      },
     );
 
+  const dailyPlan =
+    Number(plan.dataType) === 2;
+
   const validity =
-    `${plan.duration} ${formatDurationUnit(
-      plan.durationUnit,
-      plan.duration,
-    )}`;
+    dailyPlan
+      ? "1–30 Days"
+      : `${plan.duration} ${formatDurationUnit(
+          plan.durationUnit,
+          plan.duration,
+        )}`;
+
+  const dataLabel =
+    dailyPlan
+      ? `${formatData(
+          plan.volume,
+        )} / Day`
+      : formatData(
+          plan.volume,
+        );
 
   const topUpSupported =
     supportsTopUp(
@@ -494,9 +514,7 @@ export default async function PlanDetailsPage({
                 </p>
 
                 <p className="mt-1 text-xl font-black text-slate-950">
-                  {formatData(
-                    plan.volume,
-                  )}
+                  {dataLabel}
                 </p>
               </div>
 
@@ -645,9 +663,7 @@ export default async function PlanDetailsPage({
                   </span>
 
                   <strong className="text-slate-950">
-                    {formatData(
-                      plan.volume,
-                    )}
+                    {dataLabel}
                   </strong>
                 </div>
 
@@ -696,39 +712,77 @@ export default async function PlanDetailsPage({
                 </div>
               </div>
 
-              <div className="mt-8 rounded-2xl bg-slate-50 p-5">
-                <p className="text-sm font-semibold text-slate-500">
-                  Total price
-                </p>
-
-                <div className="mt-2 flex items-end gap-2">
-                  <span className="text-4xl font-black tracking-tight text-[#0A2D62]">
-                    ${sellingPrice}
-                  </span>
-
-                  <span className="pb-1 text-sm font-bold text-slate-500">
-                    USD
-                  </span>
+              {dailyPlan ? (
+                <div className="mt-8">
+                  <DailyPlanPurchase
+                    packageCode={
+                      plan.packageCode
+                    }
+                    planName={
+                      plan.name
+                    }
+                    dailyDataLabel={
+                      formatData(
+                        plan.volume,
+                      )
+                    }
+                    supplierPrice={
+                      Number(
+                        plan.price,
+                      )
+                    }
+                    usdToPhpRate={
+                      pricing.usdToPhpRate
+                    }
+                  />
                 </div>
+              ) : (
+                <>
+                  <div className="mt-8 rounded-2xl bg-slate-50 p-5">
+                    <p className="text-sm font-semibold text-slate-500">
+                      Total price
+                    </p>
 
-                <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Final amount for
-                  this eSIM package.
-                </p>
-              </div>
+                    <div className="mt-2">
+                      <span className="text-4xl font-black tracking-tight text-[#0A2D62]">
+                        {new Intl.NumberFormat(
+                          "en-PH",
+                          {
+                            style:
+                              "currency",
+                            currency:
+                              "PHP",
+                            minimumFractionDigits:
+                              2,
+                            maximumFractionDigits:
+                              2,
+                          },
+                        ).format(
+                          pricing.sellingPricePhp,
+                        )}
+                      </span>
+                    </div>
 
-              <Link
-                href={`/checkout?packageCode=${encodeURIComponent(
-                  plan.packageCode,
-                )}`}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0A2D62] to-blue-700 px-6 py-4 font-black text-white shadow-lg shadow-blue-950/15 transition hover:-translate-y-0.5 hover:from-blue-800 hover:to-blue-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-100"
-              >
-                Continue to Checkout
+                    <p className="mt-2 text-xs leading-5 text-slate-500">
+                      Final amount for
+                      this eSIM package.
+                    </p>
+                  </div>
 
-                <span aria-hidden="true">
-                  →
-                </span>
-              </Link>
+                  <Link
+                    href={`/checkout?packageCode=${encodeURIComponent(
+                      plan.packageCode,
+                    )}`}
+                    className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#0A2D62] to-blue-700 px-6 py-4 font-black text-white shadow-lg shadow-blue-950/15 transition hover:-translate-y-0.5 hover:from-blue-800 hover:to-blue-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-100"
+                  >
+                    Continue to Checkout
+
+                    <span aria-hidden="true">
+                      →
+                    </span>
+                  </Link>
+                </>
+              )}
 
               <div className="mt-5 space-y-2 text-center text-xs font-semibold text-slate-500">
                 <p>

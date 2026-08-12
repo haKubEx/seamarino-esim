@@ -4,6 +4,16 @@ import { prisma } from "@/app/lib/prisma";
 import { getUsdToPhpRate } from "@/app/services/settings";
 import type { EsimPackage } from "@/app/types/esim";
 
+const MINIMUM_DAILY_PLAN_DAYS = 1;
+const MAXIMUM_DAILY_PLAN_DAYS = 30;
+
+/*
+ * Seamarino business rule for daily plans:
+ * ₱50 markup for every selected day.
+ */
+const DAILY_PLAN_MARKUP_PHP_CENTAVOS_PER_DAY =
+  5_000;
+
 export type CalculatedPlanPrice = {
   supplierCostUsd: number;
   markupAmountUsd: number;
@@ -14,6 +24,8 @@ export type CalculatedPlanPrice = {
   volumeGb: number;
   volumeMb: number;
   isGlobalPlan: boolean;
+  isDailyPlan: boolean;
+  selectedDays: number;
 };
 
 export type CalculatePlanPriceOptions = {
@@ -28,10 +40,24 @@ export type CalculatePlanPriceOptions = {
    * value to avoid querying PlanSetting again.
    */
   enabled?: boolean;
+
+  /*
+   * Daily-plan validity.
+   *
+   * dataType = 2 plans may use 1-30 days.
+   * Normal fixed-duration plans ignore this.
+   *
+   * When omitted for a daily plan, 1 day is
+   * used. This lets shop/admin plan lists show
+   * the starting one-day price.
+   */
+  selectedDays?: number;
 };
 
 function roundCurrency(value: number) {
-  return Math.round(value * 100) / 100;
+  return Math.round(
+    (value + Number.EPSILON) * 100,
+  ) / 100;
 }
 
 function getVolumeMb(volumeBytes: number) {
@@ -91,6 +117,45 @@ function isGlobalPlan(
       "world wide",
     )
   );
+}
+
+function isDailyPlan(
+  plan: EsimPackage,
+) {
+  return Number(plan.dataType) === 2;
+}
+
+function normalizeSelectedDays({
+  dailyPlan,
+  suppliedSelectedDays,
+}: {
+  dailyPlan: boolean;
+  suppliedSelectedDays:
+    | number
+    | undefined;
+}) {
+  if (!dailyPlan) {
+    return 1;
+  }
+
+  const selectedDays =
+    suppliedSelectedDays ?? 1;
+
+  if (
+    !Number.isInteger(
+      selectedDays,
+    ) ||
+    selectedDays <
+      MINIMUM_DAILY_PLAN_DAYS ||
+    selectedDays >
+      MAXIMUM_DAILY_PLAN_DAYS
+  ) {
+    throw new Error(
+      `Daily eSIM plans must use between ${MINIMUM_DAILY_PLAN_DAYS} and ${MAXIMUM_DAILY_PLAN_DAYS} days.`,
+    );
+  }
+
+  return selectedDays;
 }
 
 function getStandardMarkupUsd(
@@ -258,8 +323,9 @@ async function resolveUsdToPhpRate(
     | undefined,
 ) {
   /*
-   * The public plans API passes one preloaded
-   * exchange rate for the whole package list.
+   * Public/admin plan APIs can pass one
+   * preloaded exchange rate for the whole
+   * package list.
    */
   if (
     typeof suppliedRate ===
@@ -315,10 +381,8 @@ export async function calculatePlanPrice(
    *
    * 10000 = $1.00 USD
    */
-  const supplierCostUsd =
-    roundCurrency(
-      rawSupplierPrice / 10000,
-    );
+  const supplierCostUsdPerUnit =
+    rawSupplierPrice / 10000;
 
   const volumeBytes =
     Number(plan.volume);
@@ -343,14 +407,16 @@ export async function calculatePlanPrice(
   const globalPlan =
     isGlobalPlan(plan);
 
-  const markupAmountUsd =
-    globalPlan
-      ? getGlobalMarkupUsd(
-          volumeBytes,
-        )
-      : getStandardMarkupUsd(
-          volumeBytes,
-        );
+  const dailyPlan =
+    isDailyPlan(plan);
+
+  const selectedDays =
+    normalizeSelectedDays({
+      dailyPlan,
+
+      suppliedSelectedDays:
+        options.selectedDays,
+    });
 
   const usdToPhpRate =
     await resolveUsdToPhpRate(
@@ -367,6 +433,105 @@ export async function calculatePlanPrice(
       "The USD-to-PHP exchange rate is invalid.",
     );
   }
+
+  /*
+   * DAILY PLAN PRICING
+   *
+   * Supplier price is treated as the supplier
+   * price for one selected day.
+   *
+   * Total supplier cost:
+   * supplier one-day cost × selectedDays
+   *
+   * Seamarino markup:
+   * ₱50 × selectedDays
+   */
+  if (dailyPlan) {
+    const supplierCostUsd =
+      roundCurrency(
+        supplierCostUsdPerUnit *
+          selectedDays,
+      );
+
+    const markupPhpCentavos =
+      DAILY_PLAN_MARKUP_PHP_CENTAVOS_PER_DAY *
+      selectedDays;
+
+    const markupAmountUsd =
+      roundCurrency(
+        markupPhpCentavos /
+          100 /
+          usdToPhpRate,
+      );
+
+    const supplierCostPhpCentavos =
+      Math.round(
+        supplierCostUsdPerUnit *
+          selectedDays *
+          usdToPhpRate *
+          100,
+      );
+
+    const amountPhpCentavos =
+      supplierCostPhpCentavos +
+      markupPhpCentavos;
+
+    if (
+      !Number.isSafeInteger(
+        amountPhpCentavos,
+      ) ||
+      amountPhpCentavos <= 0
+    ) {
+      throw new Error(
+        "The calculated PHP checkout amount is invalid.",
+      );
+    }
+
+    const sellingPricePhp =
+      roundCurrency(
+        amountPhpCentavos /
+          100,
+      );
+
+    const sellingPriceUsd =
+      roundCurrency(
+        sellingPricePhp /
+          usdToPhpRate,
+      );
+
+    return {
+      supplierCostUsd,
+      markupAmountUsd,
+      sellingPriceUsd,
+      sellingPricePhp,
+      amountPhpCentavos,
+      usdToPhpRate,
+      volumeGb,
+      volumeMb,
+      isGlobalPlan:
+        globalPlan,
+      isDailyPlan:
+        true,
+      selectedDays,
+    };
+  }
+
+  /*
+   * NORMAL FIXED-DURATION PLAN PRICING
+   */
+  const supplierCostUsd =
+    roundCurrency(
+      supplierCostUsdPerUnit,
+    );
+
+  const markupAmountUsd =
+    globalPlan
+      ? getGlobalMarkupUsd(
+          volumeBytes,
+        )
+      : getStandardMarkupUsd(
+          volumeBytes,
+        );
 
   const sellingPriceUsd =
     roundCurrency(
@@ -407,5 +572,8 @@ export async function calculatePlanPrice(
     volumeMb,
     isGlobalPlan:
       globalPlan,
+    isDailyPlan:
+      false,
+    selectedDays: 1,
   };
 }

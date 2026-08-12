@@ -12,6 +12,8 @@ function noStoreHeaders() {
   return {
     "Cache-Control":
       "no-store, no-cache, must-revalidate",
+    Pragma: "no-cache",
+    Expires: "0",
   };
 }
 
@@ -25,85 +27,159 @@ function getAdminKey(
   );
 }
 
-function normalizeSearch(
-  value: string | null,
+function isAuthorized(
+  request: NextRequest,
 ) {
-  return value?.trim() || "";
+  const suppliedAdminKey =
+    getAdminKey(request);
+
+  const expectedAdminKey =
+    process.env.ADMIN_API_KEY?.trim();
+
+  return Boolean(
+    expectedAdminKey &&
+      suppliedAdminKey ===
+        expectedAdminKey,
+  );
+}
+
+function normalizeText(
+  value: unknown,
+) {
+  return typeof value === "string"
+    ? value.trim()
+    : "";
+}
+
+function startOfCurrentMonth() {
+  const now =
+    new Date();
+
+  return new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    1,
+    0,
+    0,
+    0,
+    0,
+  );
 }
 
 export async function GET(
   request: NextRequest,
 ) {
   try {
-    const suppliedAdminKey =
-      getAdminKey(request);
-
-    const expectedAdminKey =
-      process.env.ADMIN_API_KEY?.trim();
-
     if (
-      !expectedAdminKey ||
-      suppliedAdminKey !==
-        expectedAdminKey
+      !isAuthorized(request)
     ) {
       return NextResponse.json(
         {
           success: false,
-          error: "Unauthorized.",
+          error:
+            "Unauthorized.",
         },
         {
           status: 401,
-          headers: noStoreHeaders(),
+          headers:
+            noStoreHeaders(),
         },
       );
     }
 
     const search =
-      normalizeSearch(
+      normalizeText(
         request.nextUrl.searchParams.get(
           "search",
         ),
       );
 
-    const users =
-      await prisma.user.findMany({
-        where: search
-          ? {
-              OR: [
-                {
-                  name: {
-                    contains: search,
-                    mode: "insensitive",
-                  },
+    const customerWhere = {
+      role:
+        "CUSTOMER" as const,
+
+      ...(search
+        ? {
+            OR: [
+              {
+                name: {
+                  contains:
+                    search,
+                  mode:
+                    "insensitive" as const,
                 },
-                {
-                  email: {
-                    contains: search,
-                    mode: "insensitive",
-                  },
+              },
+              {
+                email: {
+                  contains:
+                    search,
+                  mode:
+                    "insensitive" as const,
                 },
-                {
-                  phone: {
-                    contains: search,
-                    mode: "insensitive",
-                  },
+              },
+              {
+                phone: {
+                  contains:
+                    search,
+                  mode:
+                    "insensitive" as const,
                 },
-                {
-                  orders: {
-                    some: {
-                      referenceNumber: {
-                        contains: search,
-                        mode: "insensitive",
-                      },
+              },
+              {
+                orders: {
+                  some: {
+                    referenceNumber: {
+                      contains:
+                        search,
+                      mode:
+                        "insensitive" as const,
                     },
                   },
                 },
-              ],
-            }
-          : undefined,
+              },
+              {
+                orders: {
+                  some: {
+                    planName: {
+                      contains:
+                        search,
+                      mode:
+                        "insensitive" as const,
+                    },
+                  },
+                },
+              },
+              {
+                orders: {
+                  some: {
+                    packageCode: {
+                      contains:
+                        search,
+                      mode:
+                        "insensitive" as const,
+                    },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const [
+      customers,
+      totalCustomers,
+      newThisMonth,
+      revenue,
+      paidOrdersByCustomer,
+    ] = await Promise.all([
+      prisma.user.findMany({
+        where:
+          customerWhere,
 
         orderBy: {
-          createdAt: "desc",
+          createdAt:
+            "desc",
         },
 
         select: {
@@ -117,129 +193,208 @@ export async function GET(
 
           orders: {
             orderBy: {
-              createdAt: "desc",
+              createdAt:
+                "desc",
             },
 
             select: {
               id: true,
-              referenceNumber: true,
+              referenceNumber:
+                true,
               planName: true,
               packageCode: true,
-              amountPhpCentavos: true,
-              paymentStatus: true,
+              amountPhpCentavos:
+                true,
+              paymentStatus:
+                true,
               esimStatus: true,
               status: true,
               createdAt: true,
             },
           },
         },
-      });
+      }),
 
-    const customers =
-      users.map((user) => {
-        const paidOrders =
-          user.orders.filter(
-            (order) =>
-              order.paymentStatus ===
-              "PAID",
-          );
+      prisma.user.count({
+        where: {
+          role:
+            "CUSTOMER",
+        },
+      }),
 
-        const totalSpentCentavos =
-          paidOrders.reduce(
-            (total, order) =>
-              total +
-              order.amountPhpCentavos,
-            0,
-          );
+      prisma.user.count({
+        where: {
+          role:
+            "CUSTOMER",
+          createdAt: {
+            gte:
+              startOfCurrentMonth(),
+          },
+        },
+      }),
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          emailVerified:
-            user.emailVerified?.toISOString() ??
-            null,
-          createdAt:
-            user.createdAt.toISOString(),
-          updatedAt:
-            user.updatedAt.toISOString(),
+      prisma.order.aggregate({
+        where: {
+          paymentStatus:
+            "PAID",
+        },
+        _sum: {
+          amountPhpCentavos:
+            true,
+        },
+      }),
 
-          totalOrders:
-            user.orders.length,
+      prisma.order.groupBy({
+        by: [
+          "userId",
+        ],
+        where: {
+          paymentStatus:
+            "PAID",
+          userId: {
+            not:
+              null,
+          },
+        },
+        _count: {
+          _all:
+            true,
+        },
+        _sum: {
+          amountPhpCentavos:
+            true,
+        },
+      }),
+    ]);
 
+    const paidStatsByUserId =
+      new Map<
+        string,
+        {
+          paidOrders: number;
+          totalSpentCentavos: number;
+        }
+      >();
+
+    for (
+      const row of
+        paidOrdersByCustomer
+    ) {
+      if (!row.userId) {
+        continue;
+      }
+
+      paidStatsByUserId.set(
+        row.userId,
+        {
           paidOrders:
-            paidOrders.length,
-
-          totalSpentCentavos,
-
-          latestOrder:
-            user.orders[0]
-              ? {
-                  ...user.orders[0],
-                  createdAt:
-                    user.orders[0].createdAt.toISOString(),
-                }
-              : null,
-        };
-      });
-
-    const totalCustomers =
-      customers.length;
+            row._count._all,
+          totalSpentCentavos:
+            row._sum
+              .amountPhpCentavos ??
+            0,
+        },
+      );
+    }
 
     const repeatCustomers =
-      customers.filter(
-        (customer) =>
-          customer.paidOrders > 1,
+      paidOrdersByCustomer.filter(
+        (row) =>
+          row._count._all >= 2,
       ).length;
 
-    const totalRevenueCentavos =
-      customers.reduce(
-        (total, customer) =>
-          total +
-          customer.totalSpentCentavos,
-        0,
+    const serializedCustomers =
+      customers.map(
+        (customer) => {
+          const paidStats =
+            paidStatsByUserId.get(
+              customer.id,
+            );
+
+          const latestOrder =
+            customer.orders[0] ??
+            null;
+
+          return {
+            id:
+              customer.id,
+            name:
+              customer.name,
+            email:
+              customer.email,
+            phone:
+              customer.phone,
+            emailVerified:
+              customer.emailVerified
+                ?.toISOString() ??
+              null,
+            createdAt:
+              customer.createdAt.toISOString(),
+            updatedAt:
+              customer.updatedAt.toISOString(),
+
+            totalOrders:
+              customer.orders.length,
+            paidOrders:
+              paidStats
+                ?.paidOrders ??
+              0,
+            totalSpentCentavos:
+              paidStats
+                ?.totalSpentCentavos ??
+              0,
+
+            latestOrder:
+              latestOrder
+                ? {
+                    id:
+                      latestOrder.id,
+                    referenceNumber:
+                      latestOrder.referenceNumber,
+                    planName:
+                      latestOrder.planName,
+                    packageCode:
+                      latestOrder.packageCode,
+                    amountPhpCentavos:
+                      latestOrder.amountPhpCentavos,
+                    paymentStatus:
+                      latestOrder.paymentStatus,
+                    esimStatus:
+                      latestOrder.esimStatus,
+                    status:
+                      latestOrder.status,
+                    createdAt:
+                      latestOrder.createdAt.toISOString(),
+                  }
+                : null,
+          };
+        },
       );
-
-    const startOfMonth =
-      new Date();
-
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(
-      0,
-      0,
-      0,
-      0,
-    );
-
-    const newThisMonth =
-      users.filter(
-        (user) =>
-          user.createdAt >=
-          startOfMonth,
-      ).length;
 
     return NextResponse.json(
       {
         success: true,
-
         stats: {
           totalCustomers,
           newThisMonth,
           repeatCustomers,
-          totalRevenueCentavos,
+          totalRevenueCentavos:
+            revenue._sum
+              .amountPhpCentavos ??
+            0,
         },
-
-        customers,
+        customers:
+          serializedCustomers,
       },
       {
         status: 200,
-        headers: noStoreHeaders(),
+        headers:
+          noStoreHeaders(),
       },
     );
   } catch (error) {
     console.error(
-      "ADMIN CUSTOMERS API ERROR:",
+      "ADMIN CUSTOMERS GET ERROR:",
       error,
     );
 
@@ -251,7 +406,8 @@ export async function GET(
       },
       {
         status: 500,
-        headers: noStoreHeaders(),
+        headers:
+          noStoreHeaders(),
       },
     );
   }

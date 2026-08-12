@@ -1,59 +1,130 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { auth } from "@/app/lib/auth";
 import { getCountryName } from "@/app/lib/countries";
-import { getSellingPrice } from "@/app/lib/pricing";
+import { calculatePlanPrice } from "@/app/services/pricing";
+import { prisma } from "@/app/lib/prisma";
 import { getPlans } from "@/app/services/plans";
+
 import type { EsimPackage } from "@/app/types/esim";
+
+import CheckoutCoupon from "./CheckoutCoupon";
+
+const MINIMUM_STORE_CREDIT_PLAN_BYTES =
+  BigInt(10) *
+  BigInt(1024) *
+  BigInt(1024) *
+  BigInt(1024);
 
 interface CheckoutPageProps {
   searchParams: Promise<{
     packageCode?: string;
+    selectedDays?: string;
   }>;
 }
 
-function formatData(bytes: number) {
-  const gb = bytes / 1024 / 1024 / 1024;
+function formatData(
+  bytes: number,
+) {
+  const gb =
+    bytes /
+    1024 /
+    1024 /
+    1024;
 
   if (gb < 1) {
-    const mb = bytes / 1024 / 1024;
-    return `${Math.round(mb)} MB`;
+    const mb =
+      bytes /
+      1024 /
+      1024;
+
+    return `${Math.round(
+      mb,
+    )} MB`;
   }
 
-  return `${Number.isInteger(gb) ? gb : gb.toFixed(1)} GB`;
+  return `${
+    Number.isInteger(gb)
+      ? gb
+      : gb.toFixed(1)
+  } GB`;
 }
 
-function formatDurationUnit(unit: string, duration: number) {
-  const normalized = unit.trim().toLowerCase();
+function formatMoney(
+  amountCentavos: number,
+) {
+  return new Intl.NumberFormat(
+    "en-PH",
+    {
+      style: "currency",
+      currency: "PHP",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(
+    amountCentavos / 100,
+  );
+}
+
+function formatDurationUnit(
+  unit: string,
+  duration: number,
+) {
+  const normalized =
+    unit
+      .trim()
+      .toLowerCase();
 
   if (!normalized) {
-    return duration === 1 ? "day" : "days";
+    return duration === 1
+      ? "day"
+      : "days";
   }
 
   if (duration === 1) {
-    return normalized.endsWith("s")
-      ? normalized.slice(0, -1)
+    return normalized.endsWith(
+      "s",
+    )
+      ? normalized.slice(
+          0,
+          -1,
+        )
       : normalized;
   }
 
-  return normalized.endsWith("s")
+  return normalized.endsWith(
+    "s",
+  )
     ? normalized
     : `${normalized}s`;
 }
 
-function formatNetwork(speed?: string) {
+function formatNetwork(
+  speed?: string,
+) {
   if (!speed?.trim()) {
     return "4G / LTE";
   }
 
-  return speed.replaceAll(",", " / ");
+  return speed.replaceAll(
+    ",",
+    " / ",
+  );
 }
 
-
 function supportsTopUp(
-  value: string | number | boolean | null | undefined,
+  value:
+    | string
+    | number
+    | boolean
+    | null
+    | undefined,
 ) {
-  if (value === true || value === 1) {
+  if (
+    value === true ||
+    value === 1
+  ) {
     return true;
   }
 
@@ -66,58 +137,96 @@ function supportsTopUp(
     return false;
   }
 
-  const normalized = String(value)
-    .trim()
-    .toLowerCase();
+  const normalized =
+    String(value)
+      .trim()
+      .toLowerCase();
 
-  return ["1", "true", "yes", "supported"].includes(
+  return [
+    "1",
+    "true",
+    "yes",
+    "supported",
+  ].includes(
     normalized,
   );
 }
 
-function getRegionName(plan: EsimPackage, locationCount: number) {
-  const searchableText = [
-    plan.name,
-    plan.description,
-    plan.saleNote,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+function getRegionName(
+  plan: EsimPackage,
+  locationCount: number,
+) {
+  const searchableText =
+    [
+      plan.name,
+      plan.description,
+      plan.saleNote,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
 
-  if (searchableText.includes("global")) {
+  if (
+    searchableText.includes(
+      "global",
+    )
+  ) {
     return "Global eSIM";
   }
 
-  if (searchableText.includes("europe")) {
+  if (
+    searchableText.includes(
+      "europe",
+    )
+  ) {
     return "Europe eSIM";
   }
 
-  if (searchableText.includes("asia")) {
+  if (
+    searchableText.includes(
+      "asia",
+    )
+  ) {
     return "Asia eSIM";
   }
 
-  if (searchableText.includes("africa")) {
+  if (
+    searchableText.includes(
+      "africa",
+    )
+  ) {
     return "Africa eSIM";
   }
 
   if (
-    searchableText.includes("middle east") ||
-    searchableText.includes("mideast")
+    searchableText.includes(
+      "middle east",
+    ) ||
+    searchableText.includes(
+      "mideast",
+    )
   ) {
     return "Middle East eSIM";
   }
 
   if (
-    searchableText.includes("north america") ||
-    searchableText.includes("usa canada")
+    searchableText.includes(
+      "north america",
+    ) ||
+    searchableText.includes(
+      "usa canada",
+    )
   ) {
     return "North America eSIM";
   }
 
   if (
-    searchableText.includes("south america") ||
-    searchableText.includes("latin america")
+    searchableText.includes(
+      "south america",
+    ) ||
+    searchableText.includes(
+      "latin america",
+    )
   ) {
     return "South America eSIM";
   }
@@ -135,7 +244,11 @@ function UserIcon() {
       className="h-5 w-5"
       aria-hidden="true"
     >
-      <circle cx="12" cy="8" r="4" />
+      <circle
+        cx="12"
+        cy="8"
+        r="4"
+      />
 
       <path
         d="M4 21a8 8 0 0 1 16 0"
@@ -155,7 +268,13 @@ function EmailIcon() {
       className="h-5 w-5"
       aria-hidden="true"
     >
-      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <rect
+        x="3"
+        y="5"
+        width="18"
+        height="14"
+        rx="2"
+      />
 
       <path
         d="m4 7 8 6 8-6"
@@ -219,9 +338,18 @@ function LockIcon() {
         strokeLinecap="round"
       />
 
-      <rect x="4" y="10" width="16" height="11" rx="2" />
+      <rect
+        x="4"
+        y="10"
+        width="16"
+        height="11"
+        rx="2"
+      />
 
-      <path d="M12 14v3" strokeLinecap="round" />
+      <path
+        d="M12 14v3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -229,54 +357,161 @@ function LockIcon() {
 export default async function CheckoutPage({
   searchParams,
 }: CheckoutPageProps) {
-  const { packageCode } = await searchParams;
+  const {
+    packageCode,
+    selectedDays:
+      selectedDaysParam,
+  } = await searchParams;
 
   if (!packageCode) {
     redirect("/shop");
   }
 
-  const plans: EsimPackage[] = await getPlans();
-  const decodedPackageCode = decodeURIComponent(packageCode);
+  const plans:
+    EsimPackage[] =
+    await getPlans();
 
-  const plan = plans.find(
-    (item) => item.packageCode === decodedPackageCode,
-  );
+  const decodedPackageCode =
+    decodeURIComponent(
+      packageCode,
+    );
+
+  const plan =
+    plans.find(
+      (item) =>
+        item.packageCode ===
+        decodedPackageCode,
+    );
 
   if (!plan) {
     redirect("/shop");
   }
 
-  const locations = plan.location
-    .split(",")
-    .map((code) => code.trim())
-    .filter(Boolean);
+  const session =
+    await auth();
 
-  const isRegion = locations.length > 1;
-  const countryCode = locations[0] ?? "";
+  const customer =
+    session?.user?.id
+      ? await prisma.user.findUnique({
+          where: {
+            id: session.user.id,
+          },
 
-  const destinationName = isRegion
-    ? getRegionName(plan, locations.length)
-    : getCountryName(countryCode);
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            storeCreditPhpCentavos:
+              true,
+          },
+        })
+      : null;
 
-  const sellingPrice = getSellingPrice(
-    plan.price,
-    plan.volume,
-  );
+  const availableStoreCreditPhpCentavos =
+    Math.max(
+      0,
+      customer
+        ?.storeCreditPhpCentavos ??
+        0,
+    );
 
-  const validity = `${plan.duration} ${formatDurationUnit(
-    plan.durationUnit,
-    plan.duration,
-  )}`;
+  const storeCreditEligible =
+    BigInt(plan.volume) >=
+    MINIMUM_STORE_CREDIT_PLAN_BYTES;
+
+  const locations =
+    plan.location
+      .split(",")
+      .map((code) =>
+        code.trim(),
+      )
+      .filter(Boolean);
+
+  const isRegion =
+    locations.length > 1;
+
+  const countryCode =
+    locations[0] ?? "";
+
+  const destinationName =
+    isRegion
+      ? getRegionName(
+          plan,
+          locations.length,
+        )
+      : getCountryName(
+          countryCode,
+        );
+
+  const dailyPlan =
+    Number(plan.dataType) === 2;
+
+  const parsedSelectedDays =
+    Number(selectedDaysParam);
+
+  const selectedDays =
+    dailyPlan
+      ? Number.isInteger(
+          parsedSelectedDays,
+        ) &&
+        parsedSelectedDays >= 1 &&
+        parsedSelectedDays <= 30
+        ? parsedSelectedDays
+        : 1
+      : undefined;
+
+  const pricing =
+    await calculatePlanPrice(
+      plan,
+      {
+        selectedDays,
+      },
+    );
+
+  const validity =
+    dailyPlan
+      ? `${selectedDays} ${
+          selectedDays === 1
+            ? "Day"
+            : "Days"
+        }`
+      : `${plan.duration} ${formatDurationUnit(
+          plan.durationUnit,
+          plan.duration,
+        )}`;
+
+  const dataLabel =
+    dailyPlan
+      ? `${formatData(
+          plan.volume,
+        )} / Day`
+      : formatData(
+          plan.volume,
+        );
+
+  const checkoutCallbackUrl =
+    dailyPlan
+      ? `/checkout?packageCode=${encodeURIComponent(
+          plan.packageCode,
+        )}&selectedDays=${selectedDays}`
+      : `/checkout?packageCode=${encodeURIComponent(
+          plan.packageCode,
+        )}`;
 
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <Link
-            href={`/shop/${encodeURIComponent(plan.packageCode)}`}
+            href={`/shop/${encodeURIComponent(
+              plan.packageCode,
+            )}`}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-[#0A2D62] shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
           >
-            <span aria-hidden="true">←</span>
+            <span aria-hidden="true">
+              ←
+            </span>
+
             Back to plan
           </Link>
 
@@ -284,17 +519,22 @@ export default async function CheckoutPage({
             <div>
               <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
                 <LockIcon />
+
                 Secure checkout
               </span>
 
               <h1 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-                Complete your eSIM order
+                Complete your eSIM
+                order
               </h1>
 
               <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600">
-                Enter your contact information carefully. Your order
-                confirmation and eSIM details will be sent to the email
-                address you provide.
+                Enter your contact
+                information carefully.
+                Your order confirmation
+                and eSIM details will be
+                sent to the email address
+                you provide.
               </p>
             </div>
 
@@ -355,12 +595,14 @@ export default async function CheckoutPage({
             </p>
 
             <h2 className="mt-3 text-3xl font-black text-slate-950">
-              Where should we send your eSIM?
+              Where should we send
+              your eSIM?
             </h2>
 
             <p className="mt-3 max-w-2xl leading-7 text-slate-600">
-              Make sure your email address is correct before continuing
-              to payment.
+              Make sure your email
+              address is correct before
+              continuing to payment.
             </p>
           </div>
 
@@ -372,8 +614,18 @@ export default async function CheckoutPage({
             <input
               type="hidden"
               name="packageCode"
-              value={plan.packageCode}
+              value={
+                plan.packageCode
+              }
             />
+
+            {dailyPlan && (
+              <input
+                type="hidden"
+                name="selectedDays"
+                value={selectedDays}
+              />
+            )}
 
             <div>
               <label
@@ -392,6 +644,10 @@ export default async function CheckoutPage({
                   id="fullName"
                   name="fullName"
                   type="text"
+                  defaultValue={
+                    customer?.name ??
+                    ""
+                  }
                   required
                   autoComplete="name"
                   placeholder="Juan Dela Cruz"
@@ -417,6 +673,10 @@ export default async function CheckoutPage({
                   id="email"
                   name="email"
                   type="email"
+                  defaultValue={
+                    customer?.email ??
+                    ""
+                  }
                   required
                   autoComplete="email"
                   placeholder="juan@example.com"
@@ -425,8 +685,9 @@ export default async function CheckoutPage({
               </div>
 
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Your receipt and eSIM installation details will be sent
-                here.
+                Your receipt and eSIM
+                installation details will
+                be sent here.
               </p>
             </div>
 
@@ -455,6 +716,81 @@ export default async function CheckoutPage({
               </div>
             </div>
 
+            <CheckoutCoupon
+              packageCode={
+                plan.packageCode
+              }
+              selectedDays={
+                dailyPlan
+                  ? selectedDays
+                  : undefined
+              }
+            />
+
+            {customer ? (
+              <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-[0.16em] text-emerald-700">
+                      Store Credit
+                    </p>
+
+                    <p className="mt-2 text-2xl font-black text-emerald-950">
+                      {formatMoney(
+                        availableStoreCreditPhpCentavos,
+                      )}
+                    </p>
+
+                    <p className="mt-2 text-sm leading-6 text-emerald-800">
+                      Referral credit can only be used on eSIM plans with at least 10GB of data.
+                    </p>
+                  </div>
+
+                  {!storeCreditEligible ? (
+                    <span className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-bold text-amber-800">
+                      Requires a 10GB+ plan
+                    </span>
+                  ) : availableStoreCreditPhpCentavos >
+                    0 ? (
+                    <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-emerald-300 bg-white px-5 py-4 font-black text-emerald-900 shadow-sm transition hover:border-emerald-500">
+                      <input
+                        type="checkbox"
+                        name="useStoreCredit"
+                        value="true"
+                        defaultChecked
+                        className="h-5 w-5 rounded border-emerald-300 accent-emerald-700"
+                      />
+
+                      Use Store Credit
+                    </label>
+                  ) : (
+                    <span className="rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-sm font-bold text-emerald-700">
+                      No available credit
+                    </span>
+                  )}
+                </div>
+              </section>
+            ) : (
+              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <p className="font-black text-slate-900">
+                  Sign in to use store credit
+                </p>
+
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Referral rewards and store credit are available only to signed-in customers and can only be used on 10GB or larger plans.
+                </p>
+
+                <Link
+                  href={`/login?callbackUrl=${encodeURIComponent(
+                    checkoutCallbackUrl,
+                  )}`}
+                  className="mt-4 inline-flex rounded-xl bg-[#0A2D62] px-4 py-2.5 text-sm font-black text-white"
+                >
+                  Sign In
+                </Link>
+              </section>
+            )}
+
             <label className="flex cursor-pointer items-start gap-4 rounded-2xl border border-blue-100 bg-blue-50 p-5 transition hover:border-blue-200">
               <input
                 type="checkbox"
@@ -464,7 +800,9 @@ export default async function CheckoutPage({
               />
 
               <span className="text-sm leading-7 text-slate-700">
-                I confirm that my device supports eSIM and agree to the{" "}
+                I confirm that my
+                device supports eSIM
+                and agree to the{" "}
                 <Link
                   href="/terms"
                   className="font-bold text-[#0A2D62] underline-offset-4 hover:underline"
@@ -486,9 +824,12 @@ export default async function CheckoutPage({
               type="submit"
               className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#0A2D62] to-blue-700 px-6 py-4 text-base font-black text-white shadow-lg shadow-blue-950/15 transition hover:-translate-y-0.5 hover:from-blue-800 hover:to-blue-600 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-100"
             >
-              Proceed to Secure Payment
+              Proceed to Secure
+              Payment
 
-              <span aria-hidden="true">→</span>
+              <span aria-hidden="true">
+                →
+              </span>
             </button>
 
             <div className="grid gap-3 sm:grid-cols-3">
@@ -496,6 +837,7 @@ export default async function CheckoutPage({
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <CheckIcon />
                 </span>
+
                 Secure checkout
               </div>
 
@@ -503,6 +845,7 @@ export default async function CheckoutPage({
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <CheckIcon />
                 </span>
+
                 Instant processing
               </div>
 
@@ -510,6 +853,7 @@ export default async function CheckoutPage({
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <CheckIcon />
                 </span>
+
                 Email delivery
               </div>
             </div>
@@ -526,7 +870,10 @@ export default async function CheckoutPage({
               <div className="mt-6 flex items-center gap-4">
                 <div className="flex h-16 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white shadow-sm">
                   {isRegion ? (
-                    <span className="text-4xl" aria-hidden="true">
+                    <span
+                      className="text-4xl"
+                      aria-hidden="true"
+                    >
                       🌍
                     </span>
                   ) : countryCode ? (
@@ -536,7 +883,10 @@ export default async function CheckoutPage({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <span className="text-4xl" aria-hidden="true">
+                    <span
+                      className="text-4xl"
+                      aria-hidden="true"
+                    >
                       🌐
                     </span>
                   )}
@@ -544,7 +894,9 @@ export default async function CheckoutPage({
 
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-sky-200">
-                    {destinationName}
+                    {
+                      destinationName
+                    }
                   </p>
 
                   <h2 className="mt-1 line-clamp-2 text-xl font-black leading-tight text-white">
@@ -557,15 +909,19 @@ export default async function CheckoutPage({
             <div className="p-6 sm:p-8">
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <span className="text-slate-600">Data</span>
+                  <span className="text-slate-600">
+                    Data
+                  </span>
 
                   <strong className="text-slate-950">
-                    {formatData(plan.volume)}
+                    {dataLabel}
                   </strong>
                 </div>
 
                 <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <span className="text-slate-600">Validity</span>
+                  <span className="text-slate-600">
+                    Validity
+                  </span>
 
                   <strong className="text-slate-950">
                     {validity}
@@ -573,25 +929,35 @@ export default async function CheckoutPage({
                 </div>
 
                 <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <span className="text-slate-600">Network</span>
+                  <span className="text-slate-600">
+                    Network
+                  </span>
 
                   <strong className="max-w-[180px] text-right text-slate-950">
-                    {formatNetwork(plan.speed)}
+                    {formatNetwork(
+                      plan.speed,
+                    )}
                   </strong>
                 </div>
 
                 <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <span className="text-slate-600">Top-up</span>
+                  <span className="text-slate-600">
+                    Top-up
+                  </span>
 
                   <strong className="text-slate-950">
-                    {supportsTopUp(plan.supportTopUpType)
+                    {supportsTopUp(
+                      plan.supportTopUpType,
+                    )
                       ? "Supported"
                       : "Not supported"}
                   </strong>
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-slate-600">Delivery</span>
+                  <span className="text-slate-600">
+                    Delivery
+                  </span>
 
                   <strong className="text-emerald-700">
                     Digital eSIM
@@ -602,24 +968,36 @@ export default async function CheckoutPage({
               <div className="mt-7 rounded-2xl bg-slate-50 p-5">
                 <div className="flex items-end justify-between gap-4">
                   <span className="font-bold text-slate-700">
-                    Total
+                    {dailyPlan
+                      ? `Total · ${selectedDays} ${
+                          selectedDays === 1
+                            ? "Day"
+                            : "Days"
+                        }`
+                      : "Regular price"}
                   </span>
 
                   <div className="text-right">
                     <div className="flex items-end gap-1.5">
                       <span className="text-4xl font-black tracking-tight text-[#0A2D62]">
-                        ${sellingPrice}
-                      </span>
-
-                      <span className="pb-1 text-xs font-bold text-slate-500">
-                        USD
+                        {formatMoney(
+                          pricing.amountPhpCentavos,
+                        )}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 <p className="mt-3 text-xs leading-5 text-slate-500">
-                  Final price for this eSIM package.
+                  {dailyPlan
+                    ? `${formatData(
+                        plan.volume,
+                      )} per day for ${selectedDays} ${
+                        selectedDays === 1
+                          ? "day"
+                          : "days"
+                      }. The total includes the ₱50 Seamarino markup per selected day.`
+                    : "A validated coupon discount will be shown in the coupon section and securely recalculated before payment."}
                 </p>
               </div>
 
@@ -634,15 +1012,18 @@ export default async function CheckoutPage({
                   </p>
 
                   <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Your payment will be processed securely through
-                    PayMongo.
+                    Your payment will be
+                    processed securely
+                    through PayMongo.
                   </p>
                 </div>
               </div>
 
               <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-                You will be redirected to the payment page after submitting
-                your information.
+                You will be redirected
+                to the payment page after
+                submitting your
+                information.
               </p>
             </div>
           </div>

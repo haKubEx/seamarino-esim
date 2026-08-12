@@ -81,3 +81,28 @@ export type Order = Prisma.OrderModel
  * 
  */
 export type PlanSetting = Prisma.PlanSettingModel
+/**
+ * Model Coupon
+ * 
+ */
+export type Coupon = Prisma.CouponModel
+/**
+ * Model CouponRedemption
+ * 
+ */
+export type CouponRedemption = Prisma.CouponRedemptionModel
+/**
+ * Model Referral
+ * 
+ */
+export type Referral = Prisma.ReferralModel
+/**
+ * Model StoreCreditTransaction
+ * 
+ */
+export type StoreCreditTransaction = Prisma.StoreCreditTransactionModel
+/**
+ * Model AdminActivityLog
+ * 
+ */
+export type AdminActivityLog = Prisma.AdminActivityLogModel

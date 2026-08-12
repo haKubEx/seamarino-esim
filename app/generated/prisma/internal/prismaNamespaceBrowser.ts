@@ -58,7 +58,12 @@ export const ModelName = {
   VerificationToken: 'VerificationToken',
   PasswordResetToken: 'PasswordResetToken',
   Order: 'Order',
-  PlanSetting: 'PlanSetting'
+  PlanSetting: 'PlanSetting',
+  Coupon: 'Coupon',
+  CouponRedemption: 'CouponRedemption',
+  Referral: 'Referral',
+  StoreCreditTransaction: 'StoreCreditTransaction',
+  AdminActivityLog: 'AdminActivityLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -80,6 +85,15 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const AppSettingScalarFieldEnum = {
   id: 'id',
   usdToPhpRate: 'usdToPhpRate',
+  defaultMarkupPercent: 'defaultMarkupPercent',
+  referralRewardPhpCentavos: 'referralRewardPhpCentavos',
+  referredRewardPhpCentavos: 'referredRewardPhpCentavos',
+  minimumReferralDataBytes: 'minimumReferralDataBytes',
+  maximumWalletUsagePercent: 'maximumWalletUsagePercent',
+  walletTopupEnabled: 'walletTopupEnabled',
+  maintenanceMode: 'maintenanceMode',
+  supportEmail: 'supportEmail',
+  defaultApn: 'defaultApn',
   updatedAt: 'updatedAt'
 } as const
 
@@ -95,6 +109,9 @@ export const UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   image: 'image',
   role: 'role',
+  referralCode: 'referralCode',
+  storeCreditPhpCentavos: 'storeCreditPhpCentavos',
+  referredById: 'referredById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -157,13 +174,23 @@ export const OrderScalarFieldEnum = {
   userId: 'userId',
   packageCode: 'packageCode',
   planName: 'planName',
+  dataVolumeBytes: 'dataVolumeBytes',
+  selectedDays: 'selectedDays',
   customerName: 'customerName',
   customerEmail: 'customerEmail',
   customerPhone: 'customerPhone',
   sellingPriceUsd: 'sellingPriceUsd',
+  subtotalPhpCentavos: 'subtotalPhpCentavos',
+  discountPhpCentavos: 'discountPhpCentavos',
   amountPhpCentavos: 'amountPhpCentavos',
   usdToPhpRate: 'usdToPhpRate',
   currency: 'currency',
+  storeCreditUsedPhpCentavos: 'storeCreditUsedPhpCentavos',
+  couponId: 'couponId',
+  couponCodeSnapshot: 'couponCodeSnapshot',
+  couponNameSnapshot: 'couponNameSnapshot',
+  couponDiscountTypeSnapshot: 'couponDiscountTypeSnapshot',
+  couponDiscountValueSnapshot: 'couponDiscountValueSnapshot',
   status: 'status',
   paymentStatus: 'paymentStatus',
   esimStatus: 'esimStatus',
@@ -231,12 +258,122 @@ export const PlanSettingScalarFieldEnum = {
 export type PlanSettingScalarFieldEnum = (typeof PlanSettingScalarFieldEnum)[keyof typeof PlanSettingScalarFieldEnum]
 
 
+export const CouponScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  description: 'description',
+  discountType: 'discountType',
+  discountValue: 'discountValue',
+  maximumDiscountPhpCentavos: 'maximumDiscountPhpCentavos',
+  minimumPurchasePhpCentavos: 'minimumPurchasePhpCentavos',
+  minimumDataBytes: 'minimumDataBytes',
+  maximumDataBytes: 'maximumDataBytes',
+  enabled: 'enabled',
+  startsAt: 'startsAt',
+  expiresAt: 'expiresAt',
+  usageLimit: 'usageLimit',
+  perCustomerLimit: 'perCustomerLimit',
+  firstOrderOnly: 'firstOrderOnly',
+  applicablePackageCodes: 'applicablePackageCodes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CouponScalarFieldEnum = (typeof CouponScalarFieldEnum)[keyof typeof CouponScalarFieldEnum]
+
+
+export const CouponRedemptionScalarFieldEnum = {
+  id: 'id',
+  couponId: 'couponId',
+  orderId: 'orderId',
+  userId: 'userId',
+  customerEmail: 'customerEmail',
+  status: 'status',
+  subtotalPhpCentavos: 'subtotalPhpCentavos',
+  discountPhpCentavos: 'discountPhpCentavos',
+  finalPhpCentavos: 'finalPhpCentavos',
+  reservedAt: 'reservedAt',
+  reservationEndsAt: 'reservationEndsAt',
+  redeemedAt: 'redeemedAt',
+  releasedAt: 'releasedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CouponRedemptionScalarFieldEnum = (typeof CouponRedemptionScalarFieldEnum)[keyof typeof CouponRedemptionScalarFieldEnum]
+
+
+export const ReferralScalarFieldEnum = {
+  id: 'id',
+  referralCode: 'referralCode',
+  referrerId: 'referrerId',
+  referredUserId: 'referredUserId',
+  qualifyingOrderId: 'qualifyingOrderId',
+  status: 'status',
+  referrerRewardPhpCentavos: 'referrerRewardPhpCentavos',
+  referredRewardPhpCentavos: 'referredRewardPhpCentavos',
+  qualifiedAt: 'qualifiedAt',
+  rewardedAt: 'rewardedAt',
+  cancelledAt: 'cancelledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReferralScalarFieldEnum = (typeof ReferralScalarFieldEnum)[keyof typeof ReferralScalarFieldEnum]
+
+
+export const StoreCreditTransactionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  amountPhpCentavos: 'amountPhpCentavos',
+  balanceBeforePhpCentavos: 'balanceBeforePhpCentavos',
+  balanceAfterPhpCentavos: 'balanceAfterPhpCentavos',
+  referralId: 'referralId',
+  orderId: 'orderId',
+  description: 'description',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+} as const
+
+export type StoreCreditTransactionScalarFieldEnum = (typeof StoreCreditTransactionScalarFieldEnum)[keyof typeof StoreCreditTransactionScalarFieldEnum]
+
+
+export const AdminActivityLogScalarFieldEnum = {
+  id: 'id',
+  adminId: 'adminId',
+  action: 'action',
+  module: 'module',
+  entityId: 'entityId',
+  entityType: 'entityType',
+  description: 'description',
+  oldValue: 'oldValue',
+  newValue: 'newValue',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  success: 'success',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminActivityLogScalarFieldEnum = (typeof AdminActivityLogScalarFieldEnum)[keyof typeof AdminActivityLogScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
@@ -253,4 +390,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

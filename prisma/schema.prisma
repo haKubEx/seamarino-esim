@@ -46,10 +46,58 @@ enum EmailDeliveryStatus {
   FAILED
 }
 
+enum CouponDiscountType {
+  PERCENTAGE
+  FIXED_PHP
+}
+
+enum CouponRedemptionStatus {
+  RESERVED
+  REDEEMED
+  RELEASED
+}
+
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REWARDED
+  CANCELLED
+}
+
+enum StoreCreditTransactionType {
+  REFERRAL_REWARD
+  MANUAL_ADJUSTMENT
+  ORDER_PAYMENT
+  REFUND
+  EXPIRATION
+}
+
 model AppSetting {
-  id           String   @id @default("main")
-  usdToPhpRate Float    @default(58)
-  updatedAt    DateTime @updatedAt
+  id String @id @default("main")
+
+  // Pricing
+  usdToPhpRate         Float @default(58)
+  defaultMarkupPercent Float @default(20)
+
+  // Referral rewards, stored in Philippine centavos.
+  referralRewardPhpCentavos Int @default(5000)
+  referredRewardPhpCentavos Int @default(5000)
+
+  // 10GB = 10737418240 bytes.
+  minimumReferralDataBytes BigInt @default(10737418240)
+
+  // Wallet
+  maximumWalletUsagePercent Int     @default(100)
+  walletTopupEnabled        Boolean @default(false)
+
+  // Store
+  maintenanceMode Boolean @default(false)
+  supportEmail    String  @default("support@seamarinoesim.com")
+
+  // eSIM / checkout defaults
+  defaultApn String @default("internet")
+
+  updatedAt DateTime @updatedAt
 }
 
 model User {
@@ -62,14 +110,61 @@ model User {
   image         String?
   role          UserRole  @default(CUSTOMER)
 
-  orders   Order[]
-  accounts Account[]
-  sessions Session[]
+  /**
+   * Unique referral code owned by this customer.
+   * Example:
+   * JEROME8F4A
+   */
+  referralCode String? @unique
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  /**
+   * Current available store-credit balance.
+   * Stored in Philippine centavos.
+   * 5000 = ₱50.00
+   */
+  storeCreditPhpCentavos Int @default(0)
+
+  /**
+   * Customer who referred this user.
+   */
+  referredById String?
+
+  referredBy User? @relation("UserReferralRelationship", fields: [referredById], references: [id], onDelete: SetNull)
+
+  /**
+   * Customers directly referred by this user.
+   */
+  referredUsers User[] @relation("UserReferralRelationship")
+
+  /**
+   * Referral records created by this user.
+   */
+  referralsCreated Referral[] @relation("ReferralReferrer")
+
+  /**
+   * Referral record where this customer
+   * is the referred user.
+   */
+  referralReceived Referral? @relation("ReferralReferredUser")
+
+  /**
+   * Store-credit balance history.
+   */
+  storeCreditTransactions StoreCreditTransaction[]
+
+  orders            Order[]
+  accounts          Account[]
+  sessions          Session[]
+  couponRedemptions CouponRedemption[]
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  adminActivityLogs AdminActivityLog[]
 
   @@index([role])
+  @@index([referralCode])
+  @@index([referredById])
+  @@index([createdAt])
 }
 
 model Account {
@@ -129,19 +224,81 @@ model Order {
   referenceNumber String @unique
 
   userId String?
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   packageCode String
   planName    String
+
+  /**
+   * Purchased plan data allowance in bytes.
+   * This is stored as an immutable order snapshot.
+   * Examples:
+   * 10GB = 10737418240
+   * 20GB = 21474836480
+   * 50GB = 53687091200
+   * Referral rewards require at least 10GB.
+   */
+  dataVolumeBytes BigInt?
+
+  /**
+   * Selected validity for daily plans.
+   *
+   * null = normal fixed-duration plan
+   * 1-30 = customer-selected daily-plan validity
+   */
+  selectedDays Int?
 
   customerName  String
   customerEmail String
   customerPhone String
 
-  sellingPriceUsd   Float
-  amountPhpCentavos Int
-  usdToPhpRate      Float
-  currency          String @default("PHP")
+  /**
+   * Pricing snapshot.
+   * subtotalPhpCentavos:
+   * Original total before discounts and store credit.
+   * discountPhpCentavos:
+   * Coupon discount applied.
+   * amountPhpCentavos:
+   * Final amount charged through PayMongo.
+   */
+  sellingPriceUsd     Float
+  subtotalPhpCentavos Int?
+  discountPhpCentavos Int    @default(0)
+  amountPhpCentavos   Int
+  usdToPhpRate        Float
+  currency            String @default("PHP")
+
+  /**
+   * Store credit used on this order.
+   * Stored in Philippine centavos.
+   */
+  storeCreditUsedPhpCentavos Int @default(0)
+
+  /**
+   * Coupon relationship and historical snapshot.
+   */
+  couponId String?
+
+  coupon Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  couponCodeSnapshot          String?
+  couponNameSnapshot          String?
+  couponDiscountTypeSnapshot  CouponDiscountType?
+  couponDiscountValueSnapshot Float?
+
+  couponRedemption CouponRedemption?
+
+  /**
+   * Referral qualified by this completed order.
+   */
+  qualifyingReferral Referral?
+
+  /**
+   * Store-credit ledger entries associated
+   * with this order.
+   */
+  storeCreditTransactions StoreCreditTransaction[]
 
   status        OrderStatus   @default(PENDING)
   paymentStatus PaymentStatus @default(PENDING)
@@ -210,6 +367,9 @@ model Order {
   @@index([userId])
   @@index([customerEmail])
   @@index([packageCode])
+  @@index([dataVolumeBytes])
+  @@index([couponId])
+  @@index([couponCodeSnapshot])
   @@index([status])
   @@index([paymentStatus])
   @@index([esimStatus])
@@ -233,4 +393,261 @@ model PlanSetting {
 
   @@index([enabled])
   @@index([featured])
+}
+
+model Coupon {
+  id String @id @default(cuid())
+
+  code        String  @unique
+  name        String
+  description String? @db.Text
+
+  discountType  CouponDiscountType
+  discountValue Float
+
+  maximumDiscountPhpCentavos Int?
+  minimumPurchasePhpCentavos Int  @default(0)
+
+  /**
+   * Optional data-size restrictions.
+   * 10GB = 10737418240 bytes
+   * 50GB = 53687091200 bytes
+   */
+  minimumDataBytes BigInt?
+  maximumDataBytes BigInt?
+
+  enabled Boolean @default(true)
+
+  startsAt  DateTime?
+  expiresAt DateTime?
+
+  /**
+   * Null means unlimited global usage.
+   */
+  usageLimit Int?
+
+  /**
+   * Successful uses allowed per customer.
+   */
+  perCustomerLimit Int @default(1)
+
+  firstOrderOnly Boolean @default(false)
+
+  /**
+   * Empty means all eligible package codes.
+   */
+  applicablePackageCodes String[] @default([])
+
+  orders      Order[]
+  redemptions CouponRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled])
+  @@index([startsAt])
+  @@index([expiresAt])
+  @@index([discountType])
+  @@index([createdAt])
+}
+
+model CouponRedemption {
+  id String @id @default(cuid())
+
+  couponId String
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  orderId String @unique
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  userId String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /**
+   * Stored in normalized lowercase form.
+   */
+  customerEmail String
+
+  status CouponRedemptionStatus @default(RESERVED)
+
+  subtotalPhpCentavos Int
+  discountPhpCentavos Int
+  finalPhpCentavos    Int
+
+  reservedAt        DateTime  @default(now())
+  reservationEndsAt DateTime?
+
+  redeemedAt DateTime?
+  releasedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([reservationEndsAt])
+  @@index([couponId, status])
+  @@index([couponId, customerEmail, status])
+}
+
+model Referral {
+  id String @id @default(cuid())
+
+  /**
+   * Snapshot of the referral code used when
+   * the new customer registered.
+   */
+  referralCode String
+
+  /**
+   * Customer who owns the referral code.
+   */
+  referrerId String
+
+  referrer User @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  /**
+   * New customer who registered using
+   * the referral code.
+   * One customer can only be referred once.
+   */
+  referredUserId String @unique
+
+  referredUser User @relation("ReferralReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  /**
+   * First completed and delivered order
+   * containing at least 10GB.
+   */
+  qualifyingOrderId String? @unique
+
+  qualifyingOrder Order? @relation(fields: [qualifyingOrderId], references: [id], onDelete: SetNull)
+
+  status ReferralStatus @default(PENDING)
+
+  /**
+   * Reward amounts stored in centavos.
+   * 5000 = ₱50.00
+   */
+  referrerRewardPhpCentavos Int @default(5000)
+  referredRewardPhpCentavos Int @default(5000)
+
+  qualifiedAt DateTime?
+  rewardedAt  DateTime?
+  cancelledAt DateTime?
+
+  /**
+   * Store-credit ledger entries created
+   * from this referral.
+   */
+  storeCreditTransactions StoreCreditTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([referrerId])
+  @@index([referredUserId])
+  @@index([referralCode])
+  @@index([status])
+  @@index([qualifyingOrderId])
+  @@index([createdAt])
+}
+
+model StoreCreditTransaction {
+  id String @id @default(cuid())
+
+  /**
+   * Customer whose credit balance changed.
+   */
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type StoreCreditTransactionType
+
+  /**
+   * Positive value adds credit.
+   * Negative value deducts credit.
+   * Stored in Philippine centavos.
+   */
+  amountPhpCentavos Int
+
+  /**
+   * Immutable balance snapshots.
+   */
+  balanceBeforePhpCentavos Int
+  balanceAfterPhpCentavos  Int
+
+  /**
+   * Optional referral source.
+   */
+  referralId String?
+
+  referral Referral? @relation(fields: [referralId], references: [id], onDelete: SetNull)
+
+  /**
+   * Optional order associated with
+   * the balance change.
+   */
+  orderId String?
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  description String? @db.Text
+
+  /**
+   * Optional expiration date for
+   * promotional credit.
+   */
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([referralId])
+  @@index([orderId])
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+
+model AdminActivityLog {
+  id String @id @default(cuid())
+
+  adminId String
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  action String
+  module String
+
+  entityId   String?
+  entityType String?
+
+  description String
+
+  oldValue Json?
+  newValue Json?
+
+  ipAddress String?
+  userAgent String?
+
+  success Boolean @default(true)
+
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([module])
+  @@index([action])
+  @@index([success])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
 }

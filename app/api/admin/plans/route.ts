@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { auth } from "@/app/lib/auth";
+import {
+  logAdminActivity,
+} from "@/app/lib/adminActivity";
 import { getCountryName } from "@/app/lib/countries";
 import { prisma } from "@/app/lib/prisma";
 import { fetchEsimAccessPlans } from "@/app/services/esimAccess";
@@ -20,7 +24,9 @@ type UpdatePlanBody = {
   customName?: unknown;
 };
 
-function isAuthorized(request: Request) {
+function isAuthorized(
+  request: Request,
+) {
   const configuredKey =
     process.env.ADMIN_API_KEY?.trim();
 
@@ -32,7 +38,8 @@ function isAuthorized(request: Request) {
   return Boolean(
     configuredKey &&
       suppliedKey &&
-      configuredKey === suppliedKey,
+      configuredKey ===
+        suppliedKey,
   );
 }
 
@@ -48,7 +55,9 @@ function unauthorizedResponse() {
   );
 }
 
-function normalizeText(value: unknown) {
+function normalizeText(
+  value: unknown,
+) {
   return typeof value === "string"
     ? value.trim()
     : "";
@@ -58,12 +67,16 @@ function getLocationCodes(
   plan: EsimPackage,
 ) {
   const location =
-    normalizeText(plan.location);
+    normalizeText(
+      plan.location,
+    );
 
   if (location) {
     return location
       .split(",")
-      .map((code) => code.trim())
+      .map((code) =>
+        code.trim(),
+      )
       .filter(Boolean);
   }
 
@@ -88,7 +101,9 @@ function getCoverageLabel(
     return "120+ countries and regions";
   }
 
-  if (locationCodes.length > 1) {
+  if (
+    locationCodes.length > 1
+  ) {
     return `${locationCodes.length} countries covered`;
   }
 
@@ -97,9 +112,14 @@ function getCoverageLabel(
 
   if (countryCode) {
     const countryName =
-      getCountryName(countryCode);
+      getCountryName(
+        countryCode,
+      );
 
-    return countryName || countryCode;
+    return (
+      countryName ||
+      countryCode
+    );
   }
 
   return "Coverage information unavailable";
@@ -122,6 +142,60 @@ function getSearchableText(
     .toLowerCase();
 }
 
+function determinePlanAction({
+  previous,
+  enabled,
+  featured,
+  customName,
+}: {
+  previous:
+    | {
+        enabled: boolean;
+        featured: boolean;
+        customName:
+          | string
+          | null;
+      }
+    | null;
+
+  enabled: boolean;
+  featured: boolean;
+  customName:
+    | string
+    | null;
+}) {
+  if (!previous) {
+    return "PLAN_SETTING_CREATED";
+  }
+
+  if (
+    previous.enabled !==
+    enabled
+  ) {
+    return enabled
+      ? "PLAN_ENABLED"
+      : "PLAN_DISABLED";
+  }
+
+  if (
+    previous.featured !==
+    featured
+  ) {
+    return featured
+      ? "PLAN_FEATURED"
+      : "PLAN_UNFEATURED";
+  }
+
+  if (
+    previous.customName !==
+    customName
+  ) {
+    return "PLAN_NAME_UPDATED";
+  }
+
+  return "PLAN_UPDATED";
+}
+
 export async function GET(
   request: Request,
 ) {
@@ -137,13 +211,15 @@ export async function GET(
       url.searchParams
         .get("search")
         ?.trim()
-        .toLowerCase() ?? "";
+        .toLowerCase() ??
+      "";
 
     const [
       supplierPlans,
       savedSettings,
     ] = await Promise.all([
       fetchEsimAccessPlans(),
+
       prisma.planSetting.findMany(),
     ]);
 
@@ -210,7 +286,8 @@ export async function GET(
               displayName,
 
               customName:
-                setting?.customName ??
+                setting
+                  ?.customName ??
                 null,
 
               locationName:
@@ -224,10 +301,14 @@ export async function GET(
                 null,
 
               volume:
-                Number(plan.volume),
+                Number(
+                  plan.volume,
+                ),
 
               duration:
-                Number(plan.duration),
+                Number(
+                  plan.duration,
+                ),
 
               durationUnit:
                 plan.durationUnit,
@@ -241,28 +322,36 @@ export async function GET(
                 false,
 
               supplierCostUsd:
-                pricing.supplierCostUsd,
+                pricing
+                  .supplierCostUsd,
 
               markupAmountUsd:
-                pricing.markupAmountUsd,
+                pricing
+                  .markupAmountUsd,
 
               sellingPriceUsd:
-                pricing.sellingPriceUsd,
+                pricing
+                  .sellingPriceUsd,
 
               sellingPricePhp:
-                pricing.sellingPricePhp,
+                pricing
+                  .sellingPricePhp,
 
               amountPhpCentavos:
-                pricing.amountPhpCentavos,
+                pricing
+                  .amountPhpCentavos,
 
               usdToPhpRate:
-                pricing.usdToPhpRate,
+                pricing
+                  .usdToPhpRate,
 
               isGlobalPlan:
-                pricing.isGlobalPlan,
+                pricing
+                  .isGlobalPlan,
 
               markupTable:
-                pricing.isGlobalPlan
+                pricing
+                  .isGlobalPlan
                   ? "GLOBAL"
                   : "STANDARD",
 
@@ -273,45 +362,53 @@ export async function GET(
                 pricing.volumeMb,
 
               updatedAt:
-                setting?.updatedAt ??
+                setting
+                  ?.updatedAt ??
                 null,
             };
           },
         ),
       );
 
-    plans.sort((a, b) => {
-      if (
-        a.featured !==
-        b.featured
-      ) {
-        return a.featured
-          ? -1
-          : 1;
-      }
+    plans.sort(
+      (
+        a,
+        b,
+      ) => {
+        if (
+          a.featured !==
+          b.featured
+        ) {
+          return a.featured
+            ? -1
+            : 1;
+        }
 
-      if (
-        a.isGlobalPlan !==
-        b.isGlobalPlan
-      ) {
-        return a.isGlobalPlan
-          ? 1
-          : -1;
-      }
+        if (
+          a.isGlobalPlan !==
+          b.isGlobalPlan
+        ) {
+          return a.isGlobalPlan
+            ? 1
+            : -1;
+        }
 
-      return a.displayName.localeCompare(
-        b.displayName,
-      );
-    });
+        return a.displayName.localeCompare(
+          b.displayName,
+        );
+      },
+    );
 
     return NextResponse.json(
       {
         success: true,
         plans,
-        total: plans.length,
+        total:
+          plans.length,
       },
       {
         status: 200,
+
         headers: {
           "Cache-Control":
             "no-store, no-cache, must-revalidate",
@@ -329,7 +426,8 @@ export async function GET(
         success: false,
 
         error:
-          error instanceof Error
+          error instanceof
+          Error
             ? error.message
             : "Unable to retrieve plans.",
       },
@@ -347,9 +445,30 @@ export async function PUT(
     return unauthorizedResponse();
   }
 
+  const session =
+    await auth();
+
+  if (
+    !session?.user?.id ||
+    session.user.role !==
+      "ADMIN"
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Admin session required.",
+      },
+      {
+        status: 401,
+      },
+    );
+  }
+
   try {
     const body =
-      (await request.json()) as UpdatePlanBody;
+      (await request.json()) as
+        UpdatePlanBody;
 
     const packageCode =
       typeof body.packageCode ===
@@ -388,8 +507,43 @@ export async function PUT(
       body.customName.trim()
         ? body.customName
             .trim()
-            .slice(0, 255)
+            .slice(
+              0,
+              255,
+            )
         : null;
+
+    /*
+     * Save the previous values before
+     * updating so the audit log can show
+     * exactly what changed.
+     */
+    const previousSetting =
+      await prisma.planSetting.findUnique({
+        where: {
+          packageCode,
+        },
+
+        select: {
+          packageCode:
+            true,
+
+          enabled:
+            true,
+
+          featured:
+            true,
+
+          customName:
+            true,
+
+          markupPercent:
+            true,
+
+          updatedAt:
+            true,
+        },
+      });
 
     const setting =
       await prisma.planSetting.upsert({
@@ -401,6 +555,12 @@ export async function PUT(
           enabled,
           featured,
           customName,
+
+          /*
+           * Pricing markup is currently
+           * controlled by your pricing
+           * service/settings.
+           */
           markupPercent: 0,
         },
 
@@ -412,6 +572,108 @@ export async function PUT(
           markupPercent: 0,
         },
       });
+
+    const action =
+      determinePlanAction({
+        previous:
+          previousSetting
+            ? {
+                enabled:
+                  previousSetting
+                    .enabled,
+
+                featured:
+                  previousSetting
+                    .featured,
+
+                customName:
+                  previousSetting
+                    .customName,
+              }
+            : null,
+
+        enabled:
+          setting.enabled,
+
+        featured:
+          setting.featured,
+
+        customName:
+          setting.customName,
+      });
+
+    /*
+     * This is a genuine admin action,
+     * so it belongs in AdminActivityLog.
+     */
+    await logAdminActivity({
+      adminId:
+        session.user.id,
+
+      action,
+
+      module:
+        "PLANS",
+
+      entityType:
+        "PlanSetting",
+
+      /*
+       * packageCode is stable and already
+       * identifies PlanSetting in your API.
+       * Using it also avoids depending on
+       * a separate numeric/cuid ID field.
+       */
+      entityId:
+        packageCode,
+
+      description:
+        action ===
+        "PLAN_ENABLED"
+          ? `Enabled plan ${packageCode}.`
+          : action ===
+              "PLAN_DISABLED"
+            ? `Disabled plan ${packageCode}.`
+            : action ===
+                "PLAN_FEATURED"
+              ? `Featured plan ${packageCode}.`
+              : action ===
+                  "PLAN_UNFEATURED"
+                ? `Removed featured status from plan ${packageCode}.`
+                : action ===
+                    "PLAN_NAME_UPDATED"
+                  ? `Updated the custom name for plan ${packageCode}.`
+                  : action ===
+                      "PLAN_SETTING_CREATED"
+                    ? `Created admin settings for plan ${packageCode}.`
+                    : `Updated plan settings for ${packageCode}.`,
+
+      oldValue:
+        previousSetting,
+
+      newValue: {
+        packageCode:
+          setting.packageCode,
+
+        enabled:
+          setting.enabled,
+
+        featured:
+          setting.featured,
+
+        customName:
+          setting.customName,
+
+        markupPercent:
+          setting.markupPercent,
+
+        updatedAt:
+          setting.updatedAt,
+      },
+
+      success:
+        true,
+    });
 
     return NextResponse.json(
       {
@@ -432,12 +694,52 @@ export async function PUT(
       error,
     );
 
+    /*
+     * Failed admin plan changes are also
+     * recorded, but a logging error must
+     * never replace the real API error.
+     */
+    try {
+      await logAdminActivity({
+        adminId:
+          session.user.id,
+
+        action:
+          "PLAN_UPDATE_FAILED",
+
+        module:
+          "PLANS",
+
+        entityType:
+          "PlanSetting",
+
+        description:
+          "Failed to update plan settings.",
+
+        success:
+          false,
+
+        errorMessage:
+          error instanceof Error
+            ? error.message
+            : "Unknown plan update error.",
+      });
+    } catch (
+      activityLogError
+    ) {
+      console.error(
+        "ADMIN PLAN ACTIVITY LOG ERROR:",
+        activityLogError,
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
 
         error:
-          error instanceof Error
+          error instanceof
+          Error
             ? error.message
             : "Unable to update plan settings.",
       },

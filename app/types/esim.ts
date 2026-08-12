@@ -1,69 +1,74 @@
-export interface EsimPackageDescription {
-  title?: string;
-  content?: string;
-}
-
 export interface EsimPackage {
   packageCode: string;
   name: string;
 
   /**
-   * Supplier price.
+   * Supplier wholesale price.
    *
-   * eSIM Access normally returns this as an integer
-   * where 1000 represents USD 1.00.
+   * eSIM Access normally returns an integer
+   * where the API-specific divisor is handled
+   * by the pricing service.
    */
   price: number;
 
   currencyCode: string;
 
   /**
-   * May contain one country code or multiple
-   * comma-separated country codes.
+   * One country code or multiple comma-separated
+   * country codes.
    */
   location: string;
 
   locationCode?: string;
 
   speed: string;
-
   duration: number;
   durationUnit: string;
-
   volume: number;
 
-  /**
-   * Supplier values may arrive as:
-   *
-   * "0"
-   * "1"
-   * "true"
-   * "false"
-   *
-   * Keep this as a string and normalize it in the UI
-   * before deciding whether top-up is supported.
-   */
   supportTopUpType: string;
 
   description?: string;
-
-  /**
-   * Optional list of description points shown on
-   * the individual package page.
-   */
   descriptionList?: string[];
-
   saleNote?: string;
 
   /**
-   * Storefront settings loaded from PlanSetting.
+   * Supplier package metadata.
+   *
+   * dataType:
+   * 1 = fixed-volume/fixed-duration plan
+   * 2 = daily-data plan
    */
-  featured?: boolean;
+  dataType?: number;
+  durationType?: number;
+  unusedValidTime?: number;
+  fupPolicy?: string;
+  slug?: string;
+  retailPrice?: number;
+  activeType?: number;
 
   /**
-   * Optional favorite or highlighted plan flag.
+   * Storefront settings.
    */
+  enabled?: boolean;
+  featured?: boolean;
   favorite?: boolean;
-
   markupPercent?: number;
+  displayName?: string;
+  isLocalPlan?: boolean;
+
+  /**
+   * Calculated storefront price information.
+   */
+  supplierCostUsd?: number;
+  markupAmountUsd?: number;
+  sellingPriceUsd?: number;
+  sellingPricePhp?: number;
+  amountPhpCentavos?: number;
+
+  /**
+   * Normalized data-volume helpers.
+   */
+  volumeGb?: number;
+  volumeMb?: number;
 }

@@ -427,10 +427,20 @@ function profileIsPending(
 function profileIsReady(
   profile: EsimProfile,
 ): boolean {
-  if (
-    !hasInstallationData(profile) ||
-    profileIsTerminal(profile)
-  ) {
+  /*
+   * Never deliver a profile that is explicitly
+   * cancelled, expired, deleted, or revoked.
+   */
+  if (profileIsTerminal(profile)) {
+    return false;
+  }
+
+  /*
+   * ICCID, activation code, and QR-code URL are
+   * the minimum installation details required by
+   * the delivery route.
+   */
+  if (!hasInstallationData(profile)) {
     return false;
   }
 
@@ -444,16 +454,6 @@ function profileIsReady(
       profile.smdpStatus,
     );
 
-  /*
-   * Normal newly allocated profile:
-   *
-   * esimStatus: GOT_RESOURCE
-   * smdpStatus: RELEASED
-   *
-   * Profiles that have already been downloaded
-   * or installed are also valid customer profiles
-   * when their installation data is present.
-   */
   const hasAllocatedEsimStatus =
     esimStatus !== null &&
     ALLOCATED_ESIM_STATUSES.has(
@@ -466,10 +466,34 @@ function profileIsReady(
       smdpStatus,
     );
 
-  return (
+  if (
     hasAllocatedEsimStatus ||
     hasAvailableSmdpStatus
-  );
+  ) {
+    return true;
+  }
+
+  /*
+   * Keep waiting when the supplier explicitly says
+   * the eSIM is still being created or allocated.
+   */
+  if (
+    esimStatus !== null &&
+    PENDING_ESIM_STATUSES.has(
+      esimStatus,
+    )
+  ) {
+    return false;
+  }
+
+  /*
+   * eSIM Access may introduce a new non-terminal
+   * status before this application is updated. If
+   * complete installation credentials are already
+   * present, treat the profile as deliverable rather
+   * than leaving a paid order stuck indefinitely.
+   */
+  return true;
 }
 
 function getProfileScore(

@@ -42,6 +42,23 @@ function formatData(bytes: number) {
   } GB`;
 }
 
+function isDailyPlan(
+  plan: StorefrontPlan,
+) {
+  return Number(plan.dataType) === 2;
+}
+
+function formatPlanData(
+  plan: StorefrontPlan,
+) {
+  const data =
+    formatData(plan.volume);
+
+  return isDailyPlan(plan)
+    ? `${data} / Day`
+    : data;
+}
+
 function formatDurationUnit(
   unit: string | undefined,
   duration: number,
@@ -367,11 +384,16 @@ export default function PlanCard({
       ? rawDuration
       : 1;
 
+  const dailyPlan =
+    isDailyPlan(plan);
+
   const formattedValidity =
-    `${duration} ${formatDurationUnit(
-      plan.durationUnit,
-      duration,
-    )}`;
+    dailyPlan
+      ? "1–30 Days"
+      : `${duration} ${formatDurationUnit(
+          plan.durationUnit,
+          duration,
+        )}`;
 
   const sellingPricePhp =
     Number(
@@ -491,8 +513,8 @@ export default function PlanCard({
             </p>
 
             <p className="mt-1 truncate text-sm font-black text-slate-950">
-              {formatData(
-                plan.volume,
+              {formatPlanData(
+                plan,
               )}
             </p>
           </div>
@@ -548,13 +570,21 @@ export default function PlanCard({
               Local plan
             </span>
           )}
+
+          {dailyPlan && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700">
+              Daily plan · choose 1–30 days
+            </span>
+          )}
         </div>
 
         <div className="mt-auto pt-6">
           <div className="flex items-end justify-between gap-4 border-t border-slate-100 pt-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Price
+                {dailyPlan
+                  ? "From / 1 Day"
+                  : "Price"}
               </p>
 
               {validPhpPrice > 0 ? (
