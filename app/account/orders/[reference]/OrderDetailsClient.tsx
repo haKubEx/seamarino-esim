@@ -222,12 +222,89 @@ export default function OrderDetailsClient({
       return;
     }
 
+    let cancelled = false;
+    let requestRunning = false;
+
+    async function checkOrderStatus() {
+      if (
+        cancelled ||
+        requestRunning
+      ) {
+        return;
+      }
+
+      requestRunning = true;
+
+      try {
+        const response =
+          await fetch(
+            `/api/order-status?reference=${encodeURIComponent(
+              order.referenceNumber,
+            )}`,
+            {
+              method: "GET",
+              cache: "no-store",
+            },
+          );
+
+        if (!response.ok) {
+          console.error(
+            "Unable to refresh eSIM order status.",
+            {
+              status:
+                response.status,
+            },
+          );
+
+          return;
+        }
+
+        const result =
+          (await response.json()) as {
+            success?: boolean;
+            status?: string;
+            paymentStatus?: string;
+            esimStatus?: string;
+            iccid?: string | null;
+            qrCode?: string | null;
+            qrCodeUrl?: string | null;
+          };
+
+        if (
+          !cancelled &&
+          result.success
+        ) {
+          router.refresh();
+        }
+      } catch (error) {
+        console.error(
+          "Unable to poll eSIM order status.",
+          error,
+        );
+      } finally {
+        requestRunning = false;
+      }
+    }
+
+    /*
+     * Check immediately when a paid order
+     * is still waiting for eSIM issuance.
+     */
+    void checkOrderStatus();
+
+    /*
+     * Then check every 15 seconds. This
+     * matches the supplier-sync cooldown
+     * used by /api/esim/sync.
+     */
     const refreshTimer =
       window.setInterval(() => {
-        router.refresh();
-      }, 5000);
+        void checkOrderStatus();
+      }, 15_000);
 
     return () => {
+      cancelled = true;
+
       window.clearInterval(
         refreshTimer,
       );
@@ -235,6 +312,7 @@ export default function OrderDetailsClient({
   }, [
     router,
     stillProcessing,
+    order.referenceNumber,
   ]);
 
   async function copyValue(
@@ -623,8 +701,8 @@ export default function OrderDetailsClient({
                 </h2>
 
                 <p className="mt-2 leading-7 text-blue-800">
-                  This page refreshes
-                  automatically every five
+                  This page checks your eSIM
+                  automatically every 15
                   seconds. Your QR code and
                   activation details will
                   appear as soon as the
